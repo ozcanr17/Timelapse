@@ -1,24 +1,19 @@
-//
-//  ContentView.swift
-//  Timelapse
-//
-//  Created by Rıdvan Özcan on 1.07.2026.
-//
-
 import SwiftUI
+import SwiftData
 
+/// Uygulamanın kök görünümü. Tek görevi, ana ekranı (proje listesi) bir
+/// NavigationStack içine koymak — böylece başlık çubuğu ve gezinme çalışır.
 struct ContentView: View {
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        NavigationStack {
+            ProjectListView()
         }
-        .padding()
     }
 }
 
 #Preview {
+    // Önizleme de tıpkı testler gibi bellek içi (disksiz, Cloud'suz) container kullanır.
     ContentView()
+        .modelContainer(AppModelContainer.makeInMemory())
+        .environment(StoreService())
 }
