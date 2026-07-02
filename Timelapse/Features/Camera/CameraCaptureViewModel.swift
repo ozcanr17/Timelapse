@@ -52,8 +52,6 @@ final class CameraCaptureViewModel {
         retakeEntry?.imageData ?? project.sortedEntries.last?.imageData
     }
 
-    var projectCategory: ProjectCategory { project.category }
-
     /// Kullanıcı önizlemeye dokununca referans noktasını oraya taşır.
     func setAnchor(_ point: NormalizedPoint) {
         referenceAnchor = point

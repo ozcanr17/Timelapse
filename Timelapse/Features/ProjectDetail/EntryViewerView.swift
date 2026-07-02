@@ -48,6 +48,7 @@ struct EntryViewerView: View {
                 bottomBar
             }
         }
+        .environment(\.colorScheme, .dark)
         .confirmationDialog(
             "Bu çekim kalıcı olarak silinsin mi?",
             isPresented: $isConfirmingDelete,

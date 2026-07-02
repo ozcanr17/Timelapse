@@ -12,6 +12,7 @@ struct ThemePalette: Equatable {
 
 enum AppTheme: String, CaseIterable, Identifiable {
     case filmNegative = "film_negative"
+    case bright
     case darkroom
     case fjord
     case lavender
@@ -23,6 +24,7 @@ enum AppTheme: String, CaseIterable, Identifiable {
     var displayName: String {
         switch self {
         case .filmNegative: "Negatif"
+        case .bright:       "Canlı"
         case .darkroom:     "Karanlık Oda"
         case .fjord:        "Fiyort"
         case .lavender:     "Lavanta"
@@ -46,6 +48,15 @@ enum AppTheme: String, CaseIterable, Identifiable {
                 surface: Color(light: "FFFFFF", dark: "211E19"),
                 ink: Color(light: "241F1B", dark: "F2EEE7"),
                 inkMuted: Color(light: "6E675E", dark: "B3ABA0")
+            )
+        case .bright:
+            ThemePalette(
+                accent: Color(light: "4F46E5", dark: "8B85F4"),
+                secondary: Color(light: "F97066", dark: "FDA29B"),
+                canvas: Color(light: "FBFBFE", dark: "0F1017"),
+                surface: Color(light: "FFFFFF", dark: "1A1B23"),
+                ink: Color(light: "111322", dark: "F0F1F7"),
+                inkMuted: Color(light: "667085", dark: "9CA1B0")
             )
         case .darkroom:
             ThemePalette(

@@ -18,6 +18,7 @@ struct CameraCaptureView: View {
                 CameraSessionView(viewModel: viewModel)
             }
         }
+        .environment(\.colorScheme, .dark)
         .task {
             guard viewModel == nil else { return }
             let model = CameraCaptureViewModel(
@@ -35,7 +36,7 @@ struct CameraCaptureView: View {
 
 private enum CameraOverlayMode: String, CaseIterable, Identifiable {
     case ghost
-    case guide
+    case grid
     case off
 
     var id: String { rawValue }
@@ -43,7 +44,7 @@ private enum CameraOverlayMode: String, CaseIterable, Identifiable {
     var icon: String {
         switch self {
         case .ghost: "photo.on.rectangle"
-        case .guide: "grid"
+        case .grid:  "grid"
         case .off:   "circle.slash"
         }
     }
@@ -51,7 +52,7 @@ private enum CameraOverlayMode: String, CaseIterable, Identifiable {
     var label: String {
         switch self {
         case .ghost: "Ghost"
-        case .guide: "Kılavuz"
+        case .grid:  "Izgara"
         case .off:   "Kapalı"
         }
     }
@@ -64,7 +65,7 @@ private struct CameraSessionView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.theme) private var theme
 
-    @State private var overlayMode: CameraOverlayMode = .guide
+    @State private var overlayMode: CameraOverlayMode = .grid
     @State private var ghostImage: UIImage?
     @State private var ghostOpacity: Double = 0.35
     @State private var flashOpacity: Double = 0
@@ -96,8 +97,8 @@ private struct CameraSessionView: View {
                             .allowsHitTesting(false)
                     }
 
-                    if isReady, overlayMode == .guide {
-                        AlignmentGuideOverlay(category: viewModel.projectCategory)
+                    if isReady, overlayMode == .grid {
+                        AlignmentGuideOverlay()
                     }
                 }
             }
@@ -120,9 +121,15 @@ private struct CameraSessionView: View {
 
             VStack(spacing: 0) {
                 topBar
+
                 Spacer()
+
                 if isReady {
-                    controls
+                    if overlayMode == .ghost, ghostImage != nil {
+                        ghostOpacitySlider
+                            .padding(.bottom, 14)
+                    }
+                    bottomBar
                 }
             }
         }
@@ -136,31 +143,16 @@ private struct CameraSessionView: View {
         HStack {
             CameraControlButton(icon: "xmark") { dismiss() }
             Spacer()
-            CameraControlButton(icon: "arrow.triangle.2.circlepath.camera") {
-                Task { await viewModel.flipCamera() }
+            if isReady {
+                overlayModePicker
             }
-            .disabled(!canInteract)
-            .opacity(canInteract ? 1 : 0.35)
         }
         .padding(.horizontal, 16)
         .padding(.top, 4)
     }
 
-    private var controls: some View {
-        VStack(spacing: 14) {
-            overlayModePicker
-
-            if overlayMode == .ghost, ghostImage != nil {
-                ghostOpacitySlider
-            }
-
-            shutterButton
-        }
-        .padding(.bottom, 24)
-    }
-
     private var overlayModePicker: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 4) {
             ForEach(availableModes) { mode in
                 Button {
                     withAnimation(.easeInOut(duration: 0.15)) { overlayMode = mode }
@@ -168,20 +160,22 @@ private struct CameraSessionView: View {
                     Label(mode.label, systemImage: mode.icon)
                         .font(Theme.caption(12))
                         .foregroundStyle(overlayMode == mode ? .black : .white)
-                        .padding(.horizontal, 12)
+                        .padding(.horizontal, 11)
                         .padding(.vertical, 7)
                         .background(
-                            overlayMode == mode ? AnyShapeStyle(.white) : AnyShapeStyle(.black.opacity(0.35)),
+                            overlayMode == mode ? AnyShapeStyle(.white) : AnyShapeStyle(.clear),
                             in: Capsule()
                         )
                 }
             }
         }
+        .padding(3)
+        .background(.ultraThinMaterial, in: Capsule())
     }
 
     private var availableModes: [CameraOverlayMode] {
         ghostImage == nil
-            ? [.guide, .off]
+            ? [.grid, .off]
             : CameraOverlayMode.allCases
     }
 
@@ -193,7 +187,66 @@ private struct CameraSessionView: View {
         }
         .foregroundStyle(.white)
         .tint(theme.accent)
-        .padding(.horizontal, 48)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
+        .background(.ultraThinMaterial, in: Capsule())
+        .padding(.horizontal, 36)
+    }
+
+    private var bottomBar: some View {
+        ZStack {
+            shutterButton
+
+            HStack {
+                thumbnailButton
+                Spacer()
+                CameraControlButton(icon: "arrow.triangle.2.circlepath.camera", size: 48) {
+                    Task { await viewModel.flipCamera() }
+                }
+                .disabled(!canInteract)
+                .opacity(canInteract ? 1 : 0.35)
+            }
+        }
+        .padding(.horizontal, 28)
+        .padding(.top, 16)
+        .padding(.bottom, 10)
+        .background {
+            Rectangle()
+                .fill(.ultraThinMaterial)
+                .ignoresSafeArea(edges: .bottom)
+        }
+    }
+
+    private var thumbnailButton: some View {
+        Button {
+            withAnimation(.easeInOut(duration: 0.15)) {
+                overlayMode = overlayMode == .ghost ? .off : .ghost
+            }
+        } label: {
+            ZStack {
+                if let ghostImage {
+                    Image(uiImage: ghostImage)
+                        .resizable()
+                        .scaledToFill()
+                } else {
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .fill(.white.opacity(0.1))
+                    Image(systemName: "photo")
+                        .font(.system(size: 15))
+                        .foregroundStyle(.white.opacity(0.4))
+                }
+            }
+            .frame(width: 48, height: 48)
+            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .strokeBorder(
+                        overlayMode == .ghost ? theme.accent : .white.opacity(0.3),
+                        lineWidth: overlayMode == .ghost ? 2 : 1
+                    )
+            )
+        }
+        .disabled(ghostImage == nil)
     }
 
     private var shutterButton: some View {
@@ -202,8 +255,8 @@ private struct CameraSessionView: View {
         } label: {
             Circle()
                 .strokeBorder(.white, lineWidth: 4)
-                .frame(width: 76, height: 76)
-                .overlay(Circle().fill(.white).frame(width: 62, height: 62))
+                .frame(width: 74, height: 74)
+                .overlay(Circle().fill(.white).frame(width: 60, height: 60))
         }
         .disabled(!canInteract)
         .opacity(canInteract ? 1 : 0.5)
@@ -236,49 +289,15 @@ private struct CameraSessionView: View {
 }
 
 private struct AlignmentGuideOverlay: View {
-    let category: ProjectCategory
-
-    private var showsSilhouette: Bool {
-        switch category {
-        case .selfPortrait, .hairAndBeard, .child: true
-        default: false
-        }
-    }
-
     var body: some View {
         ZStack {
             ThirdsGridShape()
                 .stroke(.white.opacity(0.28), lineWidth: 1)
-
-            if showsSilhouette {
-                HeadGuideShape()
-                    .stroke(
-                        .white.opacity(0.6),
-                        style: StrokeStyle(lineWidth: 2.5, lineCap: .round, lineJoin: .round)
-                    )
-                HeadGuideDashesShape()
-                    .stroke(
-                        .white.opacity(0.4),
-                        style: StrokeStyle(lineWidth: 1.5, lineCap: .round, dash: [6, 6])
-                    )
-            } else {
-                CenterCrossShape()
-                    .stroke(.white.opacity(0.45), style: StrokeStyle(lineWidth: 1.5, lineCap: .round))
-            }
+            CenterCrossShape()
+                .stroke(.white.opacity(0.45), style: StrokeStyle(lineWidth: 1.5, lineCap: .round))
         }
         .allowsHitTesting(false)
     }
-}
-
-private func headGuideBox(in rect: CGRect) -> CGRect {
-    let width = rect.width * 0.58
-    let height = width * 1.3
-    return CGRect(
-        x: rect.midX - width / 2,
-        y: rect.height * 0.40 - height / 2,
-        width: width,
-        height: height
-    )
 }
 
 private struct ThirdsGridShape: Shape {
@@ -290,52 +309,6 @@ private struct ThirdsGridShape: Shape {
             path.move(to: CGPoint(x: 0, y: rect.height * fraction))
             path.addLine(to: CGPoint(x: rect.width, y: rect.height * fraction))
         }
-        return path
-    }
-}
-
-private struct HeadGuideShape: Shape {
-    func path(in rect: CGRect) -> Path {
-        let box = headGuideBox(in: rect)
-        func pt(_ x: CGFloat, _ y: CGFloat) -> CGPoint {
-            CGPoint(x: box.minX + x * box.width, y: box.minY + y * box.height)
-        }
-
-        var path = Path()
-        path.move(to: pt(0.5, 0.76))
-        path.addCurve(to: pt(0.77, 0.42), control1: pt(0.67, 0.73), control2: pt(0.74, 0.58))
-        path.addCurve(to: pt(0.5, 0.03), control1: pt(0.82, 0.19), control2: pt(0.70, 0.03))
-        path.addCurve(to: pt(0.23, 0.42), control1: pt(0.30, 0.03), control2: pt(0.18, 0.19))
-        path.addCurve(to: pt(0.5, 0.76), control1: pt(0.26, 0.58), control2: pt(0.33, 0.73))
-
-        path.move(to: pt(0.78, 0.40))
-        path.addCurve(to: pt(0.77, 0.57), control1: pt(0.89, 0.37), control2: pt(0.87, 0.58))
-        path.move(to: pt(0.22, 0.40))
-        path.addCurve(to: pt(0.23, 0.57), control1: pt(0.11, 0.37), control2: pt(0.13, 0.58))
-
-        path.move(to: pt(0.61, 0.72))
-        path.addCurve(to: pt(0.64, 1.0), control1: pt(0.61, 0.83), control2: pt(0.62, 0.93))
-        path.move(to: pt(0.39, 0.72))
-        path.addCurve(to: pt(0.36, 1.0), control1: pt(0.39, 0.83), control2: pt(0.38, 0.93))
-
-        return path
-    }
-}
-
-private struct HeadGuideDashesShape: Shape {
-    func path(in rect: CGRect) -> Path {
-        let box = headGuideBox(in: rect)
-        func pt(_ x: CGFloat, _ y: CGFloat) -> CGPoint {
-            CGPoint(x: box.minX + x * box.width, y: box.minY + y * box.height)
-        }
-
-        var path = Path()
-        path.move(to: pt(0.5, -0.06))
-        path.addLine(to: pt(0.5, 1.04))
-
-        path.move(to: pt(0.18, 0.46))
-        path.addQuadCurve(to: pt(0.82, 0.46), control: pt(0.5, 0.38))
-
         return path
     }
 }
@@ -355,15 +328,16 @@ private struct CenterCrossShape: Shape {
 
 struct CameraControlButton: View {
     let icon: String
+    var size: CGFloat = 42
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
             Image(systemName: icon)
-                .font(.system(size: 17, weight: .semibold))
+                .font(.system(size: size * 0.4, weight: .semibold))
                 .foregroundStyle(.white)
-                .frame(width: 42, height: 42)
-                .background(.black.opacity(0.35), in: Circle())
+                .frame(width: size, height: size)
+                .background(.ultraThinMaterial, in: Circle())
         }
     }
 }
