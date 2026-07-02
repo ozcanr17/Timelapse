@@ -22,6 +22,8 @@ final class AddProjectViewModelTests: XCTestCase {
         // ViewModel bunları kullanmıyor; protokolü tamamlamak için boş bırakıyoruz.
         func allProjects() throws -> [Project] { [] }
         func addEntry(_ entry: Entry, to project: Project) throws {}
+        func replaceImage(for entry: Entry, with data: Data) throws {}
+        func deleteEntry(_ entry: Entry) throws {}
         func deleteProject(_ project: Project) throws {}
         func saveIfNeeded() throws {}
     }

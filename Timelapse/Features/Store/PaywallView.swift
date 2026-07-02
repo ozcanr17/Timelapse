@@ -5,6 +5,7 @@ import SwiftUI
 struct PaywallView: View {
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.theme) private var theme
     @State private var viewModel: PaywallViewModel
     @State private var selectedPackageID: String?
 
@@ -15,7 +16,7 @@ struct PaywallView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                LinearGradient(colors: [Theme.rust, Theme.rust.opacity(0.65), Theme.canvas],
+                LinearGradient(colors: [theme.accent, theme.accent.opacity(0.65), theme.canvas],
                                 startPoint: .top, endPoint: .bottom)
                     .ignoresSafeArea()
 
@@ -158,34 +159,36 @@ private struct PackageCard: View {
     let isSelected: Bool
     let action: () -> Void
 
+    @Environment(\.theme) private var theme
+
     var body: some View {
         Button(action: action) {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
                     HStack(spacing: 6) {
-                        Text(package.displayName).font(Theme.headline(16)).foregroundStyle(Theme.ink)
+                        Text(package.displayName).font(Theme.headline(16)).foregroundStyle(theme.ink)
                         if isYearly {
                             Text("EN AVANTAJLI")
                                 .font(.system(size: 10, weight: .bold))
                                 .foregroundStyle(.white)
                                 .padding(.horizontal, 6).padding(.vertical, 2)
-                                .background(Theme.teal)
+                                .background(theme.secondary)
                                 .clipShape(Capsule())
                         }
                     }
-                    Text(package.displayPrice).font(Theme.stamp(15)).foregroundStyle(Theme.inkMuted)
+                    Text(package.displayPrice).font(Theme.stamp(15)).foregroundStyle(theme.inkMuted)
                 }
                 Spacer()
                 Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
                     .font(.system(size: 22))
-                    .foregroundStyle(isSelected ? Theme.rust : Theme.inkMuted.opacity(0.4))
+                    .foregroundStyle(isSelected ? theme.accent : theme.inkMuted.opacity(0.4))
             }
             .padding(16)
-            .background(Theme.surface)
+            .background(theme.surface)
             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .strokeBorder(isSelected ? Theme.rust : .clear, lineWidth: 2)
+                    .strokeBorder(isSelected ? theme.accent : .clear, lineWidth: 2)
             )
         }
         .buttonStyle(.plain)

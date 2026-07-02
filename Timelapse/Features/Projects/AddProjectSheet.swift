@@ -6,6 +6,7 @@ import SwiftData
 /// bu görünüm katmanı yenilendi (MVVM ayrımının kanıtı: testler değişmeden geçiyor).
 struct AddProjectSheet: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.theme) private var theme
     @State private var viewModel: AddProjectViewModel
 
     init(repository: ProjectRepositoryProtocol) {
@@ -22,7 +23,7 @@ struct AddProjectSheet: View {
                 }
                 .padding(20)
             }
-            .background(Theme.canvas)
+            .background(theme.canvas)
             .navigationTitle("Yeni Proje")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -43,18 +44,18 @@ struct AddProjectSheet: View {
 
     private var titleField: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("BAŞLIK").font(Theme.caption(12)).foregroundStyle(Theme.inkMuted).tracking(1)
+            Text("BAŞLIK").font(Theme.caption(12)).foregroundStyle(theme.inkMuted).tracking(1)
             TextField("ör. Sakal", text: $viewModel.title)
                 .font(Theme.headline(20))
                 .padding(16)
-                .background(Theme.surface)
+                .background(theme.surface)
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         }
     }
 
     private var categoryPicker: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("KATEGORİ").font(Theme.caption(12)).foregroundStyle(Theme.inkMuted).tracking(1)
+            Text("KATEGORİ").font(Theme.caption(12)).foregroundStyle(theme.inkMuted).tracking(1)
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 96), spacing: 10)], spacing: 10) {
                 ForEach(ProjectCategory.allCases) { category in
                     CategoryChip(category: category, isSelected: viewModel.category == category) {
@@ -67,7 +68,7 @@ struct AddProjectSheet: View {
 
     private var cadencePicker: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("ÇEKİM SIKLIĞI").font(Theme.caption(12)).foregroundStyle(Theme.inkMuted).tracking(1)
+            Text("ÇEKİM SIKLIĞI").font(Theme.caption(12)).foregroundStyle(theme.inkMuted).tracking(1)
             HStack(spacing: 10) {
                 ForEach(CaptureCadence.allCases) { cadence in
                     CadenceChip(cadence: cadence, isSelected: viewModel.cadence == cadence) {
@@ -87,6 +88,9 @@ private struct CategoryChip: View {
     let category: ProjectCategory
     let isSelected: Bool
     let action: () -> Void
+
+    @Environment(\.theme) private var theme
+
     private var accent: Color { Theme.accent(for: category) }
 
     var body: some View {
@@ -97,10 +101,10 @@ private struct CategoryChip: View {
                 Text(category.displayName)
                     .font(Theme.caption(12))
             }
-            .foregroundStyle(isSelected ? .white : Theme.ink)
+            .foregroundStyle(isSelected ? .white : theme.ink)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)
-            .background(isSelected ? accent : Theme.surface)
+            .background(isSelected ? accent : theme.surface)
             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         }
         .buttonStyle(.plain)
@@ -112,14 +116,16 @@ private struct CadenceChip: View {
     let isSelected: Bool
     let action: () -> Void
 
+    @Environment(\.theme) private var theme
+
     var body: some View {
         Button(action: action) {
             Text(cadence.displayName)
                 .font(Theme.caption(13))
-                .foregroundStyle(isSelected ? .white : Theme.ink)
+                .foregroundStyle(isSelected ? .white : theme.ink)
                 .padding(.vertical, 10)
                 .frame(maxWidth: .infinity)
-                .background(isSelected ? Theme.rust : Theme.surface)
+                .background(isSelected ? theme.accent : theme.surface)
                 .clipShape(Capsule())
         }
         .buttonStyle(.plain)

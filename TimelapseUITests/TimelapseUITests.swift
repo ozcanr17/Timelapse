@@ -42,7 +42,15 @@ final class TimelapseUITests: XCTestCase {
         settingsButton.tap()
         XCTAssertTrue(app.navigationBars["Ayarlar"].waitForExistence(timeout: 5))
         attachScreenshot(of: app, named: "settings")
+
+        let darkroomTheme = app.buttons["theme-darkroom"]
+        XCTAssertTrue(darkroomTheme.waitForExistence(timeout: 5))
+        darkroomTheme.tap()
+        attachScreenshot(of: app, named: "settings-darkroom-theme")
         app.navigationBars.buttons.firstMatch.tap()
+
+        XCTAssertTrue(card.waitForExistence(timeout: 5))
+        attachScreenshot(of: app, named: "project-list-darkroom-theme")
 
         XCTAssertTrue(addButton.waitForExistence(timeout: 5))
         addButton.tap()

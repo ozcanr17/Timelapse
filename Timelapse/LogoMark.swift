@@ -7,7 +7,7 @@ struct LogoMark: View {
         ZStack {
             RoundedRectangle(cornerRadius: size * 0.24, style: .continuous)
                 .fill(LinearGradient(
-                    colors: [Theme.rust.opacity(0.85), Theme.rust],
+                    colors: [Theme.brand.opacity(0.85), Theme.brand],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 ))
@@ -19,7 +19,7 @@ struct LogoMark: View {
                 .padding(size * 0.25)
         }
         .frame(width: size, height: size)
-        .shadow(color: Theme.rust.opacity(0.35), radius: size * 0.12, x: 0, y: size * 0.05)
+        .shadow(color: Theme.brand.opacity(0.35), radius: size * 0.12, x: 0, y: size * 0.05)
     }
 }
 
@@ -55,5 +55,5 @@ struct ApertureShape: Shape {
 #Preview {
     LogoMark(size: 160)
         .padding(40)
-        .background(Theme.canvas)
+        .background(AppTheme.filmNegative.palette.canvas)
 }

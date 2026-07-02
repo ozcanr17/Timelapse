@@ -46,6 +46,30 @@ final class ProjectRepositoryTests: XCTestCase {
         XCTAssertEqual(project.sortedEntries.first?.project?.id, project.id)
     }
 
+    func test_fotografDegistirilince_yeniVeriYazilir_kareSayisiDegismez() throws {
+        let project = try repository.createProject(title: "Sakal", category: .hairAndBeard, cadence: .daily)
+        let entry = Entry(imageData: Data([0x01]))
+        try repository.addEntry(entry, to: project)
+
+        try repository.replaceImage(for: entry, with: Data([0x02]))
+
+        XCTAssertEqual(entry.imageData, Data([0x02]))
+        let entryCount = try container.mainContext.fetchCount(FetchDescriptor<Entry>())
+        XCTAssertEqual(entryCount, 1)
+    }
+
+    func test_cekimSilinince_projedenDeKalkar() throws {
+        let project = try repository.createProject(title: "Sakal", category: .hairAndBeard, cadence: .daily)
+        let entry = Entry()
+        try repository.addEntry(entry, to: project)
+
+        try repository.deleteEntry(entry)
+
+        XCTAssertEqual(project.entries?.count ?? 0, 0)
+        let remainingEntries = try container.mainContext.fetchCount(FetchDescriptor<Entry>())
+        XCTAssertEqual(remainingEntries, 0)
+    }
+
     func test_projeSilinince_cekimleriDeSilinir() throws {
         let project = try repository.createProject(title: "Saç", category: .hairAndBeard, cadence: .daily)
         try repository.addEntry(Entry(), to: project)

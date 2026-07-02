@@ -22,15 +22,23 @@ final class CameraCaptureViewModel {
     private(set) var referenceAnchor: NormalizedPoint
 
     private(set) var position: AVCaptureDevice.Position
+    private(set) var isSwitching = false
 
     private let camera: CameraServiceProtocol
     private let repository: ProjectRepositoryProtocol
     private let project: Project
+    private let retakeEntry: Entry?
 
-    init(camera: CameraServiceProtocol, repository: ProjectRepositoryProtocol, project: Project) {
+    init(
+        camera: CameraServiceProtocol,
+        repository: ProjectRepositoryProtocol,
+        project: Project,
+        retakeEntry: Entry? = nil
+    ) {
         self.camera = camera
         self.repository = repository
         self.project = project
+        self.retakeEntry = retakeEntry
         self.referenceAnchor = Self.initialAnchor(for: project)
         self.position = Self.initialPosition(for: project.category)
     }
@@ -38,8 +46,13 @@ final class CameraCaptureViewModel {
     /// Önizleme katmanının bağlanacağı oturum.
     var session: AVCaptureSession { camera.session }
 
-    /// "Ghost" bindirmesi için bir önceki (en yeni) çekimin fotoğrafı.
-    var ghostImageData: Data? { project.sortedEntries.last?.imageData }
+    /// "Ghost" bindirmesi için referans fotoğraf: yeniden çekimde karenin kendisi,
+    /// normal çekimde bir önceki (en yeni) çekim.
+    var ghostImageData: Data? {
+        retakeEntry?.imageData ?? project.sortedEntries.last?.imageData
+    }
+
+    var projectCategory: ProjectCategory { project.category }
 
     /// Kullanıcı önizlemeye dokununca referans noktasını oraya taşır.
     func setAnchor(_ point: NormalizedPoint) {
@@ -61,7 +74,9 @@ final class CameraCaptureViewModel {
     }
 
     func flipCamera() async {
-        guard state == .ready else { return }
+        guard state == .ready, !isSwitching else { return }
+        isSwitching = true
+        defer { isSwitching = false }
         let newPosition: AVCaptureDevice.Position = position == .back ? .front : .back
         do {
             try await camera.switchCamera(to: newPosition)
@@ -71,18 +86,23 @@ final class CameraCaptureViewModel {
         }
     }
 
-    /// Fotoğrafı çeker ve referans noktasıyla birlikte Entry olarak kaydeder.
+    /// Fotoğrafı çeker; yeniden çekimde mevcut karenin fotoğrafını değiştirir,
+    /// normal çekimde yeni bir Entry kaydeder.
     func capture() async -> Bool {
-        guard state == .ready else { return false }
+        guard state == .ready, !isSwitching else { return false }
         state = .capturing
         do {
             let data = try await camera.capturePhoto()
-            let entry = Entry(
-                imageData: data,
-                anchorX: referenceAnchor.x,
-                anchorY: referenceAnchor.y
-            )
-            try repository.addEntry(entry, to: project)
+            if let retakeEntry {
+                try repository.replaceImage(for: retakeEntry, with: data)
+            } else {
+                let entry = Entry(
+                    imageData: data,
+                    anchorX: referenceAnchor.x,
+                    anchorY: referenceAnchor.y
+                )
+                try repository.addEntry(entry, to: project)
+            }
             state = .ready
             return true
         } catch {

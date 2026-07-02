@@ -35,11 +35,18 @@ final class CameraCaptureViewModelTests: XCTestCase {
 
     private final class FakeRepository: ProjectRepositoryProtocol {
         private(set) var addedEntries: [Entry] = []
+        private(set) var replacedEntryIDs: [UUID] = []
+        private(set) var lastReplacedData: Data?
         func createProject(title: String, category: ProjectCategory, cadence: CaptureCadence) throws -> Project {
             Project(title: title, category: category, cadence: cadence)
         }
         func allProjects() throws -> [Project] { [] }
         func addEntry(_ entry: Entry, to project: Project) throws { addedEntries.append(entry) }
+        func replaceImage(for entry: Entry, with data: Data) throws {
+            replacedEntryIDs.append(entry.id)
+            lastReplacedData = data
+        }
+        func deleteEntry(_ entry: Entry) throws {}
         func deleteProject(_ project: Project) throws {}
         func saveIfNeeded() throws {}
     }
@@ -94,6 +101,37 @@ final class CameraCaptureViewModelTests: XCTestCase {
         } else {
             XCTFail("Durum .failed olmalıydı, ama \(viewModel.state) bulundu")
         }
+    }
+
+    // MARK: - Yeniden çekim
+
+    func test_yenidenCekim_yeniEntryEklemez_fotografiDegistirir() async {
+        let camera = FakeCamera()
+        camera.photoToReturn = Data([0xCC])
+        let repository = FakeRepository()
+        let entry = Entry(imageData: Data([0x01]))
+        let project = Project(title: "Sakal", category: .hairAndBeard, cadence: .daily)
+        let viewModel = CameraCaptureViewModel(
+            camera: camera, repository: repository, project: project, retakeEntry: entry
+        )
+
+        await viewModel.start()
+        let success = await viewModel.capture()
+
+        XCTAssertTrue(success)
+        XCTAssertTrue(repository.addedEntries.isEmpty)
+        XCTAssertEqual(repository.replacedEntryIDs, [entry.id])
+        XCTAssertEqual(repository.lastReplacedData, Data([0xCC]))
+    }
+
+    func test_yenidenCekim_ghostOlarakKendiFotografiniGosterir() {
+        let entry = Entry(imageData: Data([0x07]))
+        let project = Project(title: "Sakal", category: .hairAndBeard, cadence: .daily)
+        let viewModel = CameraCaptureViewModel(
+            camera: FakeCamera(), repository: FakeRepository(), project: project, retakeEntry: entry
+        )
+
+        XCTAssertEqual(viewModel.ghostImageData, Data([0x07]))
     }
 
     // MARK: - Kamera pozisyonu

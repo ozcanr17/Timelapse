@@ -6,7 +6,10 @@ struct SettingsView: View {
 
     @Environment(StoreService.self) private var store
     @Environment(\.openURL) private var openURL
+    @Environment(\.theme) private var theme
     @Query private var projects: [Project]
+
+    @AppStorage(AppTheme.storageKey) private var themeID = AppTheme.filmNegative.rawValue
 
     @State private var showPaywall = false
     @State private var showWelcome = false
@@ -22,10 +25,10 @@ struct SettingsView: View {
                     Label {
                         Text("Timelapse Pro aktif")
                             .font(Theme.headline(15))
-                            .foregroundStyle(Theme.ink)
+                            .foregroundStyle(theme.ink)
                     } icon: {
                         Image(systemName: "crown.fill")
-                            .foregroundStyle(Theme.rust)
+                            .foregroundStyle(theme.accent)
                     }
                 } else {
                     Button {
@@ -35,14 +38,14 @@ struct SettingsView: View {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("Timelapse Pro'ya Geç")
                                     .font(Theme.headline(15))
-                                    .foregroundStyle(Theme.ink)
+                                    .foregroundStyle(theme.ink)
                                 Text("Sınırsız proje, 4K filigransız export")
                                     .font(Theme.caption(12))
-                                    .foregroundStyle(Theme.inkMuted)
+                                    .foregroundStyle(theme.inkMuted)
                             }
                         } icon: {
                             Image(systemName: "crown.fill")
-                                .foregroundStyle(Theme.rust)
+                                .foregroundStyle(theme.accent)
                         }
                     }
                 }
@@ -50,7 +53,15 @@ struct SettingsView: View {
                     Task { await store.restore() }
                 }
                 .font(Theme.body(15))
-                .foregroundStyle(Theme.teal)
+                .foregroundStyle(theme.secondary)
+            }
+
+            Section("Görünüm") {
+                ForEach(AppTheme.allCases) { appTheme in
+                    ThemeRow(appTheme: appTheme, isSelected: themeID == appTheme.rawValue) {
+                        themeID = appTheme.rawValue
+                    }
+                }
             }
 
             Section("İstatistik") {
@@ -66,13 +77,13 @@ struct SettingsView: View {
                 Button("Karşılama ekranını göster") {
                     showWelcome = true
                 }
-                .foregroundStyle(Theme.ink)
+                .foregroundStyle(theme.ink)
                 Button("Kamera izni ayarları") {
                     if let url = URL(string: UIApplication.openSettingsURLString) {
                         openURL(url)
                     }
                 }
-                .foregroundStyle(Theme.ink)
+                .foregroundStyle(theme.ink)
             }
 
             Section {
@@ -80,17 +91,17 @@ struct SettingsView: View {
                     LogoMark(size: 56)
                     Text("Timelapse")
                         .font(Theme.headline(17))
-                        .foregroundStyle(Theme.ink)
+                        .foregroundStyle(theme.ink)
                     Text("Sürüm \(appVersion)")
                         .font(Theme.stamp(12, weight: .regular))
-                        .foregroundStyle(Theme.inkMuted)
+                        .foregroundStyle(theme.inkMuted)
                 }
                 .frame(maxWidth: .infinity)
                 .listRowBackground(Color.clear)
             }
         }
         .scrollContentBackground(.hidden)
-        .background(Theme.canvas)
+        .background(theme.canvas)
         .navigationTitle("Ayarlar")
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showPaywall) {
@@ -103,6 +114,47 @@ struct SettingsView: View {
 
     private var appVersion: String {
         Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0"
+    }
+}
+
+private struct ThemeRow: View {
+    let appTheme: AppTheme
+    let isSelected: Bool
+    let action: () -> Void
+
+    @Environment(\.theme) private var theme
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 14) {
+                ZStack {
+                    Circle()
+                        .fill(appTheme.palette.canvas)
+                        .overlay(Circle().strokeBorder(theme.inkMuted.opacity(0.25), lineWidth: 1))
+                        .frame(width: 30, height: 30)
+                    Circle()
+                        .fill(appTheme.palette.accent)
+                        .frame(width: 16, height: 16)
+                        .offset(x: 5, y: 5)
+                    Circle()
+                        .fill(appTheme.palette.secondary)
+                        .frame(width: 9, height: 9)
+                        .offset(x: -6, y: -5)
+                }
+
+                Text(appTheme.displayName)
+                    .font(Theme.body(15))
+                    .foregroundStyle(theme.ink)
+
+                Spacer()
+
+                if isSelected {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(theme.accent)
+                }
+            }
+        }
+        .accessibilityIdentifier("theme-\(appTheme.rawValue)")
     }
 }
 

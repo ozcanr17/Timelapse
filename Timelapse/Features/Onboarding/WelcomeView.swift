@@ -4,11 +4,12 @@ struct WelcomeView: View {
 
     let onFinish: () -> Void
 
+    @Environment(\.theme) private var theme
     @State private var isAnimating = false
 
     var body: some View {
         ZStack {
-            Theme.canvas.ignoresSafeArea()
+            theme.canvas.ignoresSafeArea()
 
             VStack(spacing: 0) {
                 Spacer()
@@ -21,12 +22,12 @@ struct WelcomeView: View {
 
                 Text("Timelapse")
                     .font(Theme.headline(34))
-                    .foregroundStyle(Theme.ink)
+                    .foregroundStyle(theme.ink)
                     .padding(.top, 24)
 
                 Text("DEĞİŞİMİ TEK KAREDE BİRİKTİR")
                     .font(Theme.stamp(12))
-                    .foregroundStyle(Theme.inkMuted)
+                    .foregroundStyle(theme.inkMuted)
                     .tracking(2)
                     .padding(.top, 6)
 
@@ -70,21 +71,23 @@ private struct WelcomeFeatureRow: View {
     let title: String
     let subtitle: String
 
+    @Environment(\.theme) private var theme
+
     var body: some View {
         HStack(alignment: .top, spacing: 14) {
             ZStack {
-                Circle().fill(Theme.rust.opacity(0.12)).frame(width: 40, height: 40)
+                Circle().fill(theme.accent.opacity(0.12)).frame(width: 40, height: 40)
                 Image(systemName: icon)
                     .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(Theme.rust)
+                    .foregroundStyle(theme.accent)
             }
             VStack(alignment: .leading, spacing: 3) {
                 Text(title)
                     .font(Theme.headline(15))
-                    .foregroundStyle(Theme.ink)
+                    .foregroundStyle(theme.ink)
                 Text(subtitle)
                     .font(Theme.caption(12))
-                    .foregroundStyle(Theme.inkMuted)
+                    .foregroundStyle(theme.inkMuted)
                     .fixedSize(horizontal: false, vertical: true)
             }
         }

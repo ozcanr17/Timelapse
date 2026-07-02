@@ -7,6 +7,7 @@ struct ProjectListView: View {
     @Query(sort: \Project.createdAt, order: .reverse) private var projects: [Project]
     @Environment(\.modelContext) private var modelContext
     @Environment(StoreService.self) private var store
+    @Environment(\.theme) private var theme
 
     @State private var activeSheet: ActiveSheet?
     @State private var isShowingSettings = false
@@ -19,7 +20,7 @@ struct ProjectListView: View {
 
     var body: some View {
         ZStack {
-            Theme.canvas.ignoresSafeArea()
+            theme.canvas.ignoresSafeArea()
 
             if projects.isEmpty {
                 EmptyProjectsView()
@@ -51,7 +52,7 @@ struct ProjectListView: View {
                 } label: {
                     Image(systemName: "gearshape.fill")
                         .font(.system(size: 17))
-                        .foregroundStyle(Theme.inkMuted)
+                        .foregroundStyle(theme.inkMuted)
                 }
                 .accessibilityIdentifier("settingsButton")
             }
@@ -61,7 +62,7 @@ struct ProjectListView: View {
                 } label: {
                     Image(systemName: "plus.circle.fill")
                         .font(.system(size: 22))
-                        .foregroundStyle(Theme.rust)
+                        .foregroundStyle(theme.accent)
                 }
                 .accessibilityIdentifier("addProjectButton")
             }
@@ -98,6 +99,9 @@ struct ProjectListView: View {
 /// Liste satırı: kategori renkli ikon rozeti + başlık + damga fontuyla çekim sayısı.
 private struct ProjectCard: View {
     let project: Project
+
+    @Environment(\.theme) private var theme
+
     private var accent: Color { Theme.accent(for: project.category) }
 
     var body: some View {
@@ -112,7 +116,7 @@ private struct ProjectCard: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(project.title)
                     .font(Theme.headline(17))
-                    .foregroundStyle(Theme.ink)
+                    .foregroundStyle(theme.ink)
 
                 HStack(spacing: 6) {
                     Text("\(project.sortedEntries.count)")
@@ -120,7 +124,7 @@ private struct ProjectCard: View {
                     Text("çekim · \(project.cadence.displayName)")
                 }
                 .font(Theme.caption())
-                .foregroundStyle(Theme.inkMuted)
+                .foregroundStyle(theme.inkMuted)
             }
 
             Spacer()
@@ -136,7 +140,7 @@ private struct ProjectCard: View {
             } else {
                 Image(systemName: "chevron.right")
                     .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(Theme.inkMuted.opacity(0.4))
+                    .foregroundStyle(theme.inkMuted.opacity(0.4))
             }
         }
         .padding(16)
@@ -145,21 +149,23 @@ private struct ProjectCard: View {
 }
 
 private struct EmptyProjectsView: View {
+    @Environment(\.theme) private var theme
+
     var body: some View {
         VStack(spacing: 18) {
             ZStack {
-                Circle().fill(Theme.rust.opacity(0.12)).frame(width: 96, height: 96)
+                Circle().fill(theme.accent.opacity(0.12)).frame(width: 96, height: 96)
                 Image(systemName: "camera.aperture")
                     .font(.system(size: 36, weight: .medium))
-                    .foregroundStyle(Theme.rust)
+                    .foregroundStyle(theme.accent)
             }
             VStack(spacing: 6) {
                 Text("İlk hikayeni başlat")
                     .font(Theme.headline(22))
-                    .foregroundStyle(Theme.ink)
+                    .foregroundStyle(theme.ink)
                 Text("Sağ üstteki + ile bir proje oluştur,\nzamanla değişimi kaydetmeye başla.")
                     .font(Theme.body(15))
-                    .foregroundStyle(Theme.inkMuted)
+                    .foregroundStyle(theme.inkMuted)
                     .multilineTextAlignment(.center)
             }
         }

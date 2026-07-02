@@ -46,8 +46,10 @@ final class CameraService: NSObject, CameraServiceProtocol, @unchecked Sendable 
     func capturePhoto() async throws -> Data {
         try await withCheckedThrowingContinuation { continuation in
             self.sessionQueue.async {
+                let settings = AVCapturePhotoSettings()
+                settings.photoQualityPrioritization = .speed
                 self.captureContinuation = continuation
-                self.photoOutput.capturePhoto(with: AVCapturePhotoSettings(), delegate: self)
+                self.photoOutput.capturePhoto(with: settings, delegate: self)
             }
         }
     }
@@ -81,6 +83,7 @@ final class CameraService: NSObject, CameraServiceProtocol, @unchecked Sendable 
             session.sessionPreset = .photo
             guard session.canAddOutput(photoOutput) else { throw CameraError.configurationFailed }
             session.addOutput(photoOutput)
+            photoOutput.maxPhotoQualityPrioritization = .balanced
         }
 
         if let currentInput {

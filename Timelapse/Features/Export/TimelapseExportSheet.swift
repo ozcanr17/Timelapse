@@ -8,13 +8,14 @@ struct TimelapseExportSheet: View {
 
     @Environment(StoreService.self) private var store
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.theme) private var theme
     @State private var viewModel = TimelapseExportViewModel()
     @State private var showPaywall = false
 
     var body: some View {
         NavigationStack {
             ZStack {
-                Theme.canvas.ignoresSafeArea()
+                theme.canvas.ignoresSafeArea()
                 content
             }
             .navigationTitle("Timelapse")
@@ -49,13 +50,13 @@ struct TimelapseExportSheet: View {
             VStack(spacing: 8) {
                 Text("Kareler birleştiriliyor…")
                     .font(Theme.headline(17))
-                    .foregroundStyle(Theme.ink)
+                    .foregroundStyle(theme.ink)
                 Text(viewModel.progress, format: .percent.precision(.fractionLength(0)))
                     .font(Theme.stamp(15))
-                    .foregroundStyle(Theme.inkMuted)
+                    .foregroundStyle(theme.inkMuted)
             }
             ProgressView(value: viewModel.progress)
-                .tint(Theme.rust)
+                .tint(theme.accent)
                 .padding(.horizontal, 48)
         }
     }
@@ -79,7 +80,7 @@ struct TimelapseExportSheet: View {
                 } label: {
                     Text("Filigranı kaldır, 4K'ya geç — Pro")
                         .font(Theme.caption(13))
-                        .foregroundStyle(Theme.teal)
+                        .foregroundStyle(theme.secondary)
                 }
             }
         }
@@ -90,10 +91,10 @@ struct TimelapseExportSheet: View {
         VStack(spacing: 16) {
             Image(systemName: "exclamationmark.triangle")
                 .font(.largeTitle)
-                .foregroundStyle(Theme.rust)
+                .foregroundStyle(theme.accent)
             Text(message)
                 .font(Theme.body(15))
-                .foregroundStyle(Theme.ink)
+                .foregroundStyle(theme.ink)
                 .multilineTextAlignment(.center)
             Button("Tekrar dene") {
                 Task { await export() }
