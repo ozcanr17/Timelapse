@@ -14,9 +14,19 @@ final class CameraCaptureViewModelTests: XCTestCase {
         var photoToReturn = Data([0x01])
         var startError: Error?
         var captureError: Error?
+        var switchError: Error?
+        private(set) var startedPositions: [AVCaptureDevice.Position] = []
+        private(set) var switchedPositions: [AVCaptureDevice.Position] = []
 
-        func start() async throws { if let startError { throw startError } }
+        func start(position: AVCaptureDevice.Position) async throws {
+            startedPositions.append(position)
+            if let startError { throw startError }
+        }
         func stop() {}
+        func switchCamera(to position: AVCaptureDevice.Position) async throws {
+            if let switchError { throw switchError }
+            switchedPositions.append(position)
+        }
         func capturePhoto() async throws -> Data {
             if let captureError { throw captureError }
             return photoToReturn
@@ -84,6 +94,48 @@ final class CameraCaptureViewModelTests: XCTestCase {
         } else {
             XCTFail("Durum .failed olmalıydı, ama \(viewModel.state) bulundu")
         }
+    }
+
+    // MARK: - Kamera pozisyonu
+
+    func test_sacSakalProjesi_onKameraylaBaslar() async {
+        let camera = FakeCamera()
+        let viewModel = makeViewModel(camera: camera, repository: FakeRepository())
+
+        await viewModel.start()
+
+        XCTAssertEqual(viewModel.position, .front)
+        XCTAssertEqual(camera.startedPositions, [.front])
+    }
+
+    func test_bitkiProjesi_arkaKameraylaBaslar() {
+        let project = Project(title: "Limon fidanı", category: .plant, cadence: .weekly)
+        let viewModel = makeViewModel(camera: FakeCamera(), repository: FakeRepository(), project: project)
+
+        XCTAssertEqual(viewModel.position, .back)
+    }
+
+    func test_flipCamera_pozisyonuDegistirir() async {
+        let camera = FakeCamera()
+        let viewModel = makeViewModel(camera: camera, repository: FakeRepository())
+
+        await viewModel.start()
+        await viewModel.flipCamera()
+
+        XCTAssertEqual(viewModel.position, .back)
+        XCTAssertEqual(camera.switchedPositions, [.back])
+    }
+
+    func test_flipCamera_hazirDegilkenCalismaz() async {
+        let camera = FakeCamera()
+        camera.startError = DummyError()
+        let viewModel = makeViewModel(camera: camera, repository: FakeRepository())
+
+        await viewModel.start()
+        await viewModel.flipCamera()
+
+        XCTAssertEqual(viewModel.position, .front)
+        XCTAssertTrue(camera.switchedPositions.isEmpty)
     }
 
     // MARK: - Referans noktası (hizalama)

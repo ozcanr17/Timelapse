@@ -9,6 +9,7 @@ struct ProjectDetailView: View {
     let project: Project
     @Environment(\.modelContext) private var modelContext
     @State private var isCapturing = false
+    @State private var isExporting = false
 
     private let columns = [GridItem(.adaptive(minimum: 100), spacing: 12)]
     private var accent: Color { Theme.accent(for: project.category) }
@@ -17,6 +18,15 @@ struct ProjectDetailView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 header
+
+                if project.sortedEntries.count >= 2 {
+                    Button {
+                        isExporting = true
+                    } label: {
+                        Label("Timelapse'i Oluştur", systemImage: "film.stack")
+                    }
+                    .buttonStyle(.timelapsePrimary)
+                }
 
                 if project.sortedEntries.isEmpty {
                     emptyState
@@ -49,6 +59,9 @@ struct ProjectDetailView: View {
                 repository: ProjectRepository(context: modelContext),
                 project: project
             )
+        }
+        .sheet(isPresented: $isExporting) {
+            TimelapseExportSheet(project: project)
         }
     }
 

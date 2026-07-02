@@ -7,17 +7,24 @@ final class TimelapseUITests: XCTestCase {
     }
 
     @MainActor
-    func testAddProjectFlow() throws {
+    func testFullJourney() throws {
         let app = XCUIApplication()
         app.launch()
 
-        app.navigationBars["Projeler"].buttons.firstMatch.tap()
+        let startButton = app.buttons["Başla"]
+        if startButton.waitForExistence(timeout: 5) {
+            attachScreenshot(of: app, named: "welcome")
+            startButton.tap()
+        }
+
+        let addButton = app.buttons["addProjectButton"]
+        XCTAssertTrue(addButton.waitForExistence(timeout: 5))
+        addButton.tap()
 
         let titleField = app.textFields.firstMatch
         XCTAssertTrue(titleField.waitForExistence(timeout: 5))
         titleField.tap()
         titleField.typeText("Sakal")
-
         app.buttons["Saç & Sakal"].tap()
         app.buttons["Kaydet"].tap()
 
@@ -28,10 +35,17 @@ final class TimelapseUITests: XCTestCase {
         card.tap()
         XCTAssertTrue(app.staticTexts["Henüz çekim yok"].waitForExistence(timeout: 5))
         attachScreenshot(of: app, named: "project-detail")
-
         app.navigationBars.buttons.firstMatch.tap()
-        app.navigationBars["Projeler"].buttons.firstMatch.tap()
 
+        let settingsButton = app.buttons["settingsButton"]
+        XCTAssertTrue(settingsButton.waitForExistence(timeout: 5))
+        settingsButton.tap()
+        XCTAssertTrue(app.navigationBars["Ayarlar"].waitForExistence(timeout: 5))
+        attachScreenshot(of: app, named: "settings")
+        app.navigationBars.buttons.firstMatch.tap()
+
+        XCTAssertTrue(addButton.waitForExistence(timeout: 5))
+        addButton.tap()
         XCTAssertTrue(app.staticTexts["Timelapse Pro"].waitForExistence(timeout: 5))
         attachScreenshot(of: app, named: "paywall")
     }

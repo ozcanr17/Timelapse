@@ -21,6 +21,8 @@ final class CameraCaptureViewModel {
     /// kullanıcı önizlemeye dokununca güncellenir, çekimde Entry'ye kaydedilir.
     private(set) var referenceAnchor: NormalizedPoint
 
+    private(set) var position: AVCaptureDevice.Position
+
     private let camera: CameraServiceProtocol
     private let repository: ProjectRepositoryProtocol
     private let project: Project
@@ -30,6 +32,7 @@ final class CameraCaptureViewModel {
         self.repository = repository
         self.project = project
         self.referenceAnchor = Self.initialAnchor(for: project)
+        self.position = Self.initialPosition(for: project.category)
     }
 
     /// Önizleme katmanının bağlanacağı oturum.
@@ -46,7 +49,7 @@ final class CameraCaptureViewModel {
     func start() async {
         state = .starting
         do {
-            try await camera.start()
+            try await camera.start(position: position)
             state = .ready
         } catch {
             state = .failed(message(for: error))
@@ -55,6 +58,17 @@ final class CameraCaptureViewModel {
 
     func stop() {
         camera.stop()
+    }
+
+    func flipCamera() async {
+        guard state == .ready else { return }
+        let newPosition: AVCaptureDevice.Position = position == .back ? .front : .back
+        do {
+            try await camera.switchCamera(to: newPosition)
+            position = newPosition
+        } catch {
+            state = .failed(message(for: error))
+        }
     }
 
     /// Fotoğrafı çeker ve referans noktasıyla birlikte Entry olarak kaydeder.
@@ -74,6 +88,13 @@ final class CameraCaptureViewModel {
         } catch {
             state = .failed(message(for: error))
             return false
+        }
+    }
+
+    private static func initialPosition(for category: ProjectCategory) -> AVCaptureDevice.Position {
+        switch category {
+        case .selfPortrait, .hairAndBeard: .front
+        default: .back
         }
     }
 

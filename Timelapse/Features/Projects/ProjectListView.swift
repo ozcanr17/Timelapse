@@ -9,6 +9,7 @@ struct ProjectListView: View {
     @Environment(StoreService.self) private var store
 
     @State private var activeSheet: ActiveSheet?
+    @State private var isShowingSettings = false
 
     private enum ActiveSheet: Identifiable {
         case addProject
@@ -44,6 +45,16 @@ struct ProjectListView: View {
         }
         .navigationTitle("Projeler")
         .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button {
+                    isShowingSettings = true
+                } label: {
+                    Image(systemName: "gearshape.fill")
+                        .font(.system(size: 17))
+                        .foregroundStyle(Theme.inkMuted)
+                }
+                .accessibilityIdentifier("settingsButton")
+            }
             ToolbarItem(placement: .primaryAction) {
                 Button {
                     addProjectTapped()
@@ -52,7 +63,11 @@ struct ProjectListView: View {
                         .font(.system(size: 22))
                         .foregroundStyle(Theme.rust)
                 }
+                .accessibilityIdentifier("addProjectButton")
             }
+        }
+        .navigationDestination(isPresented: $isShowingSettings) {
+            SettingsView()
         }
         .sheet(item: $activeSheet) { sheet in
             switch sheet {
