@@ -11,6 +11,7 @@ struct ProjectListView: View {
 
     @State private var activeSheet: ActiveSheet?
     @State private var isShowingSettings = false
+    @State private var pendingDeletion: [Project] = []
 
     private enum ActiveSheet: Identifiable {
         case addProject
@@ -85,6 +86,36 @@ struct ProjectListView: View {
                 PaywallView(store: store)
             }
         }
+        .confirmationDialog(
+            "Proje ve içindeki tüm çekimler kalıcı olarak silinsin mi?",
+            isPresented: deletionBinding,
+            titleVisibility: .visible
+        ) {
+            Button("Sil", role: .destructive) { confirmDeletion() }
+            Button("Vazgeç", role: .cancel) { pendingDeletion = [] }
+        }
+    }
+
+    private var deletionBinding: Binding<Bool> {
+        Binding(
+            get: { !pendingDeletion.isEmpty },
+            set: { if !$0 { pendingDeletion = [] } }
+        )
+    }
+
+    private func confirmDeletion() {
+        let repository = ProjectRepository(context: modelContext)
+        let toDelete = pendingDeletion
+        pendingDeletion = []
+        withAnimation {
+            for project in toDelete where !project.isDeleted {
+                try? repository.deleteProject(project)
+            }
+        }
+        Task {
+            try? await Task.sleep(for: .seconds(0.6))
+            try? repository.saveIfNeeded()
+        }
     }
 
     private func addProjectTapped() {
@@ -96,18 +127,8 @@ struct ProjectListView: View {
     }
 
     private func deleteProjects(at offsets: IndexSet) {
-        let repository = ProjectRepository(context: modelContext)
-        let toDelete = offsets.compactMap { index in
+        pendingDeletion = offsets.compactMap { index in
             projects.indices.contains(index) ? projects[index] : nil
-        }
-        withAnimation {
-            for project in toDelete {
-                try? repository.deleteProject(project)
-            }
-        }
-        Task {
-            try? await Task.sleep(for: .seconds(0.6))
-            try? repository.saveIfNeeded()
         }
     }
 }

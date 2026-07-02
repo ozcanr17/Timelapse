@@ -4,14 +4,10 @@ import SwiftData
 @main
 struct TimelapseApp: App {
 
-    // Uygulama boyunca yaşayan tek SwiftData container'ı (yerel + kullanıcının iCloud'una senkron).
-    // NOT: makeProduction() cloudKitDatabase: .automatic kullanır ve iCloud/CloudKit capability
-    // gerektirir. Capability'yi henüz eklemediysen, AppModelContainer içinde geçici olarak
-    // cloudKitDatabase: .none yap; capability'yi ekledikten sonra .automatic'e döndür.
     let container = AppModelContainer.makeProduction()
 
-    // StoreKit yetki/satın alma motoru; ortam üzerinden tüm ekranlara dağıtılır.
     @State private var store = StoreService()
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some Scene {
         WindowGroup {
@@ -23,5 +19,11 @@ struct TimelapseApp: App {
                 }
         }
         .modelContainer(container)
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .background {
+                let projects = (try? container.mainContext.fetch(FetchDescriptor<Project>())) ?? []
+                ReminderScheduler.shared.sync(projects: projects)
+            }
+        }
     }
 }

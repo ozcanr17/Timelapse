@@ -132,6 +132,7 @@ final class CameraCaptureViewModel {
         case .notAuthorized:        return "Kamera izni verilmedi. Ayarlar’dan açabilirsin."
         case .configurationFailed:  return "Kamera başlatılamadı."
         case .imageDataUnavailable: return "Fotoğraf verisi alınamadı."
+        case .captureInterrupted:   return "Çekim yarıda kesildi. Tekrar dene."
         }
     }
 }

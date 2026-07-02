@@ -4,6 +4,7 @@ enum CameraError: Error {
     case notAuthorized
     case configurationFailed
     case imageDataUnavailable
+    case captureInterrupted
 }
 
 protocol CameraServiceProtocol: AnyObject {
@@ -46,6 +47,10 @@ final class CameraService: NSObject, CameraServiceProtocol, @unchecked Sendable 
     func capturePhoto() async throws -> Data {
         try await withCheckedThrowingContinuation { continuation in
             self.sessionQueue.async {
+                if let pending = self.captureContinuation {
+                    self.captureContinuation = nil
+                    pending.resume(throwing: CameraError.captureInterrupted)
+                }
                 let settings = AVCapturePhotoSettings()
                 settings.photoQualityPrioritization = .speed
                 self.captureContinuation = continuation

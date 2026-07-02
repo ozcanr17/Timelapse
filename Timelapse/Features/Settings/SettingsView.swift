@@ -10,6 +10,8 @@ struct SettingsView: View {
     @Query private var projects: [Project]
 
     @AppStorage(AppTheme.storageKey) private var themeID = AppTheme.filmNegative.rawValue
+    @AppStorage(ReminderScheduler.enabledKey) private var remindersEnabled = false
+    @AppStorage(ReminderScheduler.hourKey) private var reminderHour = 19
 
     @State private var showPaywall = false
     @State private var showWelcome = false
@@ -64,6 +66,20 @@ struct SettingsView: View {
                 }
             }
 
+            Section("Hatırlatıcı") {
+                Toggle("Çekim hatırlatıcıları", isOn: $remindersEnabled)
+                    .tint(theme.accent)
+                if remindersEnabled {
+                    Picker("Saat", selection: $reminderHour) {
+                        ForEach(0..<24, id: \.self) { hour in
+                            Text(String(format: "%02d:00", hour))
+                                .font(Theme.stamp(14))
+                                .tag(hour)
+                        }
+                    }
+                }
+            }
+
             Section("İstatistik") {
                 LabeledContent("Proje") {
                     Text("\(projects.count)").font(Theme.stamp(15))
@@ -109,6 +125,23 @@ struct SettingsView: View {
         }
         .fullScreenCover(isPresented: $showWelcome) {
             WelcomeView { showWelcome = false }
+        }
+        .onChange(of: remindersEnabled) { _, enabled in
+            if enabled {
+                Task {
+                    let granted = await ReminderScheduler.shared.requestAuthorization()
+                    if granted {
+                        ReminderScheduler.shared.sync(projects: projects)
+                    } else {
+                        remindersEnabled = false
+                    }
+                }
+            } else {
+                ReminderScheduler.shared.sync(projects: projects)
+            }
+        }
+        .onChange(of: reminderHour) {
+            ReminderScheduler.shared.sync(projects: projects)
         }
     }
 
