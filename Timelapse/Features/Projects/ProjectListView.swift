@@ -32,16 +32,18 @@ struct ProjectListView: View {
                         .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 10, trailing: 16))
 
                     ForEach(projects) { project in
-                        ProjectCard(project: project)
-                            .background(
-                                NavigationLink("") {
-                                    ProjectDetailView(project: project)
-                                }
-                                .opacity(0)
-                            )
-                            .listRowSeparator(.hidden)
-                            .listRowBackground(Color.clear)
-                            .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
+                        if !project.isDeleted {
+                            ProjectCard(project: project)
+                                .background(
+                                    NavigationLink("") {
+                                        ProjectDetailView(project: project)
+                                    }
+                                    .opacity(0)
+                                )
+                                .listRowSeparator(.hidden)
+                                .listRowBackground(Color.clear)
+                                .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
+                        }
                     }
                     .onDelete(perform: deleteProjects)
                 }
@@ -95,8 +97,13 @@ struct ProjectListView: View {
 
     private func deleteProjects(at offsets: IndexSet) {
         let repository = ProjectRepository(context: modelContext)
-        for index in offsets {
-            try? repository.deleteProject(projects[index])
+        let toDelete = offsets.compactMap { index in
+            projects.indices.contains(index) ? projects[index] : nil
+        }
+        withAnimation {
+            for project in toDelete {
+                try? repository.deleteProject(project)
+            }
         }
     }
 }
@@ -106,8 +113,12 @@ private struct ActivityHeroCard: View {
 
     @Environment(\.theme) private var theme
 
+    private var liveProjects: [Project] {
+        projects.filter { !$0.isDeleted }
+    }
+
     private var capturedDates: [Date] {
-        projects.flatMap { ($0.entries ?? []).map(\.capturedAt) }
+        liveProjects.flatMap { ($0.entries ?? []).map(\.capturedAt) }
     }
 
     private var counts: [Int] {
@@ -119,7 +130,7 @@ private struct ActivityHeroCard: View {
     }
 
     private var dueCount: Int {
-        projects.filter { $0.isCaptureDue() }.count
+        liveProjects.filter { $0.isCaptureDue() }.count
     }
 
     var body: some View {

@@ -34,30 +34,6 @@ struct CameraCaptureView: View {
     }
 }
 
-private enum CameraOverlayMode: String, CaseIterable, Identifiable {
-    case ghost
-    case grid
-    case off
-
-    var id: String { rawValue }
-
-    var icon: String {
-        switch self {
-        case .ghost: "photo.on.rectangle"
-        case .grid:  "grid"
-        case .off:   "circle.slash"
-        }
-    }
-
-    var label: String {
-        switch self {
-        case .ghost: "Ghost"
-        case .grid:  "Izgara"
-        case .off:   "Kapalı"
-        }
-    }
-}
-
 private struct CameraSessionView: View {
 
     let viewModel: CameraCaptureViewModel
@@ -65,7 +41,7 @@ private struct CameraSessionView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.theme) private var theme
 
-    @State private var overlayMode: CameraOverlayMode = .grid
+    @State private var showGhost = false
     @State private var ghostImage: UIImage?
     @State private var ghostOpacity: Double = 0.35
     @State private var flashOpacity: Double = 0
@@ -78,6 +54,11 @@ private struct CameraSessionView: View {
         viewModel.state == .ready && !viewModel.isSwitching
     }
 
+    private var hasFailed: Bool {
+        if case .failed = viewModel.state { return true }
+        return false
+    }
+
     var body: some View {
         ZStack {
             GeometryReader { geo in
@@ -86,7 +67,7 @@ private struct CameraSessionView: View {
 
                     CameraPreview(session: viewModel.session)
 
-                    if isReady, overlayMode == .ghost, let ghostImage {
+                    if isReady, showGhost, let ghostImage {
                         Image(uiImage: ghostImage)
                             .resizable()
                             .scaledToFill()
@@ -97,7 +78,7 @@ private struct CameraSessionView: View {
                             .allowsHitTesting(false)
                     }
 
-                    if isReady, overlayMode == .grid {
+                    if !hasFailed {
                         AlignmentGuideOverlay()
                     }
                 }
@@ -124,8 +105,8 @@ private struct CameraSessionView: View {
 
                 Spacer()
 
-                if isReady {
-                    if overlayMode == .ghost, ghostImage != nil {
+                if !hasFailed {
+                    if showGhost, ghostImage != nil {
                         ghostOpacitySlider
                             .padding(.bottom, 14)
                     }
@@ -135,7 +116,6 @@ private struct CameraSessionView: View {
         }
         .task {
             ghostImage = await ImageDownsampler.image(from: viewModel.ghostImageData, maxPixelSize: 1400)
-            if ghostImage != nil { overlayMode = .ghost }
         }
     }
 
@@ -143,40 +123,9 @@ private struct CameraSessionView: View {
         HStack {
             CameraControlButton(icon: "xmark") { dismiss() }
             Spacer()
-            if isReady {
-                overlayModePicker
-            }
         }
         .padding(.horizontal, 16)
         .padding(.top, 4)
-    }
-
-    private var overlayModePicker: some View {
-        HStack(spacing: 4) {
-            ForEach(availableModes) { mode in
-                Button {
-                    withAnimation(.easeInOut(duration: 0.15)) { overlayMode = mode }
-                } label: {
-                    Label(mode.label, systemImage: mode.icon)
-                        .font(Theme.caption(12))
-                        .foregroundStyle(overlayMode == mode ? .black : .white)
-                        .padding(.horizontal, 11)
-                        .padding(.vertical, 7)
-                        .background(
-                            overlayMode == mode ? AnyShapeStyle(.white) : AnyShapeStyle(.clear),
-                            in: Capsule()
-                        )
-                }
-            }
-        }
-        .padding(3)
-        .background(.ultraThinMaterial, in: Capsule())
-    }
-
-    private var availableModes: [CameraOverlayMode] {
-        ghostImage == nil
-            ? [.grid, .off]
-            : CameraOverlayMode.allCases
     }
 
     private var ghostOpacitySlider: some View {
@@ -220,7 +169,7 @@ private struct CameraSessionView: View {
     private var thumbnailButton: some View {
         Button {
             withAnimation(.easeInOut(duration: 0.15)) {
-                overlayMode = overlayMode == .ghost ? .off : .ghost
+                showGhost.toggle()
             }
         } label: {
             ZStack {
@@ -241,8 +190,8 @@ private struct CameraSessionView: View {
             .overlay(
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
                     .strokeBorder(
-                        overlayMode == .ghost ? theme.accent : .white.opacity(0.3),
-                        lineWidth: overlayMode == .ghost ? 2 : 1
+                        showGhost ? theme.accent : .white.opacity(0.3),
+                        lineWidth: showGhost ? 2 : 1
                     )
             )
         }
