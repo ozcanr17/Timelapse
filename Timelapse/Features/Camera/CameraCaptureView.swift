@@ -1,6 +1,6 @@
 import SwiftUI
 import AVFoundation
-import UIKit   // UIImage için
+import UIKit
 
 /// Tam ekran kamera çekim ekranı: canlı önizleme + ghost + hizalama nişangahı.
 struct CameraCaptureView: View {
@@ -16,16 +16,12 @@ struct CameraCaptureView: View {
     }
 
     var body: some View {
-        // GeometryReader bize alanın boyutunu verir; referans noktasını bu boyuta göre
-        // hem yerleştiriyor hem de dokunmadan normalize ediyoruz.
         GeometryReader { geo in
             ZStack {
                 Color.black
 
-                // 1) Canlı kamera önizlemesi.
                 CameraPreview(session: viewModel.session)
 
-                // 2) Ghost bindirmesi (varsa).
                 if let data = viewModel.ghostImageData, let uiImage = UIImage(data: data) {
                     Image(uiImage: uiImage)
                         .resizable()
@@ -34,20 +30,16 @@ struct CameraCaptureView: View {
                         .allowsHitTesting(false)
                 }
 
-                // 3) Dokunma katmanı: boş alana dokununca referans noktasını taşır.
-                //    Kontrollerin ALTINDA, önizlemenin ÜSTÜNDE.
                 Color.clear
                     .contentShape(Rectangle())
                     .onTapGesture(coordinateSpace: .local) { location in
                         viewModel.setAnchor(NormalizedPoint.from(location, in: geo.size))
                     }
 
-                // 4) Hizalama nişangahı (referans noktası) — yalnızca görsel.
                 ReticleView()
                     .position(viewModel.referenceAnchor.cgPoint(in: geo.size))
                     .allowsHitTesting(false)
 
-                // 5) Duruma göre kontroller (en üstte; dokunuşları o alır).
                 switch viewModel.state {
                 case .starting:
                     ProgressView().tint(.white)
@@ -76,17 +68,15 @@ struct CameraCaptureView: View {
             }
 
             Text("Hizalamak için bir referans noktasına dokun")
-                .font(.caption)
+                .font(Theme.caption(12))
                 .foregroundStyle(.white.opacity(0.85))
 
             Spacer()
 
-            // Ghost saydamlık ayarı — yalnızca ghost varken.
             if viewModel.ghostImageData != nil {
                 ghostOpacitySlider
             }
 
-            // Deklanşör.
             Button {
                 Task { if await viewModel.capture() { dismiss() } }
             } label: {
@@ -102,12 +92,12 @@ struct CameraCaptureView: View {
 
     private var ghostOpacitySlider: some View {
         HStack(spacing: 12) {
-            Image(systemName: "circle.dashed")   // az ghost
+            Image(systemName: "circle.dashed")
             Slider(value: $ghostOpacity, in: 0...1)
-            Image(systemName: "circle.fill")     // çok ghost
+            Image(systemName: "circle.fill")
         }
         .foregroundStyle(.white)
-        .tint(.white)
+        .tint(Theme.rust)
         .padding(.horizontal, 32)
         .padding(.bottom, 12)
     }
@@ -119,26 +109,25 @@ struct CameraCaptureView: View {
             Text(message)
                 .multilineTextAlignment(.center)
             Button("Kapat") { dismiss() }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.timelapsePrimary)
+                .frame(width: 160)
         }
         .foregroundStyle(.white)
         .padding()
     }
 }
 
-/// Referans noktasını gösteren sarı nişangah.
 private struct ReticleView: View {
     var body: some View {
         ZStack {
-            Circle().strokeBorder(.yellow, lineWidth: 2).frame(width: 46, height: 46)
-            Rectangle().fill(.yellow).frame(width: 2, height: 14)
-            Rectangle().fill(.yellow).frame(width: 14, height: 2)
+            Circle().strokeBorder(Theme.rust, lineWidth: 2).frame(width: 46, height: 46)
+            Rectangle().fill(Theme.rust).frame(width: 2, height: 14)
+            Rectangle().fill(Theme.rust).frame(width: 14, height: 2)
         }
         .shadow(color: .black.opacity(0.5), radius: 2)
     }
 }
 
-/// AVFoundation'ın canlı önizleme katmanını (UIKit) SwiftUI'a köprüleyen sarmalayıcı.
 private struct CameraPreview: UIViewRepresentable {
     let session: AVCaptureSession
 

@@ -1,10 +1,12 @@
 import SwiftUI
 
-/// Premium aboneliği tanıtan ve satın almayı sunan paywall ekranı.
+/// Premium aboneliği tanıtan paywall. Fiyatlar damga (monospaced) fontuyla yazılır —
+/// uygulama genelindeki numara/tarih diliyle aynı.
 struct PaywallView: View {
 
     @Environment(\.dismiss) private var dismiss
     @State private var viewModel: PaywallViewModel
+    @State private var selectedPackageID: String?
 
     init(store: StoreServiceProtocol) {
         _viewModel = State(initialValue: PaywallViewModel(store: store))
@@ -12,123 +14,184 @@ struct PaywallView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 24) {
-                    header
-                    featureList
-                    packageButtons
-                    restoreButton
-                    legalText
+            ZStack {
+                LinearGradient(colors: [Theme.rust, Theme.rust.opacity(0.65), Theme.canvas],
+                                startPoint: .top, endPoint: .bottom)
+                    .ignoresSafeArea()
+
+                ScrollView {
+                    VStack(spacing: 28) {
+                        header
+                        featureList
+                        packageList
+                        restoreButton
+                        legalText
+                    }
+                    .padding(20)
+                    .padding(.top, 12)
                 }
-                .padding()
             }
-            .navigationTitle("Timelapse Pro")
-            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Kapat") { dismiss() }
+                    Button {
+                        dismiss()
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundStyle(.white.opacity(0.85))
+                    }
                 }
             }
             .task { await viewModel.load() }
             .alert("Hata", isPresented: errorBinding) {
                 Button("Tamam", role: .cancel) {}
-            } message: {
-                Text(viewModel.errorMessage ?? "")
-            }
+            } message: { Text(viewModel.errorMessage ?? "") }
         }
     }
 
     private var header: some View {
-        VStack(spacing: 8) {
-            Image(systemName: "crown.fill")
-                .font(.largeTitle)
-                .foregroundStyle(.yellow)
-            Text("Tüm özelliklerin kilidini aç")
-                .font(.title2.bold())
-                .multilineTextAlignment(.center)
+        VStack(spacing: 10) {
+            ZStack {
+                Circle().fill(.white.opacity(0.2)).frame(width: 72, height: 72)
+                Image(systemName: "crown.fill").font(.system(size: 30)).foregroundStyle(.white)
+            }
+            Text("Timelapse Pro")
+                .font(Theme.headline(26))
+                .foregroundStyle(.white)
+            Text("Hikayeni en iyi haliyle anlat")
+                .font(Theme.body(15))
+                .foregroundStyle(.white.opacity(0.85))
         }
+        .padding(.top, 8)
     }
 
     private var featureList: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            ProFeatureRow(icon: "infinity", text: "Sınırsız proje")
-            ProFeatureRow(icon: "wand.and.stars", text: "Akıllı hizalama")
-            ProFeatureRow(icon: "icloud.fill", text: "iCloud yedekleme")
-            ProFeatureRow(icon: "person.2.fill", text: "Çift (couple) modu")
-            ProFeatureRow(icon: "film", text: "Filigransız 4K export")
+        VStack(spacing: 12) {
+            ProFeatureRow(icon: "infinity", title: "Sınırsız proje", subtitle: "İstediğin kadar hikaye takip et")
+            ProFeatureRow(icon: "wand.and.stars", title: "Akıllı hizalama", subtitle: "Otomatik kare eşleştirme")
+            ProFeatureRow(icon: "icloud.fill", title: "iCloud yedekleme", subtitle: "Fotoğrafların hep güvende")
+            ProFeatureRow(icon: "person.2.fill", title: "Çift modu", subtitle: "Birlikte kaydedin")
+            ProFeatureRow(icon: "film", title: "4K, filigransız export", subtitle: "Paylaşıma hazır video")
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(18)
+        .background(.white.opacity(0.12))
+        .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
     }
 
-    private var packageButtons: some View {
-        VStack(spacing: 12) {
+    private var packageList: some View {
+        VStack(spacing: 10) {
             if viewModel.packages.isEmpty {
-                ProgressView()
-                    .padding()
+                ProgressView().tint(.white).padding()
             } else {
                 ForEach(viewModel.packages) { package in
-                    Button {
-                        Task {
-                            if await viewModel.purchase(package) { dismiss() }
-                        }
-                    } label: {
-                        HStack {
-                            Text(package.displayName)
-                            Spacer()
-                            Text(package.displayPrice).bold()
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 6)
+                    PackageCard(
+                        package: package,
+                        isYearly: package.id.contains("yearly"),
+                        isSelected: selectedPackageID == package.id
+                    ) {
+                        selectedPackageID = package.id
                     }
-                    .buttonStyle(.borderedProminent)
-                    .disabled(viewModel.isPurchasing)
                 }
+                Button {
+                    guard let id = selectedPackageID,
+                          let package = viewModel.packages.first(where: { $0.id == id }) ?? viewModel.packages.first
+                    else { return }
+                    Task { if await viewModel.purchase(package) { dismiss() } }
+                } label: {
+                    Text(viewModel.isPurchasing ? "İşleniyor…" : "Devam Et")
+                }
+                .buttonStyle(.timelapsePrimary)
+                .disabled(viewModel.isPurchasing)
+                .padding(.top, 4)
+            }
+        }
+        .onChange(of: viewModel.packages) { _, packages in
+            if selectedPackageID == nil {
+                selectedPackageID = packages.first(where: { $0.id.contains("yearly") })?.id ?? packages.first?.id
             }
         }
     }
 
     private var restoreButton: some View {
         Button("Satın alımları geri yükle") {
-            Task {
-                await viewModel.restore()
-                if viewModel.isPro { dismiss() }
-            }
+            Task { await viewModel.restore(); if viewModel.isPro { dismiss() } }
         }
-        .font(.footnote)
+        .font(Theme.caption(13))
+        .foregroundStyle(.white.opacity(0.85))
         .disabled(viewModel.isPurchasing)
     }
 
     private var legalText: some View {
         Text("Abonelik otomatik yenilenir; istediğin zaman Ayarlar’dan iptal edebilirsin.")
             .font(.caption2)
-            .foregroundStyle(.secondary)
+            .foregroundStyle(.white.opacity(0.6))
             .multilineTextAlignment(.center)
     }
 
     private var errorBinding: Binding<Bool> {
-        Binding(
-            get: { viewModel.errorMessage != nil },
-            set: { if !$0 { viewModel.errorMessage = nil } }
-        )
+        Binding(get: { viewModel.errorMessage != nil }, set: { if !$0 { viewModel.errorMessage = nil } })
     }
 }
 
 private struct ProFeatureRow: View {
     let icon: String
-    let text: String
+    let title: String
+    let subtitle: String
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 14) {
             Image(systemName: icon)
-                .foregroundStyle(.tint)
-                .frame(width: 28)
-            Text(text)
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundStyle(.white)
+                .frame(width: 30)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title).font(Theme.headline(15)).foregroundStyle(.white)
+                Text(subtitle).font(Theme.caption(12)).foregroundStyle(.white.opacity(0.7))
+            }
             Spacer()
         }
     }
 }
 
+private struct PackageCard: View {
+    let package: StorePackage
+    let isYearly: Bool
+    let isSelected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 6) {
+                        Text(package.displayName).font(Theme.headline(16)).foregroundStyle(Theme.ink)
+                        if isYearly {
+                            Text("EN AVANTAJLI")
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, 6).padding(.vertical, 2)
+                                .background(Theme.teal)
+                                .clipShape(Capsule())
+                        }
+                    }
+                    Text(package.displayPrice).font(Theme.stamp(15)).foregroundStyle(Theme.inkMuted)
+                }
+                Spacer()
+                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                    .font(.system(size: 22))
+                    .foregroundStyle(isSelected ? Theme.rust : Theme.inkMuted.opacity(0.4))
+            }
+            .padding(16)
+            .background(Theme.surface)
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .strokeBorder(isSelected ? Theme.rust : .clear, lineWidth: 2)
+            )
+        }
+        .buttonStyle(.plain)
+    }
+}
+
 #Preview {
-    // Not: gerçek paketler .storekit yapılandırmasıyla dolar; önizlemede liste boş görünebilir.
     PaywallView(store: StoreService())
 }

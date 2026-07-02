@@ -1,13 +1,11 @@
 import SwiftUI
 import SwiftData
 
-/// "Yeni proje" formunu gösteren sheet. İnce bir görünüm: tüm mantık ViewModel'de.
+/// "Yeni proje" formu. Kategori seçimini varsayılan Picker yerine ikonlu, renkli çip
+/// kartları olarak sunuyoruz — AddProjectViewModel'daki mantık hiç değişmedi, sadece
+/// bu görünüm katmanı yenilendi (MVVM ayrımının kanıtı: testler değişmeden geçiyor).
 struct AddProjectSheet: View {
-
     @Environment(\.dismiss) private var dismiss
-
-    // ViewModel'i bu görünüm sahiplenir (@State). Bağımlılığını (repository) init'te
-    // enjekte ediyoruz; bu, @State içine bağımlılık geçirmenin standart yoludur.
     @State private var viewModel: AddProjectViewModel
 
     init(repository: ProjectRepositoryProtocol) {
@@ -16,23 +14,15 @@ struct AddProjectSheet: View {
 
     var body: some View {
         NavigationStack {
-            Form {
-                Section("Proje") {
-                    TextField("Başlık (ör. Sakal)", text: $viewModel.title)
-
-                    Picker("Kategori", selection: $viewModel.category) {
-                        ForEach(ProjectCategory.allCases) { category in
-                            Text(category.displayName).tag(category)
-                        }
-                    }
-
-                    Picker("Çekim sıklığı", selection: $viewModel.cadence) {
-                        ForEach(CaptureCadence.allCases) { cadence in
-                            Text(cadence.displayName).tag(cadence)
-                        }
-                    }
+            ScrollView {
+                VStack(alignment: .leading, spacing: 28) {
+                    titleField
+                    categoryPicker
+                    cadencePicker
                 }
+                .padding(20)
             }
+            .background(Theme.canvas)
             .navigationTitle("Yeni Proje")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -40,31 +30,102 @@ struct AddProjectSheet: View {
                     Button("İptal") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Kaydet") {
-                        if viewModel.save() { dismiss() }
-                    }
-                    .disabled(!viewModel.isValid)   // geçersizse pasif
+                    Button("Kaydet") { if viewModel.save() { dismiss() } }
+                        .disabled(!viewModel.isValid)
+                        .fontWeight(.bold)
                 }
             }
             .alert("Hata", isPresented: errorBinding) {
                 Button("Tamam", role: .cancel) {}
-            } message: {
-                Text(viewModel.errorMessage ?? "")
+            } message: { Text(viewModel.errorMessage ?? "") }
+        }
+    }
+
+    private var titleField: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("BAŞLIK").font(Theme.caption(12)).foregroundStyle(Theme.inkMuted).tracking(1)
+            TextField("ör. Sakal", text: $viewModel.title)
+                .font(Theme.headline(20))
+                .padding(16)
+                .background(Theme.surface)
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        }
+    }
+
+    private var categoryPicker: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("KATEGORİ").font(Theme.caption(12)).foregroundStyle(Theme.inkMuted).tracking(1)
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 96), spacing: 10)], spacing: 10) {
+                ForEach(ProjectCategory.allCases) { category in
+                    CategoryChip(category: category, isSelected: viewModel.category == category) {
+                        viewModel.category = category
+                    }
+                }
             }
         }
     }
 
-    // errorMessage opsiyonelini, alert'in beklediği Bool bağına çeviren küçük köprü.
+    private var cadencePicker: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("ÇEKİM SIKLIĞI").font(Theme.caption(12)).foregroundStyle(Theme.inkMuted).tracking(1)
+            HStack(spacing: 10) {
+                ForEach(CaptureCadence.allCases) { cadence in
+                    CadenceChip(cadence: cadence, isSelected: viewModel.cadence == cadence) {
+                        viewModel.cadence = cadence
+                    }
+                }
+            }
+        }
+    }
+
     private var errorBinding: Binding<Bool> {
-        Binding(
-            get: { viewModel.errorMessage != nil },
-            set: { isPresented in if !isPresented { viewModel.errorMessage = nil } }
-        )
+        Binding(get: { viewModel.errorMessage != nil }, set: { if !$0 { viewModel.errorMessage = nil } })
+    }
+}
+
+private struct CategoryChip: View {
+    let category: ProjectCategory
+    let isSelected: Bool
+    let action: () -> Void
+    private var accent: Color { Theme.accent(for: category) }
+
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 8) {
+                Image(systemName: Theme.icon(for: category))
+                    .font(.system(size: 18, weight: .semibold))
+                Text(category.displayName)
+                    .font(Theme.caption(12))
+            }
+            .foregroundStyle(isSelected ? .white : Theme.ink)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 14)
+            .background(isSelected ? accent : Theme.surface)
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+private struct CadenceChip: View {
+    let cadence: CaptureCadence
+    let isSelected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Text(cadence.displayName)
+                .font(Theme.caption(13))
+                .foregroundStyle(isSelected ? .white : Theme.ink)
+                .padding(.vertical, 10)
+                .frame(maxWidth: .infinity)
+                .background(isSelected ? Theme.rust : Theme.surface)
+                .clipShape(Capsule())
+        }
+        .buttonStyle(.plain)
     }
 }
 
 #Preview {
-    AddProjectSheet(
-        repository: ProjectRepository(context: AppModelContainer.makeInMemory().mainContext)
-    )
+    AddProjectSheet(repository: ProjectRepository(context: AppModelContainer.makeInMemory().mainContext))
 }

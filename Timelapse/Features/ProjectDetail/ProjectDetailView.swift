@@ -1,57 +1,48 @@
 import SwiftUI
 import SwiftData
-import UIKit   // UIImage için
+import UIKit
 
-/// Bir projenin çekimlerini kronolojik ızgara olarak gösteren detay ekranı.
+/// Bir projenin çekimlerini kontakt föyü (contact sheet) mantığıyla ızgara olarak
+/// gösteren detay ekranı.
 struct ProjectDetailView: View {
 
-    // `project` canlı bir @Model nesnesi. @Observable olduğu için, aynı context
-    // üzerinden çekim eklendiğinde project.entries değişir ve bu ekran kendiliğinden
-    // tazelenir — elle yeniden yükleme gerekmez.
     let project: Project
-
     @Environment(\.modelContext) private var modelContext
-
     @State private var isCapturing = false
 
-    // Ekran genişliğine göre sütun sayısını kendi ayarlayan esnek ızgara.
     private let columns = [GridItem(.adaptive(minimum: 100), spacing: 12)]
+    private var accent: Color { Theme.accent(for: project.category) }
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 20) {
                 header
 
                 if project.sortedEntries.isEmpty {
-                    ContentUnavailableView(
-                        "Henüz çekim yok",
-                        systemImage: "camera",
-                        description: Text("Sağ üstteki düğmeyle ilk çekimini ekle.")
-                    )
-                    .padding(.top, 40)
+                    emptyState
                 } else {
                     LazyVGrid(columns: columns, spacing: 12) {
-                        // enumerated() ile sıra numarasını (kaçıncı gün) da alıyoruz.
                         ForEach(Array(project.sortedEntries.enumerated()), id: \.element.id) { index, entry in
-                            EntryThumbnail(entry: entry, dayNumber: index + 1)
+                            EntryThumbnail(entry: entry, dayNumber: index + 1, accent: accent)
                         }
                     }
                 }
             }
-            .padding()
+            .padding(16)
         }
+        .background(Theme.canvas.ignoresSafeArea())
         .navigationTitle(project.title)
+        .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button {
                     isCapturing = true
                 } label: {
-                    Label("Çekim ekle", systemImage: "plus.circle.fill")
+                    Image(systemName: "camera.fill")
+                        .foregroundStyle(accent)
                 }
             }
         }
-        // Kamerayı tam ekran aç. Kaydetme işini kameranın ViewModel'i repository üzerinden
-        // yapar; aynı context kullanıldığı için dönünce ızgara kendiliğinden güncellenir.
         .fullScreenCover(isPresented: $isCapturing) {
             CameraCaptureView(
                 camera: CameraService(),
@@ -62,66 +53,113 @@ struct ProjectDetailView: View {
     }
 
     private var header: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(project.category.displayName)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+        VStack(alignment: .leading, spacing: 18) {
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(project.category.displayName.uppercased())
+                        .font(Theme.caption(12))
+                        .foregroundStyle(.white.opacity(0.8))
+                        .tracking(1.2)
 
-            HStack(spacing: 12) {
-                Label("\(project.sortedEntries.count) çekim", systemImage: "photo.stack")
+                    (
+                        Text("\(project.sortedEntries.count)")
+                            .font(Theme.stamp(40, weight: .bold))
+                            .foregroundStyle(.white)
+                        +
+                        Text(" çekim")
+                            .font(Theme.headline(17))
+                            .foregroundStyle(.white.opacity(0.85))
+                    )
+                }
+                Spacer()
+                ZStack {
+                    Circle().fill(.white.opacity(0.18)).frame(width: 54, height: 54)
+                    Image(systemName: Theme.icon(for: project.category))
+                        .font(.system(size: 22, weight: .semibold))
+                        .foregroundStyle(.white)
+                }
+            }
+
+            HStack(spacing: 14) {
                 Label(project.cadence.displayName, systemImage: "calendar")
+                if project.isCaptureDue() {
+                    Label("Bugün zamanı geldi", systemImage: "bell.fill")
+                }
             }
-            .font(.subheadline)
-
-            if project.isCaptureDue() {
-                Text("Bugün çekim zamanı geldi")
-                    .font(.subheadline.weight(.medium))
-                    .foregroundStyle(.tint)
-            }
+            .font(Theme.caption(12))
+            .foregroundStyle(.white.opacity(0.9))
         }
+        .padding(20)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            LinearGradient(colors: [accent, accent.opacity(0.7)], startPoint: .topLeading, endPoint: .bottomTrailing)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
+    }
+
+    private var emptyState: some View {
+        VStack(spacing: 14) {
+            Image(systemName: "camera")
+                .font(.system(size: 30))
+                .foregroundStyle(Theme.inkMuted)
+            Text("Henüz çekim yok")
+                .font(Theme.headline(16))
+                .foregroundStyle(Theme.ink)
+            Text("Sağ üstteki kamera düğmesiyle ilk çekimini ekle.")
+                .font(Theme.body(14))
+                .foregroundStyle(Theme.inkMuted)
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.top, 50)
     }
 }
 
-/// Izgaradaki tek bir çekim karesi. Fotoğraf varsa onu, yoksa yer tutucu gösterir.
+/// Kontakt föyündeki tek bir kare: fotoğraf + "No. 0X" damgası — gerçek bir negatifin
+/// köşesindeki eski tarz numaralandırmaya gönderme.
 private struct EntryThumbnail: View {
     let entry: Entry
     let dayNumber: Int
+    let accent: Color
 
     var body: some View {
-        VStack(spacing: 4) {
+        VStack(spacing: 6) {
             ZStack {
                 if let data = entry.imageData, let uiImage = UIImage(data: data) {
-                    Image(uiImage: uiImage)
-                        .resizable()
-                        .scaledToFill()
+                    Image(uiImage: uiImage).resizable().scaledToFill()
                 } else {
-                    Rectangle().fill(.quaternary)
+                    Rectangle().fill(Theme.surface)
                     Image(systemName: "camera")
-                        .font(.title2)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Theme.inkMuted)
                 }
             }
-            .frame(height: 100)
+            .frame(height: 110)
             .frame(maxWidth: .infinity)
-            .clipShape(RoundedRectangle(cornerRadius: 10))
+            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .strokeBorder(Theme.ink.opacity(0.06), lineWidth: 1)
+            )
+            .overlay(alignment: .topLeading) {
+                Text(String(format: "No. %02d", dayNumber))
+                    .font(Theme.stamp(9.5, weight: .medium))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 3)
+                    .background(accent.opacity(0.88))
+                    .clipShape(Capsule())
+                    .padding(6)
+            }
+            .shadow(color: .black.opacity(0.08), radius: 6, x: 0, y: 3)
 
             Text(entry.capturedAt, format: .dateTime.day().month())
-                .font(.caption2)
-                .foregroundStyle(.secondary)
-        }
-        .overlay(alignment: .topLeading) {
-            Text("\(dayNumber)")
-                .font(.caption2.weight(.bold))
-                .padding(.horizontal, 6)
-                .padding(.vertical, 2)
-                .background(.ultraThinMaterial, in: Capsule())
-                .padding(6)
+                .font(Theme.stamp(11, weight: .regular))
+                .foregroundStyle(Theme.inkMuted)
         }
     }
 }
 
 #Preview {
-    // Önizleme için bellek içi bir proje + birkaç örnek çekim hazırlıyoruz.
     let container = AppModelContainer.makeInMemory()
     let project = Project(title: "Sakal", category: .hairAndBeard, cadence: .daily)
     container.mainContext.insert(project)
