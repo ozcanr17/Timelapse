@@ -105,6 +105,10 @@ struct ProjectListView: View {
                 try? repository.deleteProject(project)
             }
         }
+        Task {
+            try? await Task.sleep(for: .seconds(0.6))
+            try? repository.saveIfNeeded()
+        }
     }
 }
 
@@ -112,6 +116,7 @@ private struct ActivityHeroCard: View {
     let projects: [Project]
 
     @Environment(\.theme) private var theme
+    @State private var isBreathing = false
 
     private var liveProjects: [Project] {
         projects.filter { !$0.isDeleted }
@@ -162,6 +167,10 @@ private struct ActivityHeroCard: View {
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)
                     .background(theme.accent, in: Capsule())
+                    .shadow(color: theme.accent.opacity(isBreathing ? 0.55 : 0.15), radius: isBreathing ? 10 : 3)
+                    .scaleEffect(isBreathing ? 1.03 : 1)
+                    .animation(.easeInOut(duration: 1.3).repeatForever(autoreverses: true), value: isBreathing)
+                    .onAppear { isBreathing = true }
             } else {
                 Label("Bugün için her şey tamam", systemImage: "checkmark.circle.fill")
                     .font(Theme.caption(12))

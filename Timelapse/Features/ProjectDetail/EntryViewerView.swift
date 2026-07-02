@@ -19,7 +19,9 @@ struct EntryViewerView: View {
         _selectedEntryID = State(initialValue: initialEntry.id)
     }
 
-    private var entries: [Entry] { project.sortedEntries }
+    private var entries: [Entry] {
+        project.sortedEntries.filter { !$0.isDeleted }
+    }
 
     private var selectedEntry: Entry? {
         entries.first { $0.id == selectedEntryID }
@@ -101,9 +103,15 @@ struct EntryViewerView: View {
         guard let entry = selectedEntry else { return }
         let index = selectedIndex ?? 0
         let repository = ProjectRepository(context: modelContext)
-        try? repository.deleteEntry(entry)
+        withAnimation {
+            try? repository.deleteEntry(entry)
+        }
+        Task {
+            try? await Task.sleep(for: .seconds(0.6))
+            try? repository.saveIfNeeded()
+        }
 
-        let remaining = project.sortedEntries
+        let remaining = entries
         if remaining.isEmpty {
             dismiss()
         } else {

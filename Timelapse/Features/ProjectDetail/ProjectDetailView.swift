@@ -12,9 +12,14 @@ struct ProjectDetailView: View {
     @State private var isCapturing = false
     @State private var isExporting = false
     @State private var viewerEntry: Entry?
+    @State private var shareCardURL: URL?
 
     private let columns = [GridItem(.adaptive(minimum: 100), spacing: 12)]
     private var accent: Color { Theme.accent(for: project.category) }
+
+    private var liveEntries: [Entry] {
+        project.sortedEntries.filter { !$0.isDeleted }
+    }
 
     var body: some View {
         ScrollView {
@@ -38,7 +43,7 @@ struct ProjectDetailView: View {
                     emptyState
                 } else {
                     LazyVGrid(columns: columns, spacing: 12) {
-                        ForEach(Array(project.sortedEntries.enumerated()), id: \.element.id) { index, entry in
+                        ForEach(Array(liveEntries.enumerated()), id: \.element.id) { index, entry in
                             Button {
                                 viewerEntry = entry
                             } label: {
@@ -67,6 +72,20 @@ struct ProjectDetailView: View {
         .navigationTitle(project.title)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
+            if let shareCardURL {
+                ToolbarItem(placement: .primaryAction) {
+                    ShareLink(
+                        item: shareCardURL,
+                        preview: SharePreview(
+                            "\(project.title) — Timelapse",
+                            image: Image(systemName: "camera.aperture")
+                        )
+                    ) {
+                        Image(systemName: "square.and.arrow.up")
+                            .foregroundStyle(accent)
+                    }
+                }
+            }
             ToolbarItem(placement: .primaryAction) {
                 Button {
                     isCapturing = true
@@ -86,15 +105,32 @@ struct ProjectDetailView: View {
         .sheet(isPresented: $isExporting) {
             TimelapseExportSheet(project: project)
         }
+        .task(id: liveEntries.count) {
+            shareCardURL = renderShareCard()
+        }
+    }
+
+    private func renderShareCard() -> URL? {
+        guard !liveEntries.isEmpty else { return nil }
+        let renderer = ImageRenderer(content: StreakShareCard(project: project, theme: theme))
+        renderer.scale = 1
+        guard let uiImage = renderer.uiImage, let data = uiImage.pngData() else { return nil }
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent("timelapse-share-\(project.id.uuidString)")
+            .appendingPathExtension("png")
+        try? data.write(to: url)
+        return url
     }
 
     private var statsRow: some View {
         let dates = project.sortedEntries.map(\.capturedAt)
+        let streak = ActivitySummary.streak(capturedDates: dates)
         return HStack(spacing: 12) {
             StatTile(
                 icon: "flame.fill",
-                value: "\(ActivitySummary.streak(capturedDates: dates))",
-                label: "Gün serisi"
+                value: "\(streak)",
+                label: "Gün serisi",
+                isAlive: streak > 0
             )
             StatTile(
                 icon: "photo.stack",
@@ -111,7 +147,13 @@ struct ProjectDetailView: View {
 
     private func deleteEntry(_ entry: Entry) {
         let repository = ProjectRepository(context: modelContext)
-        try? repository.deleteEntry(entry)
+        withAnimation {
+            try? repository.deleteEntry(entry)
+        }
+        Task {
+            try? await Task.sleep(for: .seconds(0.6))
+            try? repository.saveIfNeeded()
+        }
     }
 
     private var header: some View {
@@ -181,14 +223,25 @@ private struct StatTile: View {
     let icon: String
     let value: String
     let label: String
+    var isAlive: Bool = false
 
     @Environment(\.theme) private var theme
+    @State private var isBreathing = false
 
     var body: some View {
         VStack(spacing: 6) {
             Image(systemName: icon)
                 .font(.system(size: 15, weight: .semibold))
                 .foregroundStyle(theme.accent)
+                .scaleEffect(isAlive && isBreathing ? 1.18 : 1)
+                .shadow(color: isAlive ? theme.accent.opacity(isBreathing ? 0.55 : 0.15) : .clear, radius: 6)
+                .animation(
+                    isAlive
+                        ? .easeInOut(duration: 1.1).repeatForever(autoreverses: true)
+                        : .default,
+                    value: isBreathing
+                )
+                .onAppear { if isAlive { isBreathing = true } }
             Text(value)
                 .font(Theme.stamp(20, weight: .bold))
                 .foregroundStyle(theme.ink)
@@ -198,8 +251,7 @@ private struct StatTile: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 14)
-        .background(theme.surface)
-        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .cardStyle()
     }
 }
 

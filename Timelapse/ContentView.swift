@@ -53,6 +53,10 @@ private struct LaunchSplashView: View {
     var body: some View {
         ZStack {
             theme.canvas.ignoresSafeArea()
+            AnimatedAccentBackground(base: theme.accent)
+                .opacity(isAnimating ? 0.16 : 0)
+                .ignoresSafeArea()
+                .allowsHitTesting(false)
 
             VStack(spacing: 20) {
                 LogoMark(size: 108)

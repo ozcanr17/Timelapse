@@ -64,6 +64,7 @@ final class ProjectRepositoryTests: XCTestCase {
         try repository.addEntry(entry, to: project)
 
         try repository.deleteEntry(entry)
+        try repository.saveIfNeeded()
 
         XCTAssertEqual(project.entries?.count ?? 0, 0)
         let remainingEntries = try container.mainContext.fetchCount(FetchDescriptor<Entry>())
@@ -75,6 +76,7 @@ final class ProjectRepositoryTests: XCTestCase {
         try repository.addEntry(Entry(), to: project)
 
         try repository.deleteProject(project)
+        try repository.saveIfNeeded()
 
         // Proje gitti mi?
         XCTAssertTrue(try repository.allProjects().isEmpty)

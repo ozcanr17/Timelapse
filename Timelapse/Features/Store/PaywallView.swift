@@ -16,7 +16,9 @@ struct PaywallView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                LinearGradient(colors: [theme.accent, theme.accent.opacity(0.65), theme.canvas],
+                AnimatedAccentBackground(base: theme.accent)
+                    .ignoresSafeArea()
+                LinearGradient(colors: [.clear, .clear, theme.canvas],
                                 startPoint: .top, endPoint: .bottom)
                     .ignoresSafeArea()
 

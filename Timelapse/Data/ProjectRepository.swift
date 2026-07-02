@@ -59,7 +59,6 @@ final class ProjectRepository: ProjectRepositoryProtocol {
 
     func deleteEntry(_ entry: Entry) throws {
         context.delete(entry)
-        try context.save()
     }
 
     func deleteProject(_ project: Project) throws {
@@ -67,7 +66,6 @@ final class ProjectRepository: ProjectRepositoryProtocol {
             context.delete(entry)
         }
         context.delete(project)
-        try context.save()
     }
 
     /// Bekleyen değişiklik varsa diske/Cloud'a yazar. Gereksiz kayıttan kaçınmak için

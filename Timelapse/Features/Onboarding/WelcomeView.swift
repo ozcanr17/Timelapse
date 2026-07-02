@@ -10,6 +10,10 @@ struct WelcomeView: View {
     var body: some View {
         ZStack {
             theme.canvas.ignoresSafeArea()
+            AnimatedAccentBackground(base: theme.accent)
+                .opacity(isAnimating ? 0.14 : 0)
+                .ignoresSafeArea()
+                .allowsHitTesting(false)
 
             VStack(spacing: 0) {
                 Spacer()

@@ -8,12 +8,15 @@ struct ThemePalette: Equatable {
     let surface: Color
     let ink: Color
     let inkMuted: Color
+    var isGlass: Bool = false
+    var glow: Color? = nil
 }
 
 enum AppTheme: String, CaseIterable, Identifiable {
     case filmNegative = "film_negative"
     case daylight
     case bright
+    case cyber
     case darkroom
     case fjord
     case lavender
@@ -27,6 +30,7 @@ enum AppTheme: String, CaseIterable, Identifiable {
         case .filmNegative: "Negatif"
         case .daylight:     "Aydınlık"
         case .bright:       "Canlı"
+        case .cyber:        "Cyber"
         case .darkroom:     "Karanlık Oda"
         case .fjord:        "Fiyort"
         case .lavender:     "Lavanta"
@@ -36,7 +40,7 @@ enum AppTheme: String, CaseIterable, Identifiable {
     var preferredColorScheme: ColorScheme? {
         switch self {
         case .daylight: .light
-        case .darkroom: .dark
+        case .darkroom, .cyber: .dark
         default: nil
         }
     }
@@ -45,7 +49,7 @@ enum AppTheme: String, CaseIterable, Identifiable {
         switch self {
         case .filmNegative:
             ThemePalette(
-                accent: Color(light: "C4562F", dark: "E8825C"),
+                accent: Color(light: "2E8B57", dark: "5FD98A"),
                 secondary: Color(light: "1F6B6E", dark: "4FADAF"),
                 canvas: Color(light: "F3F0EA", dark: "16140F"),
                 surface: Color(light: "FFFFFF", dark: "211E19"),
@@ -69,6 +73,17 @@ enum AppTheme: String, CaseIterable, Identifiable {
                 surface: Color(light: "FFFFFF", dark: "1A1B23"),
                 ink: Color(light: "111322", dark: "F0F1F7"),
                 inkMuted: Color(light: "667085", dark: "9CA1B0")
+            )
+        case .cyber:
+            ThemePalette(
+                accent: Color(light: "7B5CFF", dark: "7B5CFF"),
+                secondary: Color(light: "37E6C4", dark: "37E6C4"),
+                canvas: Color(light: "07070C", dark: "07070C"),
+                surface: Color(light: "14141F", dark: "14141F"),
+                ink: Color(light: "F3F2FA", dark: "F3F2FA"),
+                inkMuted: Color(light: "8B89A8", dark: "8B89A8"),
+                isGlass: true,
+                glow: Color(light: "7B5CFF", dark: "7B5CFF")
             )
         case .darkroom:
             ThemePalette(
@@ -107,11 +122,11 @@ extension EnvironmentValues {
 
 enum Theme {
 
-    static let brand = Color(light: "C4562F", dark: "E8825C")
+    static let brand = Color(light: "2E8B57", dark: "5FD98A")
 
     static func accent(for category: ProjectCategory) -> Color {
         switch category {
-        case .selfPortrait: Color(light: "C4562F", dark: "E8825C")
+        case .selfPortrait: Color(light: "2E8B57", dark: "5FD98A")
         case .child:        Color(light: "B8637A", dark: "E79CAE")
         case .plant:        Color(light: "4C7A52", dark: "8FC79A")
         case .hairAndBeard: Color(light: "8A6A4E", dark: "C9A97D")
@@ -153,6 +168,22 @@ extension Color {
             UIColor(hex: trait.userInterfaceStyle == .dark ? dark : light)
         })
     }
+
+    func mix(with other: Color, by fraction: Double) -> Color {
+        let f = min(max(fraction, 0), 1)
+        let a = UIColor(self)
+        let b = UIColor(other)
+        var ar: CGFloat = 0, ag: CGFloat = 0, ab: CGFloat = 0, aa: CGFloat = 0
+        var br: CGFloat = 0, bg: CGFloat = 0, bb: CGFloat = 0, ba: CGFloat = 0
+        a.getRed(&ar, green: &ag, blue: &ab, alpha: &aa)
+        b.getRed(&br, green: &bg, blue: &bb, alpha: &ba)
+        return Color(
+            red: ar + (br - ar) * f,
+            green: ag + (bg - ag) * f,
+            blue: ab + (bb - ab) * f,
+            opacity: aa + (ba - aa) * f
+        )
+    }
 }
 
 private extension UIColor {
@@ -169,10 +200,22 @@ struct CardBackground: ViewModifier {
     @Environment(\.theme) private var theme
 
     func body(content: Content) -> some View {
-        content
-            .background(theme.surface)
-            .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
-            .shadow(color: .black.opacity(0.06), radius: 12, x: 0, y: 6)
+        if theme.isGlass {
+            content
+                .background(.ultraThinMaterial)
+                .background(theme.surface.opacity(0.35))
+                .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
+                        .strokeBorder(.white.opacity(0.14), lineWidth: 1)
+                )
+                .shadow(color: (theme.glow ?? .clear).opacity(0.35), radius: 18, x: 0, y: 8)
+        } else {
+            content
+                .background(theme.surface)
+                .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
+                .shadow(color: .black.opacity(0.06), radius: 12, x: 0, y: 6)
+        }
     }
 }
 
@@ -191,6 +234,7 @@ struct PrimaryButtonStyle: ButtonStyle {
             .padding(.vertical, 14)
             .background(theme.accent)
             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .shadow(color: (theme.glow ?? .clear).opacity(0.5), radius: 14, x: 0, y: 6)
             .scaleEffect(configuration.isPressed ? 0.97 : 1)
             .animation(.spring(response: 0.25, dampingFraction: 0.7), value: configuration.isPressed)
     }
