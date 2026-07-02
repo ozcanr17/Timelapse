@@ -21,6 +21,10 @@ struct ProjectDetailView: View {
             VStack(alignment: .leading, spacing: 20) {
                 header
 
+                if !project.sortedEntries.isEmpty {
+                    statsRow
+                }
+
                 if project.sortedEntries.count >= 2 {
                     Button {
                         isExporting = true
@@ -81,6 +85,27 @@ struct ProjectDetailView: View {
         }
         .sheet(isPresented: $isExporting) {
             TimelapseExportSheet(project: project)
+        }
+    }
+
+    private var statsRow: some View {
+        let dates = project.sortedEntries.map(\.capturedAt)
+        return HStack(spacing: 12) {
+            StatTile(
+                icon: "flame.fill",
+                value: "\(ActivitySummary.streak(capturedDates: dates))",
+                label: "Gün serisi"
+            )
+            StatTile(
+                icon: "photo.stack",
+                value: "\(dates.count)",
+                label: "Toplam kare"
+            )
+            StatTile(
+                icon: "calendar",
+                value: "\(ActivitySummary.daysRunning(firstCapture: dates.first))",
+                label: "Gündür sürüyor"
+            )
         }
     }
 
@@ -149,6 +174,32 @@ struct ProjectDetailView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.top, 50)
+    }
+}
+
+private struct StatTile: View {
+    let icon: String
+    let value: String
+    let label: String
+
+    @Environment(\.theme) private var theme
+
+    var body: some View {
+        VStack(spacing: 6) {
+            Image(systemName: icon)
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(theme.accent)
+            Text(value)
+                .font(Theme.stamp(20, weight: .bold))
+                .foregroundStyle(theme.ink)
+            Text(label)
+                .font(Theme.caption(11))
+                .foregroundStyle(theme.inkMuted)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 14)
+        .background(theme.surface)
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 }
 

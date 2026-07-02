@@ -26,6 +26,11 @@ struct ProjectListView: View {
                 EmptyProjectsView()
             } else {
                 List {
+                    ActivityHeroCard(projects: projects)
+                        .listRowSeparator(.hidden)
+                        .listRowBackground(Color.clear)
+                        .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 10, trailing: 16))
+
                     ForEach(projects) { project in
                         ProjectCard(project: project)
                             .background(
@@ -93,6 +98,86 @@ struct ProjectListView: View {
         for index in offsets {
             try? repository.deleteProject(projects[index])
         }
+    }
+}
+
+private struct ActivityHeroCard: View {
+    let projects: [Project]
+
+    @Environment(\.theme) private var theme
+
+    private var capturedDates: [Date] {
+        projects.flatMap { ($0.entries ?? []).map(\.capturedAt) }
+    }
+
+    private var counts: [Int] {
+        ActivitySummary.dailyCounts(capturedDates: capturedDates)
+    }
+
+    private var weekTotal: Int {
+        counts.reduce(0, +)
+    }
+
+    private var dueCount: Int {
+        projects.filter { $0.isCaptureDue() }.count
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("BU HAFTA")
+                        .font(Theme.caption(11))
+                        .foregroundStyle(theme.inkMuted)
+                        .tracking(1.2)
+                    (
+                        Text("\(weekTotal)")
+                            .font(Theme.stamp(32, weight: .bold))
+                            .foregroundStyle(theme.ink)
+                        +
+                        Text(" çekim")
+                            .font(Theme.headline(15))
+                            .foregroundStyle(theme.inkMuted)
+                    )
+                }
+                Spacer()
+                WeeklyBars(counts: counts)
+            }
+
+            if dueCount > 0 {
+                Label("Bugün \(dueCount) projede çekim zamanı", systemImage: "bell.fill")
+                    .font(Theme.caption(12))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(theme.accent, in: Capsule())
+            } else {
+                Label("Bugün için her şey tamam", systemImage: "checkmark.circle.fill")
+                    .font(Theme.caption(12))
+                    .foregroundStyle(theme.secondary)
+            }
+        }
+        .padding(18)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .cardStyle()
+    }
+}
+
+private struct WeeklyBars: View {
+    let counts: [Int]
+
+    @Environment(\.theme) private var theme
+
+    var body: some View {
+        let maxCount = max(counts.max() ?? 1, 1)
+        HStack(alignment: .bottom, spacing: 5) {
+            ForEach(Array(counts.enumerated()), id: \.offset) { _, count in
+                RoundedRectangle(cornerRadius: 3, style: .continuous)
+                    .fill(count > 0 ? AnyShapeStyle(theme.accent) : AnyShapeStyle(theme.inkMuted.opacity(0.18)))
+                    .frame(width: 10, height: max(8, 52 * CGFloat(count) / CGFloat(maxCount)))
+            }
+        }
+        .frame(height: 56, alignment: .bottom)
     }
 }
 

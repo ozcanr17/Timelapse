@@ -251,10 +251,15 @@ private struct AlignmentGuideOverlay: View {
                 .stroke(.white.opacity(0.28), lineWidth: 1)
 
             if showsSilhouette {
-                HeadSilhouetteShape()
+                HeadGuideShape()
                     .stroke(
-                        .white.opacity(0.55),
-                        style: StrokeStyle(lineWidth: 2, lineCap: .round, dash: [8, 7])
+                        .white.opacity(0.6),
+                        style: StrokeStyle(lineWidth: 2.5, lineCap: .round, lineJoin: .round)
+                    )
+                HeadGuideDashesShape()
+                    .stroke(
+                        .white.opacity(0.4),
+                        style: StrokeStyle(lineWidth: 1.5, lineCap: .round, dash: [6, 6])
                     )
             } else {
                 CenterCrossShape()
@@ -263,6 +268,17 @@ private struct AlignmentGuideOverlay: View {
         }
         .allowsHitTesting(false)
     }
+}
+
+private func headGuideBox(in rect: CGRect) -> CGRect {
+    let width = rect.width * 0.58
+    let height = width * 1.3
+    return CGRect(
+        x: rect.midX - width / 2,
+        y: rect.height * 0.40 - height / 2,
+        width: width,
+        height: height
+    )
 }
 
 private struct ThirdsGridShape: Shape {
@@ -278,22 +294,48 @@ private struct ThirdsGridShape: Shape {
     }
 }
 
-private struct HeadSilhouetteShape: Shape {
+private struct HeadGuideShape: Shape {
     func path(in rect: CGRect) -> Path {
-        let w = rect.width
-        let h = rect.height
+        let box = headGuideBox(in: rect)
+        func pt(_ x: CGFloat, _ y: CGFloat) -> CGPoint {
+            CGPoint(x: box.minX + x * box.width, y: box.minY + y * box.height)
+        }
+
         var path = Path()
-        path.addEllipse(in: CGRect(x: 0.32 * w, y: 0.20 * h, width: 0.36 * w, height: 0.32 * h))
-        path.move(to: CGPoint(x: 0.06 * w, y: 1.02 * h))
-        path.addQuadCurve(
-            to: CGPoint(x: 0.38 * w, y: 0.585 * h),
-            control: CGPoint(x: 0.13 * w, y: 0.62 * h)
-        )
-        path.move(to: CGPoint(x: 0.62 * w, y: 0.585 * h))
-        path.addQuadCurve(
-            to: CGPoint(x: 0.94 * w, y: 1.02 * h),
-            control: CGPoint(x: 0.87 * w, y: 0.62 * h)
-        )
+        path.move(to: pt(0.5, 0.76))
+        path.addCurve(to: pt(0.77, 0.42), control1: pt(0.67, 0.73), control2: pt(0.74, 0.58))
+        path.addCurve(to: pt(0.5, 0.03), control1: pt(0.82, 0.19), control2: pt(0.70, 0.03))
+        path.addCurve(to: pt(0.23, 0.42), control1: pt(0.30, 0.03), control2: pt(0.18, 0.19))
+        path.addCurve(to: pt(0.5, 0.76), control1: pt(0.26, 0.58), control2: pt(0.33, 0.73))
+
+        path.move(to: pt(0.78, 0.40))
+        path.addCurve(to: pt(0.77, 0.57), control1: pt(0.89, 0.37), control2: pt(0.87, 0.58))
+        path.move(to: pt(0.22, 0.40))
+        path.addCurve(to: pt(0.23, 0.57), control1: pt(0.11, 0.37), control2: pt(0.13, 0.58))
+
+        path.move(to: pt(0.61, 0.72))
+        path.addCurve(to: pt(0.64, 1.0), control1: pt(0.61, 0.83), control2: pt(0.62, 0.93))
+        path.move(to: pt(0.39, 0.72))
+        path.addCurve(to: pt(0.36, 1.0), control1: pt(0.39, 0.83), control2: pt(0.38, 0.93))
+
+        return path
+    }
+}
+
+private struct HeadGuideDashesShape: Shape {
+    func path(in rect: CGRect) -> Path {
+        let box = headGuideBox(in: rect)
+        func pt(_ x: CGFloat, _ y: CGFloat) -> CGPoint {
+            CGPoint(x: box.minX + x * box.width, y: box.minY + y * box.height)
+        }
+
+        var path = Path()
+        path.move(to: pt(0.5, -0.06))
+        path.addLine(to: pt(0.5, 1.04))
+
+        path.move(to: pt(0.18, 0.46))
+        path.addQuadCurve(to: pt(0.82, 0.46), control: pt(0.5, 0.38))
+
         return path
     }
 }
