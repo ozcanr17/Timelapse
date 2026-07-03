@@ -10,18 +10,26 @@ enum AppModelContainer {
     private static let schema = Schema([Project.self, Entry.self])
 
     /// Üretim: yerel diskte + kullanıcının özel iCloud'una (CloudKit) otomatik senkron.
-    /// `.automatic`, projedeki iCloud capability'sini kullanır. Belirli bir container'a
-    /// sabitlemek istersek `.private("iCloud.com.ridvan.timelapse")` da yazabiliriz.
+    /// CloudKit kurulamazsa (iCloud hesabı yok, container erişilemiyor vb.) uygulama
+    /// çökmez; yerel-only depoya düşer.
     static func makeProduction() -> ModelContainer {
-        let configuration = ModelConfiguration(
+        let cloudConfiguration = ModelConfiguration(
+            schema: schema,
+            isStoredInMemoryOnly: false,
+            cloudKitDatabase: .automatic
+        )
+        if let container = try? ModelContainer(for: schema, configurations: [cloudConfiguration]) {
+            return container
+        }
+
+        let localConfiguration = ModelConfiguration(
             schema: schema,
             isStoredInMemoryOnly: false,
             cloudKitDatabase: .none
         )
         do {
-            return try ModelContainer(for: schema, configurations: [configuration])
+            return try ModelContainer(for: schema, configurations: [localConfiguration])
         } catch {
-            // Container kurulamıyorsa uygulama zaten çalışamaz; erken ve net hata veriyoruz.
             fatalError("Üretim ModelContainer'ı oluşturulamadı: \(error)")
         }
     }
