@@ -1,0 +1,12 @@
+{
+  "sourceLanguage" : "tr",
+  "strings" : {
+    "NSCameraUsageDescription" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Camera access is needed to take your progress photos." } },
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "Gelişim fotoğraflarını çekmek için kameraya erişim gerekir." } }
+      }
+    }
+  },
+  "version" : "1.0"
+}

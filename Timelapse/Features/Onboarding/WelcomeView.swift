@@ -72,8 +72,8 @@ struct WelcomeView: View {
 
 private struct WelcomeFeatureRow: View {
     let icon: String
-    let title: String
-    let subtitle: String
+    let title: LocalizedStringKey
+    let subtitle: LocalizedStringKey
 
     @Environment(\.theme) private var theme
 

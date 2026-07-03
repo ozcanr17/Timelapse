@@ -137,8 +137,8 @@ struct PaywallView: View {
 
 private struct ProFeatureRow: View {
     let icon: String
-    let title: String
-    let subtitle: String
+    let title: LocalizedStringKey
+    let subtitle: LocalizedStringKey
 
     var body: some View {
         HStack(spacing: 14) {

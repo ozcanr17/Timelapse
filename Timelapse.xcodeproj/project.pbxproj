@@ -189,9 +189,10 @@
 				};
 			};
 			buildConfigurationList = F1C4FE8D2FF58B0500294B17 /* Build configuration list for PBXProject "Timelapse" */;
-			developmentRegion = en;
+			developmentRegion = tr;
 			hasScannedForEncodings = 0;
 			knownRegions = (
+				tr,
 				en,
 				Base,
 			);

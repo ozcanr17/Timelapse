@@ -47,7 +47,7 @@ final class AddProjectViewModel {
             )
             return true
         } catch {
-            errorMessage = "Proje kaydedilemedi: \(error.localizedDescription)"
+            errorMessage = String(localized: "Proje kaydedilemedi: \(error.localizedDescription)")
             return false
         }
     }

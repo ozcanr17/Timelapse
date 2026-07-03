@@ -30,7 +30,7 @@ final class PaywallViewModel {
         do {
             return try await store.purchase(package)
         } catch {
-            errorMessage = "Satın alma tamamlanamadı: \(error.localizedDescription)"
+            errorMessage = String(localized: "Satın alma tamamlanamadı: \(error.localizedDescription)")
             return false
         }
     }
@@ -40,7 +40,7 @@ final class PaywallViewModel {
         defer { isPurchasing = false }
         await store.restore()
         if !store.isPro {
-            errorMessage = "Geri yüklenecek bir abonelik bulunamadı."
+            errorMessage = String(localized: "Geri yüklenecek bir abonelik bulunamadı.")
         }
     }
 }

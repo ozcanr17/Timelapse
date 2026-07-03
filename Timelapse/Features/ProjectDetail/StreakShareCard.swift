@@ -60,7 +60,7 @@ struct StreakShareCard: View {
 
 private struct ShareStatColumn: View {
     let value: String
-    let label: String
+    let label: LocalizedStringKey
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {

@@ -9,6 +9,7 @@ final class TimelapseUITests: XCTestCase {
     @MainActor
     func testFullJourney() throws {
         let app = XCUIApplication()
+        app.launchArguments += ["-AppleLanguages", "(tr)", "-AppleLocale", "tr_TR"]
         app.launch()
 
         let startButton = app.buttons["Başla"]

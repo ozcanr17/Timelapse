@@ -23,7 +23,7 @@ final class TimelapseExportViewModel {
     func export(frames: [Data], isPro: Bool) async {
         guard phase != .rendering else { return }
         guard frames.count >= 2 else {
-            phase = .failed("Timelapse için en az 2 çekim gerekli.")
+            phase = .failed(String(localized: "Timelapse için en az 2 çekim gerekli."))
             return
         }
         phase = .rendering
@@ -38,7 +38,7 @@ final class TimelapseExportViewModel {
             )
             phase = .finished(url)
         } catch {
-            phase = .failed("Video oluşturulamadı: \(error.localizedDescription)")
+            phase = .failed(String(localized: "Video oluşturulamadı: \(error.localizedDescription)"))
         }
     }
 }

@@ -27,13 +27,13 @@ enum AppTheme: String, CaseIterable, Identifiable {
 
     var displayName: String {
         switch self {
-        case .filmNegative: "Negatif"
-        case .daylight:     "Aydınlık"
-        case .bright:       "Canlı"
+        case .filmNegative: String(localized: "Negatif")
+        case .daylight:     String(localized: "Aydınlık")
+        case .bright:       String(localized: "Canlı")
         case .cyber:        "Cyber"
-        case .darkroom:     "Karanlık Oda"
-        case .fjord:        "Fiyort"
-        case .lavender:     "Lavanta"
+        case .darkroom:     String(localized: "Karanlık Oda")
+        case .fjord:        String(localized: "Fiyort")
+        case .lavender:     String(localized: "Lavanta")
         }
     }
 

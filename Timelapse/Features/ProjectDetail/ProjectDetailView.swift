@@ -222,7 +222,7 @@ struct ProjectDetailView: View {
 private struct StatTile: View {
     let icon: String
     let value: String
-    let label: String
+    let label: LocalizedStringKey
     var isAlive: Bool = false
 
     @Environment(\.theme) private var theme

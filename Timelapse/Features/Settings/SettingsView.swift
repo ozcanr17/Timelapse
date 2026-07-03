@@ -90,6 +90,16 @@ struct SettingsView: View {
             }
 
             Section("Uygulama") {
+                Button {
+                    if let url = URL(string: UIApplication.openSettingsURLString) {
+                        openURL(url)
+                    }
+                } label: {
+                    LabeledContent("Uygulama dili") {
+                        Text(currentLanguageName).font(Theme.caption(13))
+                    }
+                }
+                .foregroundStyle(theme.ink)
                 Button("Karşılama ekranını göster") {
                     showWelcome = true
                 }
@@ -147,6 +157,11 @@ struct SettingsView: View {
 
     private var appVersion: String {
         Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0"
+    }
+
+    private var currentLanguageName: String {
+        let code = Locale.current.language.languageCode?.identifier ?? "tr"
+        return code == "tr" ? "Türkçe" : "English"
     }
 }
 

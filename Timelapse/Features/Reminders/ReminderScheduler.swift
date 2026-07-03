@@ -29,8 +29,8 @@ final class ReminderScheduler {
             ) else { continue }
 
             let content = UNMutableNotificationContent()
-            content.title = "Çekim zamanı"
-            content.body = "\(project.title) için bugünkü kareni ekle."
+            content.title = String(localized: "Çekim zamanı")
+            content.body = String(localized: "\(project.title) için bugünkü kareni ekle.")
             content.sound = .default
 
             let components = Calendar.current.dateComponents(
