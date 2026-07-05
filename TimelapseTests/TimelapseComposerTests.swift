@@ -16,8 +16,12 @@ final class TimelapseComposerTests: XCTestCase {
         return image.jpegData(compressionQuality: 0.9)!
     }
 
+    private func frame(_ index: Int) -> TimelapseFrame {
+        TimelapseFrame(imageData: frameData(index), capturedAt: Date(timeIntervalSince1970: Double(index)))
+    }
+
     func test_videoDosyasiOlusur_veSuresiKareSayisinaUyar() async throws {
-        let frames = (0..<8).map(frameData)
+        let frames = (0..<8).map(frame)
         let settings = TimelapseExportSettings(
             renderSize: CGSize(width: 240, height: 320),
             framesPerSecond: 8,
@@ -35,7 +39,7 @@ final class TimelapseComposerTests: XCTestCase {
     func test_ikidenAzKare_hataVerir() async {
         do {
             _ = try await TimelapseComposer().makeVideo(
-                from: [frameData(0)],
+                from: [frame(0)],
                 settings: .current(isPro: false),
                 onProgress: { _ in }
             )
@@ -48,7 +52,10 @@ final class TimelapseComposerTests: XCTestCase {
     func test_bozukKareVerisi_hataVerir() async {
         do {
             _ = try await TimelapseComposer().makeVideo(
-                from: [Data([0x00]), Data([0x01])],
+                from: [
+                    TimelapseFrame(imageData: Data([0x00]), capturedAt: Date(timeIntervalSince1970: 0)),
+                    TimelapseFrame(imageData: Data([0x01]), capturedAt: Date(timeIntervalSince1970: 1))
+                ],
                 settings: .current(isPro: false),
                 onProgress: { _ in }
             )
@@ -81,9 +88,16 @@ final class TimelapseExportSettingsTests: XCTestCase {
     }
 
     func test_hizSeciminiKareHizinaUygular() {
+        XCTAssertEqual(TimelapseExportSettings.current(isPro: false, speed: .quarter).framesPerSecond, 2)
         XCTAssertEqual(TimelapseExportSettings.current(isPro: false, speed: .slow).framesPerSecond, 4)
         XCTAssertEqual(TimelapseExportSettings.current(isPro: true, speed: .fast).framesPerSecond, 16)
         XCTAssertEqual(TimelapseExportSettings.current(isPro: true, speed: .turbo).framesPerSecond, 24)
+    }
+
+    func test_besHizSecenegiVar() {
+        XCTAssertEqual(TimelapseSpeed.allCases.count, 5)
+        XCTAssertEqual(TimelapseSpeed.allCases.map(\.displayName),
+                       ["0.25×", "0.5×", "1×", "2×", "3×"])
     }
 
     func test_hizDegisikligi_cozunurlukVeFiligraniEtkilemez() {

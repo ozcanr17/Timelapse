@@ -16,6 +16,7 @@ struct SettingsView: View {
     @AppStorage(ReminderScheduler.hourKey) private var reminderHour = 19
     @AppStorage(PremiumFeature.coupleMode.preferenceKey!) private var coupleModeEnabled = false
     @AppStorage(PremiumFeature.smartAlignment.preferenceKey!) private var smartAlignmentEnabled = false
+    @AppStorage(PremiumFeature.cloudBackup.preferenceKey!) private var cloudBackupEnabled = false
 
     @State private var auth = AuthService()
     @State private var showPaywall = false
@@ -87,10 +88,17 @@ struct SettingsView: View {
                     isOn: $smartAlignmentEnabled,
                     isPro: store.isPro
                 ) { showPaywall = true }
+                ProToggleRow(
+                    feature: .cloudBackup,
+                    isOn: $cloudBackupEnabled,
+                    isPro: store.isPro
+                ) { showPaywall = true }
             } header: {
                 Text("Pro Özellikler")
             } footer: {
-                if !store.isPro {
+                if store.isPro {
+                    Text("iCloud yedekleme değişikliği uygulamayı yeniden başlatınca geçerli olur.")
+                } else {
                     Text("Bu özellikler Timelapse Pro ile açılır.")
                 }
             }

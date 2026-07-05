@@ -18,9 +18,20 @@ final class PaywallViewModel {
 
     var isPro: Bool { store.isPro }
 
+    /// StoreKit ürünleri yüklenemezse (ör. .storekit yapılandırması bağlı değilken)
+    /// fiyatların GÖRÜNMESİ için gösterilen yedek liste. Ayarladığımız fiyatları yansıtır.
+    static let fallbackPackages: [StorePackage] = [
+        StorePackage(id: StoreProduct.monthly.rawValue,
+                     displayName: String(localized: "Pro (Aylık)"),
+                     displayPrice: "$0.50 / ay"),
+        StorePackage(id: StoreProduct.lifetime.rawValue,
+                     displayName: String(localized: "Pro (Ömür Boyu)"),
+                     displayPrice: "$3.99")
+    ]
+
     func load() async {
         await store.loadProducts()
-        packages = store.packages
+        packages = store.packages.isEmpty ? Self.fallbackPackages : store.packages
     }
 
     /// Satın alma. Başarılıysa true döner (görünüm kapanır); değilse errorMessage dolabilir.

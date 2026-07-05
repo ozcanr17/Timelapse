@@ -9,17 +9,27 @@ enum AppModelContainer {
     /// buraya da eklemeyi unutmamamız gerekir.
     private static let schema = Schema([Project.self, Entry.self])
 
-    /// Üretim: yerel diskte + kullanıcının özel iCloud'una (CloudKit) otomatik senkron.
-    /// CloudKit kurulamazsa (iCloud hesabı yok, container erişilemiyor vb.) uygulama
+    /// iCloud yedekleme, kullanıcının açık tercihine bağlı bir Pro özelliğidir. Anahtar
+    /// PremiumFeature.cloudBackup.preferenceKey ile aynıdır; tercih yalnızca Pro
+    /// kullanıcı tarafından Ayarlar'dan açılabilir. Değişiklik bir sonraki açılışta geçerli olur.
+    static var iCloudBackupEnabled: Bool {
+        guard let key = PremiumFeature.cloudBackup.preferenceKey else { return false }
+        return UserDefaults.standard.bool(forKey: key)
+    }
+
+    /// Üretim: yerel diskte saklar. Kullanıcı iCloud yedeklemeyi (Pro) açtıysa ayrıca
+    /// kişisel iCloud'una (CloudKit) otomatik senkron eder. CloudKit kurulamazsa uygulama
     /// çökmez; yerel-only depoya düşer.
     static func makeProduction() -> ModelContainer {
-        let cloudConfiguration = ModelConfiguration(
-            schema: schema,
-            isStoredInMemoryOnly: false,
-            cloudKitDatabase: .automatic
-        )
-        if let container = try? ModelContainer(for: schema, configurations: [cloudConfiguration]) {
-            return container
+        if iCloudBackupEnabled {
+            let cloudConfiguration = ModelConfiguration(
+                schema: schema,
+                isStoredInMemoryOnly: false,
+                cloudKitDatabase: .automatic
+            )
+            if let container = try? ModelContainer(for: schema, configurations: [cloudConfiguration]) {
+                return container
+            }
         }
 
         let localConfiguration = ModelConfiguration(

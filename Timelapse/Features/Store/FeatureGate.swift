@@ -45,6 +45,7 @@ enum PremiumFeature {
         switch self {
         case .smartAlignment: "feature.smartAlignment.enabled"
         case .coupleMode:     "feature.coupleMode.enabled"
+        case .cloudBackup:    "feature.cloudBackup.enabled"
         default:              nil
         }
     }

@@ -50,6 +50,12 @@
         }
       }
     },
+    "Admin — Pro etkin" : {
+
+    },
+    "Admin olarak giriş yapıldı — Pro açıldı. 👑" : {
+
+    },
     "Akıllı hizalama" : {
       "localizations" : {
         "en" : {
@@ -59,6 +65,9 @@
           }
         }
       }
+    },
+    "Apple ID ile girildi" : {
+
     },
     "Ayarlar" : {
       "localizations" : {
@@ -149,6 +158,9 @@
           }
         }
       }
+    },
+    "Bu özellikler Timelapse Pro ile açılır." : {
+
     },
     "Bugün" : {
       "localizations" : {
@@ -260,6 +272,9 @@
         }
       }
     },
+    "Çıkış yap" : {
+
+    },
     "Çocuk" : {
       "localizations" : {
         "en" : {
@@ -301,6 +316,7 @@
       }
     },
     "EN AVANTAJLI" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -360,6 +376,9 @@
         }
       }
     },
+    "Geliştirici" : {
+
+    },
     "Geri yüklenecek bir abonelik bulunamadı." : {
       "localizations" : {
         "en" : {
@@ -379,6 +398,12 @@
           }
         }
       }
+    },
+    "Giriş yapıldı. Bu hesap admin değil; Pro açılmadı." : {
+
+    },
+    "Gizli test arka kapısı. Yalnızca sen görürsün." : {
+
     },
     "Görüntüle" : {
       "localizations" : {
@@ -510,6 +535,9 @@
         }
       }
     },
+    "Hesap" : {
+
+    },
     "Hikayeni en iyi haliyle anlat" : {
       "localizations" : {
         "en" : {
@@ -519,6 +547,9 @@
           }
         }
       }
+    },
+    "Hız" : {
+
     },
     "iCloud yedekleme" : {
       "localizations" : {
@@ -760,6 +791,18 @@
         }
       }
     },
+    "PRO" : {
+
+    },
+    "Pro Özellikler" : {
+
+    },
+    "Pro'ya Geç" : {
+
+    },
+    "Pro'yu Test Et (ödeme yok)" : {
+
+    },
     "Proje" : {
       "localizations" : {
         "en" : {
@@ -910,6 +953,9 @@
         }
       }
     },
+    "TEK SEFERLİK" : {
+
+    },
     "Tekrar dene" : {
       "localizations" : {
         "en" : {
@@ -1012,6 +1058,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "TOTAL FRAMES"
+          }
+        }
+      }
+    },
+    "Tüm Pro özelliklerini satın almadan aç" : {
+
+    },
+    "Ücretsiz sınır doldu — devam için Pro" : {
+
+    },
+    "Ücretsiz: %lld/%lld kare" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Ücretsiz: %1$lld/%2$lld kare"
           }
         }
       }

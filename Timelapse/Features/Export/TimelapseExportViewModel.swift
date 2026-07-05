@@ -20,7 +20,12 @@ final class TimelapseExportViewModel {
         self.composer = composer
     }
 
-    func export(frames: [Data], isPro: Bool, speed: TimelapseSpeed = .normal) async {
+    func export(
+        frames: [TimelapseFrame],
+        isPro: Bool,
+        speed: TimelapseSpeed = .normal,
+        overlay: TimelapseOverlayOptions = TimelapseOverlayOptions()
+    ) async {
         guard phase != .rendering else { return }
         guard frames.count >= 2 else {
             phase = .failed(String(localized: "Timelapse için en az 2 çekim gerekli."))
@@ -31,7 +36,7 @@ final class TimelapseExportViewModel {
         do {
             let url = try await composer.makeVideo(
                 from: frames,
-                settings: .current(isPro: isPro, speed: speed),
+                settings: .current(isPro: isPro, speed: speed, overlay: overlay),
                 onProgress: { [weak self] value in
                     Task { @MainActor in self?.progress = value }
                 }
