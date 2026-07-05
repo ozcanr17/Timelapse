@@ -280,7 +280,7 @@ struct SettingsView: View {
                 adminSignInMessage = String(localized: "Giriş yapıldı. Bu hesap admin değil; Pro açılmadı.")
             }
         case .failure:
-            adminSignInMessage = nil
+            adminSignInMessage = String(localized: "Apple ile giriş şu an kullanılamıyor (ücretli Apple Developer hesabı gerekir). Test için sürüm numarasına 7 kez dokunup geliştirici arka kapısını kullan.")
         }
     }
 
