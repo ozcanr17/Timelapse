@@ -12,6 +12,8 @@ struct SettingsView: View {
     @AppStorage(AppTheme.storageKey) private var themeID = AppTheme.filmNegative.rawValue
     @AppStorage(ReminderScheduler.enabledKey) private var remindersEnabled = false
     @AppStorage(ReminderScheduler.hourKey) private var reminderHour = 19
+    @AppStorage(PremiumFeature.coupleMode.preferenceKey!) private var coupleModeEnabled = false
+    @AppStorage(PremiumFeature.smartAlignment.preferenceKey!) private var smartAlignmentEnabled = false
 
     @State private var showPaywall = false
     @State private var showWelcome = false
@@ -56,6 +58,25 @@ struct SettingsView: View {
                 }
                 .font(Theme.body(15))
                 .foregroundStyle(theme.secondary)
+            }
+
+            Section {
+                ProToggleRow(
+                    feature: .coupleMode,
+                    isOn: $coupleModeEnabled,
+                    isPro: store.isPro
+                ) { showPaywall = true }
+                ProToggleRow(
+                    feature: .smartAlignment,
+                    isOn: $smartAlignmentEnabled,
+                    isPro: store.isPro
+                ) { showPaywall = true }
+            } header: {
+                Text("Pro Özellikler")
+            } footer: {
+                if !store.isPro {
+                    Text("Bu özellikler Timelapse Pro ile açılır.")
+                }
             }
 
             Section("Görünüm") {
@@ -162,6 +183,58 @@ struct SettingsView: View {
     private var currentLanguageName: String {
         let code = Locale.current.language.languageCode?.identifier ?? "tr"
         return code == "tr" ? "Türkçe" : "English"
+    }
+}
+
+/// Pro'ya bağlı bir özelliğin ayarlar satırı. Pro kullanıcıda gerçek bir anahtar (toggle),
+/// ücretsiz kullanıcıda ise pasif (inactive) görünen, dokununca paywall açan kilitli satır.
+private struct ProToggleRow: View {
+    let feature: PremiumFeature
+    @Binding var isOn: Bool
+    let isPro: Bool
+    let onLockedTap: () -> Void
+
+    @Environment(\.theme) private var theme
+
+    var body: some View {
+        if isPro {
+            Toggle(isOn: $isOn) { label }
+                .tint(theme.accent)
+        } else {
+            Button(action: onLockedTap) {
+                HStack {
+                    label
+                    Spacer()
+                    proBadge
+                }
+            }
+        }
+    }
+
+    private var label: some View {
+        Label {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(feature.title)
+                    .font(Theme.headline(15))
+                    .foregroundStyle(isPro ? theme.ink : theme.inkMuted)
+                Text(feature.subtitle)
+                    .font(Theme.caption(12))
+                    .foregroundStyle(theme.inkMuted)
+            }
+        } icon: {
+            Image(systemName: isPro ? feature.iconName : "lock.fill")
+                .foregroundStyle(isPro ? theme.accent : theme.inkMuted)
+        }
+    }
+
+    private var proBadge: some View {
+        Text("PRO")
+            .font(.system(size: 10, weight: .bold))
+            .foregroundStyle(.white)
+            .padding(.horizontal, 7)
+            .padding(.vertical, 3)
+            .background(theme.accent)
+            .clipShape(Capsule())
     }
 }
 

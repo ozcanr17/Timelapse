@@ -11,6 +11,7 @@ struct TimelapseExportSheet: View {
     @Environment(\.theme) private var theme
     @State private var viewModel = TimelapseExportViewModel()
     @State private var showPaywall = false
+    @State private var speed: TimelapseSpeed = .normal
 
     var body: some View {
         NavigationStack {
@@ -68,6 +69,8 @@ struct TimelapseExportSheet: View {
                 .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
                 .frame(maxHeight: 460)
 
+            speedControl
+
             ShareLink(item: url) {
                 Label("Videoyu Paylaş", systemImage: "square.and.arrow.up")
                     .frame(maxWidth: .infinity)
@@ -85,6 +88,27 @@ struct TimelapseExportSheet: View {
             }
         }
         .padding(20)
+    }
+
+    private var speedControl: some View {
+        VStack(spacing: 8) {
+            HStack {
+                Label("Hız", systemImage: "gauge.with.needle")
+                    .font(Theme.caption(13))
+                    .foregroundStyle(theme.inkMuted)
+                Spacer()
+            }
+            Picker("Hız", selection: $speed) {
+                ForEach(TimelapseSpeed.allCases) { option in
+                    Text(option.displayName).tag(option)
+                }
+            }
+            .pickerStyle(.segmented)
+            .disabled(viewModel.phase == .rendering)
+            .onChange(of: speed) {
+                Task { await export() }
+            }
+        }
     }
 
     private func failedView(_ message: String) -> some View {
@@ -108,7 +132,8 @@ struct TimelapseExportSheet: View {
     private func export() async {
         await viewModel.export(
             frames: project.sortedEntries.compactMap(\.imageData),
-            isPro: store.isPro
+            isPro: store.isPro,
+            speed: speed
         )
     }
 }

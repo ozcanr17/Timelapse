@@ -1,22 +1,53 @@
 import AVFoundation
 import UIKit
 
+/// Timelapse oynatma hızı. Kare hızını (fps) belirler; daha yüksek fps daha hızlı,
+/// akıcı bir video demek. Herkese açık bir özellik — Pro gerektirmez.
+enum TimelapseSpeed: String, CaseIterable, Identifiable {
+    case slow
+    case normal
+    case fast
+    case turbo
+
+    var id: String { rawValue }
+
+    /// Saniyedeki kare sayısı. `normal` mevcut varsayılanı (8 fps) korur.
+    var framesPerSecond: Int32 {
+        switch self {
+        case .slow:   4
+        case .normal: 8
+        case .fast:   16
+        case .turbo:  24
+        }
+    }
+
+    /// Segmentli seçicide gösterilen çarpan etiketi.
+    var displayName: String {
+        switch self {
+        case .slow:   "0.5×"
+        case .normal: "1×"
+        case .fast:   "2×"
+        case .turbo:  "3×"
+        }
+    }
+}
+
 struct TimelapseExportSettings: Equatable {
     let renderSize: CGSize
     let framesPerSecond: Int32
     let includesWatermark: Bool
 
-    static func current(isPro: Bool) -> TimelapseExportSettings {
+    static func current(isPro: Bool, speed: TimelapseSpeed = .normal) -> TimelapseExportSettings {
         if FeatureGate.isUnlocked(.highResExport, isPro: isPro) {
             TimelapseExportSettings(
                 renderSize: CGSize(width: 2160, height: 2880),
-                framesPerSecond: 8,
+                framesPerSecond: speed.framesPerSecond,
                 includesWatermark: false
             )
         } else {
             TimelapseExportSettings(
                 renderSize: CGSize(width: 720, height: 960),
-                framesPerSecond: 8,
+                framesPerSecond: speed.framesPerSecond,
                 includesWatermark: true
             )
         }

@@ -74,4 +74,21 @@ final class TimelapseExportSettingsTests: XCTestCase {
         XCTAssertEqual(settings.renderSize, CGSize(width: 720, height: 960))
         XCTAssertTrue(settings.includesWatermark)
     }
+
+    func test_varsayilanHiz_normaldirVe8fpsdir() {
+        XCTAssertEqual(TimelapseExportSettings.current(isPro: false).framesPerSecond, 8)
+        XCTAssertEqual(TimelapseExportSettings.current(isPro: true).framesPerSecond, 8)
+    }
+
+    func test_hizSeciminiKareHizinaUygular() {
+        XCTAssertEqual(TimelapseExportSettings.current(isPro: false, speed: .slow).framesPerSecond, 4)
+        XCTAssertEqual(TimelapseExportSettings.current(isPro: true, speed: .fast).framesPerSecond, 16)
+        XCTAssertEqual(TimelapseExportSettings.current(isPro: true, speed: .turbo).framesPerSecond, 24)
+    }
+
+    func test_hizDegisikligi_cozunurlukVeFiligraniEtkilemez() {
+        let free = TimelapseExportSettings.current(isPro: false, speed: .turbo)
+        XCTAssertEqual(free.renderSize, CGSize(width: 720, height: 960))
+        XCTAssertTrue(free.includesWatermark)
+    }
 }
