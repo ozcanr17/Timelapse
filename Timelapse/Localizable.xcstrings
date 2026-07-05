@@ -70,6 +70,9 @@
         }
       }
     },
+    "Akıllı hizalama açık — özne karelere sabitlendi" : {
+
+    },
     "Apple ID ile girildi" : {
 
     },
@@ -130,6 +133,9 @@
       }
     },
     "Bindirmeler" : {
+
+    },
+    "Birlikte Çekim" : {
 
     },
     "Birlikte kaydedin" : {
@@ -403,6 +409,7 @@
       }
     },
     "Ghost hizalama" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -787,6 +794,7 @@
 
     },
     "Önceki kareyi şablon olarak gör, hep aynı açıyı yakala" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -836,6 +844,9 @@
 
     },
     "Pro Özellikler" : {
+
+    },
+    "Pro'da özneyi otomatik hizala; kareler pürüzsüz aksın" : {
 
     },
     "Pro'ya Geç" : {

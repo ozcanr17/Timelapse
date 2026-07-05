@@ -131,7 +131,7 @@ enum Theme {
         case .plant:        Color(light: "4C7A52", dark: "8FC79A")
         case .hairAndBeard: Color(light: "8A6A4E", dark: "C9A97D")
         case .pet:          Color(light: "5B7FBF", dark: "94B4F2")
-        case .captureTogether: Color(light: "C2566B", dark: "F191A6")
+        case .coupleMode:   Color(light: "C2566B", dark: "F191A6")
         case .other:        Color(light: "6E675E", dark: "B3ABA0")
         }
     }
@@ -143,7 +143,7 @@ enum Theme {
         case .plant:        "leaf.fill"
         case .hairAndBeard: "scissors"
         case .pet:          "pawprint.fill"
-        case .captureTogether: "person.2.fill"
+        case .coupleMode:   "person.2.fill"
         case .other:        "sparkles"
         }
     }

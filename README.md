@@ -143,8 +143,9 @@ Free users get a genuinely useful app; Pro removes limits and unlocks premium ca
 - Unlimited projects & unlimited photos per project.
 - 4K (2160×2880) export with **no watermark** (app mark becomes optional & positionable).
 - iCloud backup (opt-in).
-- Smart Alignment — real, automatic subject alignment at export: `FrameAligner` uses the **Vision** framework (`VNDetectFaceRectanglesRequest`) to find the face in each frame, and the composer locks it to a consistent position and size across the whole timelapse. Frames without a detected face fall back to aspect-fill.
-- Capture Together — a dedicated **project category**: two people are photographed in the same frame with a split framing guide, and a partner can be invited via the share sheet. (Cross-device sync of two phones would additionally require iCloud sharing / a paid account.)
+- Smart Alignment — real, automatic subject alignment at export. `FrameAligner` uses **Vision**: `VNDetectFaceRectanglesRequest` (with roll) to lock a face to a consistent position, size **and angle** (it rotates frames to level the subject); when there's no face it falls back to attention-based **saliency** (`VNGenerateAttentionBasedSaliencyImageRequest`) so pets, plants and objects align too. Frames with no subject fall back to aspect-fill.
+- **Couple Mode** — a project category ("Çift Modu"): two people are photographed in the same frame with an on-screen split guide.
+- **Capture Together** — invite friends to collaborate on any project via the share sheet (marks the project collaborative). Live two-device sync additionally needs iCloud sharing / a paid account.
 
 ### Products & pricing
 | Product ID | Type | Price |

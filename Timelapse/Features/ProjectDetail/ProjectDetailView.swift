@@ -41,6 +41,8 @@ struct ProjectDetailView: View {
                     freeQuotaBadge
                 }
 
+                captureCTA
+
                 if project.sortedEntries.count >= 2 {
                     Button {
                         isExporting = true
@@ -97,29 +99,14 @@ struct ProjectDetailView: View {
                     }
                 }
             }
-            if project.isCoupleMode {
-                ToolbarItem(placement: .primaryAction) {
-                    Button {
-                        inviteTapped()
-                    } label: {
-                        Image(systemName: "person.badge.plus")
-                            .foregroundStyle(accent)
-                    }
-                    .accessibilityIdentifier("inviteButton")
-                }
-            }
             ToolbarItem(placement: .primaryAction) {
                 Button {
-                    if canAddEntry {
-                        isCapturing = true
-                    } else {
-                        showPaywall = true
-                    }
+                    inviteTapped()
                 } label: {
-                    Image(systemName: "camera.fill")
+                    Image(systemName: project.isCollaborative ? "person.2.fill" : "person.badge.plus")
                         .foregroundStyle(accent)
                 }
-                .accessibilityIdentifier("captureButton")
+                .accessibilityIdentifier("inviteButton")
             }
         }
         .fullScreenCover(isPresented: $isCapturing) {
@@ -142,17 +129,61 @@ struct ProjectDetailView: View {
         }
     }
 
-    private var inviteText: String {
-        String(localized: "Timelapse'te \"\(project.title)\" projesinde birlikte kayıt tutalım! Uygulamayı indirip aynı anı birlikte yakalayalım. 📸")
+    /// Bugünün karesini çekmek için ana çağrı — kamerayı prim konumda, büyük bir
+    /// düğmeyle açar. Uygulamanın asıl amacı bu olduğundan öne çıkarıyoruz.
+    private var captureCTA: some View {
+        let due = project.isCaptureDue()
+        return Button {
+            if canAddEntry { isCapturing = true } else { showPaywall = true }
+        } label: {
+            HStack(spacing: 14) {
+                ZStack {
+                    Circle().fill(.white.opacity(0.22)).frame(width: 46, height: 46)
+                    Image(systemName: "camera.fill").font(.system(size: 20, weight: .bold))
+                }
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(due ? "Bugünün karesini çek" : "Yeni kare ekle")
+                        .font(Theme.headline(18))
+                    Text(canAddEntry ? "Sıradaki: No. \(liveEntries.count + 1)" : "Ücretsiz sınır doldu — Pro")
+                        .font(Theme.caption(12)).opacity(0.9)
+                }
+                Spacer()
+                Image(systemName: "chevron.right").font(.system(size: 15, weight: .bold)).opacity(0.75)
+            }
+            .foregroundStyle(.white)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 18)
+            .background(
+                LinearGradient(colors: [accent, accent.opacity(0.78)], startPoint: .leading, endPoint: .trailing)
+            )
+            .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
+            .shadow(color: accent.opacity(0.4), radius: 14, x: 0, y: 7)
+            .overlay(alignment: .topTrailing) {
+                if due {
+                    Circle().fill(.white).frame(width: 10, height: 10).padding(12)
+                }
+            }
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("captureButton")
     }
 
-    /// Birlikte Çekim projesinde partneri davet etmek için sistem paylaşım sayfasını açar.
+    private var inviteText: String {
+        String(localized: "Timelapse'te \"\(project.title)\" projesinde birlikte çekim yapalım! Uygulamayı indirip aynı hikâyeyi birlikte biriktirelim. 📸")
+    }
+
+    /// Birlikte Çekim: arkadaşları davet edip aynı projeye birlikte katkı yapmak için
+    /// sistem paylaşım sayfasını açar (Pro). Ücretsiz kullanıcı paywall görür.
     private func inviteTapped() {
-        if store.isPro {
-            showInvite = true
-        } else {
+        guard store.isPro else {
             showPaywall = true
+            return
         }
+        if !project.isCollaborative {
+            project.isCollaborative = true
+            try? modelContext.save()
+        }
+        showInvite = true
     }
 
     private var freeQuotaBadge: some View {
@@ -262,6 +293,9 @@ struct ProjectDetailView: View {
                 }
                 if project.isCoupleMode {
                     Label("Çift modu", systemImage: "person.2.fill")
+                }
+                if project.isCollaborative {
+                    Label("Birlikte", systemImage: "person.3.fill")
                 }
             }
             .font(Theme.caption(12))

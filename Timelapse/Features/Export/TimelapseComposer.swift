@@ -226,10 +226,10 @@ struct TimelapseComposer: TimelapseComposing {
         return formatter
     }()
 
-    // Akıllı Hizalama hedefi: yüz karenin yatayda ortasına, dikeyde biraz yukarısına ve
-    // sabit bir yüksekliğe oturtulur; böylece özne tüm karelerde aynı yerde durur.
+    // Akıllı Hizalama hedefi: özne karenin yatayda ortasına, dikeyde biraz yukarısına ve
+    // sabit bir yüksekliğe oturtulur; böylece tüm karelerde aynı yerde ve boyutta durur.
     private static let alignTargetCenter = CGPoint(x: 0.5, y: 0.42)
-    private static let alignTargetFaceHeight: CGFloat = 0.34
+    private static let alignTargetHeight: CGFloat = 0.34
 
     private static func composeFrame(
         _ image: UIImage,
@@ -242,17 +242,15 @@ struct TimelapseComposer: TimelapseComposing {
         let format = UIGraphicsImageRendererFormat()
         format.scale = 1
         format.opaque = true
-        let rendered = UIGraphicsImageRenderer(size: size, format: format).image { _ in
+        let rendered = UIGraphicsImageRenderer(size: size, format: format).image { context in
             UIColor.black.setFill()
             UIRectFill(CGRect(origin: .zero, size: size))
 
-            let rect: CGRect
-            if settings.smartAlignment, let anchor, reference != nil {
-                rect = alignedRect(for: image, anchor: anchor, canvas: size)
+            if settings.smartAlignment, let anchor, let reference {
+                drawAligned(image, anchor: anchor, reference: reference, canvas: size, context: context.cgContext)
             } else {
-                rect = aspectFillRect(for: image, canvas: size)
+                image.draw(in: aspectFillRect(for: image, canvas: size))
             }
-            image.draw(in: rect)
 
             drawOverlays(size: size, date: date, settings: settings)
         }
@@ -271,19 +269,26 @@ struct TimelapseComposer: TimelapseComposing {
         )
     }
 
-    /// Yüzü hedef konum ve boyuta getirecek şekilde görseli ölçekleyip kaydırır.
-    private static func alignedRect(for image: UIImage, anchor: FrameAnchor, canvas: CGSize) -> CGRect {
-        let faceHeightPoints = max(anchor.height * image.size.height, 1)
-        let scale = (alignTargetFaceHeight * canvas.height) / faceHeightPoints
-        let drawSize = CGSize(width: image.size.width * scale, height: image.size.height * scale)
-        let faceInScaled = CGPoint(x: anchor.center.x * drawSize.width, y: anchor.center.y * drawSize.height)
+    /// Özneyi hedef konum, boyut VE açıya getirir: ölçekler, döndürür (yüz roll'ü) ve
+    /// kaydırır. Yüzsüz kareler için roll 0'dır (yalnızca konum + boyut hizalanır).
+    private static func drawAligned(
+        _ image: UIImage,
+        anchor: FrameAnchor,
+        reference: FrameAnchor,
+        canvas: CGSize,
+        context: CGContext
+    ) {
+        let subjectHeightPoints = max(anchor.height * image.size.height, 1)
+        let scale = (alignTargetHeight * canvas.height) / subjectHeightPoints
         let target = CGPoint(x: alignTargetCenter.x * canvas.width, y: alignTargetCenter.y * canvas.height)
-        return CGRect(
-            x: target.x - faceInScaled.x,
-            y: target.y - faceInScaled.y,
-            width: drawSize.width,
-            height: drawSize.height
-        )
+        let subjectInImage = CGPoint(x: anchor.center.x * image.size.width, y: anchor.center.y * image.size.height)
+
+        context.saveGState()
+        context.translateBy(x: target.x, y: target.y)          // öznenin geleceği yer
+        context.rotate(by: reference.roll - anchor.roll)        // referansa göre düzelt
+        context.scaleBy(x: scale, y: scale)                     // özneyi sabit boyuta getir
+        image.draw(at: CGPoint(x: -subjectInImage.x, y: -subjectInImage.y))
+        context.restoreGState()
     }
 
     /// Tarih / not / uygulama etiketini seçilen köşelere çizer. Ücretsiz katmanda

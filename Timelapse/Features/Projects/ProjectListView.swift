@@ -12,11 +12,17 @@ struct ProjectListView: View {
     @State private var activeSheet: ActiveSheet?
     @State private var isShowingSettings = false
     @State private var pendingDeletion: [Project] = []
+    @State private var showQuickPick = false
+    @State private var captureTarget: Project?
 
     private enum ActiveSheet: Identifiable {
         case addProject
         case paywall
         var id: Int { hashValue }
+    }
+
+    private var liveProjects: [Project] {
+        projects.filter { !$0.isDeleted }
     }
 
     var body: some View {
@@ -75,6 +81,11 @@ struct ProjectListView: View {
                 .accessibilityIdentifier("addProjectButton")
             }
         }
+        .safeAreaInset(edge: .bottom) {
+            if !liveProjects.isEmpty {
+                homeCaptureButton
+            }
+        }
         .navigationDestination(isPresented: $isShowingSettings) {
             SettingsView()
         }
@@ -85,6 +96,16 @@ struct ProjectListView: View {
             case .paywall:
                 PaywallView(store: store)
             }
+        }
+        .sheet(isPresented: $showQuickPick) {
+            QuickCaptureSheet(projects: liveProjects) { project in
+                beginCapture(project)
+            }
+            .presentationDetents([.medium, .large])
+            .presentationDragIndicator(.visible)
+        }
+        .fullScreenCover(item: $captureTarget) { project in
+            CameraCaptureView(project: project)
         }
         .confirmationDialog(
             "Proje ve içindeki tüm çekimler kalıcı olarak silinsin mi?",
@@ -126,9 +147,110 @@ struct ProjectListView: View {
         }
     }
 
+    /// Ana ekranda öne çıkan çekim düğmesi: uygulamanın asıl amacı. Tek proje varsa
+    /// doğrudan kameraya gider; birden fazlaysa alttan hızlı seçim açılır.
+    private var homeCaptureButton: some View {
+        Button {
+            if liveProjects.count == 1 {
+                beginCapture(liveProjects[0])
+            } else {
+                showQuickPick = true
+            }
+        } label: {
+            HStack(spacing: 10) {
+                Image(systemName: "camera.fill").font(.system(size: 18, weight: .bold))
+                Text("Kare Çek").font(Theme.headline(17))
+            }
+            .foregroundStyle(.white)
+            .padding(.horizontal, 30)
+            .padding(.vertical, 15)
+            .background(Capsule().fill(theme.accent))
+            .shadow(color: theme.accent.opacity(0.45), radius: 14, x: 0, y: 6)
+        }
+        .buttonStyle(.plain)
+        .padding(.bottom, 6)
+        .accessibilityIdentifier("homeCaptureButton")
+    }
+
+    private func beginCapture(_ project: Project) {
+        let count = project.sortedEntries.filter { !$0.isDeleted }.count
+        guard FeatureGate.canAddEntry(isPro: store.isPro, currentEntryCount: count) else {
+            showQuickPick = false
+            activeSheet = .paywall
+            return
+        }
+        if showQuickPick {
+            // Hızlı seçim sayfasını kapatıp kamerayı sun; iki modalin çakışmaması için
+            // kısa bir gecikme veriyoruz.
+            showQuickPick = false
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(380))
+                captureTarget = project
+            }
+        } else {
+            captureTarget = project
+        }
+    }
+
     private func deleteProjects(at offsets: IndexSet) {
         pendingDeletion = offsets.compactMap { index in
             projects.indices.contains(index) ? projects[index] : nil
+        }
+    }
+}
+
+/// Ana ekrandan "Kare Çek" ile açılan, alt yarıdan gelen hızlı proje seçici.
+private struct QuickCaptureSheet: View {
+    let projects: [Project]
+    let onSelect: (Project) -> Void
+
+    @Environment(\.theme) private var theme
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            List {
+                ForEach(projects) { project in
+                    let accent = Theme.accent(for: project.category)
+                    Button {
+                        onSelect(project)
+                    } label: {
+                        HStack(spacing: 14) {
+                            ZStack {
+                                Circle().fill(accent.opacity(0.15)).frame(width: 44, height: 44)
+                                Image(systemName: Theme.icon(for: project.category))
+                                    .font(.system(size: 18, weight: .semibold))
+                                    .foregroundStyle(accent)
+                            }
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(project.title).font(Theme.headline(16)).foregroundStyle(theme.ink)
+                                Text("\(project.sortedEntries.count) kare")
+                                    .font(Theme.caption(12)).foregroundStyle(theme.inkMuted)
+                            }
+                            Spacer()
+                            if project.isCaptureDue() {
+                                Text("Bugün")
+                                    .font(Theme.caption(11)).foregroundStyle(.white)
+                                    .padding(.horizontal, 8).padding(.vertical, 4)
+                                    .background(accent, in: Capsule())
+                            }
+                            Image(systemName: "camera.fill").foregroundStyle(accent)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    .listRowBackground(theme.surface)
+                }
+            }
+            .listStyle(.plain)
+            .scrollContentBackground(.hidden)
+            .background(theme.canvas)
+            .navigationTitle("Hangi projeye?")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("İptal") { dismiss() }
+                }
+            }
         }
     }
 }

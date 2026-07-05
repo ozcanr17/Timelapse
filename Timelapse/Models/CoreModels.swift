@@ -12,7 +12,7 @@ enum ProjectCategory: String, Codable, CaseIterable, Identifiable {
     case plant
     case hairAndBeard = "hair_beard"
     case pet
-    case captureTogether = "capture_together"
+    case coupleMode = "capture_together"
     case other
 
     var id: String { rawValue }
@@ -20,18 +20,18 @@ enum ProjectCategory: String, Codable, CaseIterable, Identifiable {
     /// Kullanıcıya gösterilecek okunabilir ad. (switch-as-expression: Swift 5.9+)
     var displayName: String {
         switch self {
-        case .selfPortrait:    String(localized: "Kendim")
-        case .child:           String(localized: "Çocuk")
-        case .plant:           String(localized: "Bitki")
-        case .hairAndBeard:    String(localized: "Saç & Sakal")
-        case .pet:             String(localized: "Evcil hayvan")
-        case .captureTogether: String(localized: "Birlikte Çekim")
-        case .other:           String(localized: "Diğer")
+        case .selfPortrait: String(localized: "Kendim")
+        case .child:        String(localized: "Çocuk")
+        case .plant:        String(localized: "Bitki")
+        case .hairAndBeard: String(localized: "Saç & Sakal")
+        case .pet:          String(localized: "Evcil hayvan")
+        case .coupleMode:   String(localized: "Çift Modu")
+        case .other:        String(localized: "Diğer")
         }
     }
 
-    /// "Birlikte Çekim" bir Pro kategorisidir: iki kişi aynı karede, bölme kılavuzuyla.
-    var isPro: Bool { self == .captureTogether }
+    /// "Çift Modu" bir Pro kategorisidir: iki kişi aynı karede, bölme kılavuzuyla.
+    var isPro: Bool { self == .coupleMode }
 }
 
 /// Çekim sıklığı (kadans). Hatırlatıcıların ve "çekim zamanı geldi mi?" mantığının
@@ -130,6 +130,10 @@ final class Project {
     var category: ProjectCategory = ProjectCategory.other
     var cadence: CaptureCadence = CaptureCadence.daily
 
+    // Birlikte Çekim: arkadaşları davet edip aynı projeye birlikte çekim yaptığında
+    // açılır. CloudKit için varsayılan değeri var.
+    var isCollaborative: Bool = false
+
     // Bir proje silinince çekimleri de silinsin: .cascade.
     // CloudKit kısıtı gereği to-many ilişki optional olmak zorunda.
     @Relationship(deleteRule: .cascade, inverse: \Entry.project)
@@ -147,8 +151,8 @@ final class Project {
         sortedEntries.last?.capturedAt
     }
 
-    /// "Birlikte Çekim" projesi mi? Kamerada bölme kılavuzunu bu belirler.
-    var isCoupleMode: Bool { category == .captureTogether }
+    /// "Çift Modu" projesi mi? Kamerada bölme kılavuzunu bu belirler.
+    var isCoupleMode: Bool { category == .coupleMode }
 
     /// Bu proje için yeni çekim zamanı geldi mi? Mantığı CaptureCadence'e devrediyoruz.
     func isCaptureDue(now: Date = Date()) -> Bool {
