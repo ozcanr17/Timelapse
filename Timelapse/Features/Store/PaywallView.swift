@@ -124,10 +124,20 @@ struct PaywallView: View {
     }
 
     private var legalText: some View {
-        Text("Abonelik otomatik yenilenir; istediğin zaman Ayarlar’dan iptal edebilirsin.")
-            .font(.caption2)
-            .foregroundStyle(.white.opacity(0.6))
-            .multilineTextAlignment(.center)
+        VStack(spacing: 10) {
+            Text("Aylık abonelik dönem sonunda otomatik yenilenir; en az 24 saat önce iptal etmezsen ücret Apple Kimliği hesabından tahsil edilir. Ömür boyu seçenek tek seferlik bir satın alımdır. Aboneliğini App Store hesap ayarlarından yönetebilir veya iptal edebilirsin.")
+                .font(.caption2)
+                .foregroundStyle(.white.opacity(0.6))
+                .multilineTextAlignment(.center)
+
+            HStack(spacing: 6) {
+                Link("Kullanım Koşulları", destination: LegalLinks.termsOfUse)
+                Text("·").foregroundStyle(.white.opacity(0.4))
+                Link("Gizlilik Politikası", destination: LegalLinks.privacyPolicy)
+            }
+            .font(.caption2.weight(.semibold))
+            .tint(.white.opacity(0.85))
+        }
     }
 
     private var errorBinding: Binding<Bool> {

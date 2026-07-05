@@ -73,7 +73,8 @@ struct TimelapseExportSheet: View {
     private func finishedView(_ url: URL) -> some View {
         ScrollView {
             VStack(spacing: 18) {
-                VideoPlayer(player: AVPlayer(url: url))
+                ExportedVideoPlayer(url: url)
+                    .id(url)
                     .aspectRatio(3.0 / 4.0, contentMode: .fit)
                     .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
                     .frame(maxHeight: 380)
@@ -226,6 +227,21 @@ struct TimelapseExportSheet: View {
             speed: speed,
             overlay: effectiveOverlay
         )
+    }
+}
+
+/// Oynatıcıyı bir kez oluşturup tutar; her SwiftUI güncellemesinde yeni bir AVPlayer
+/// üretmeyi (ve sızıntıyı) önler. `.id(url)` ile URL değişince görünüm yeniden kurulur.
+private struct ExportedVideoPlayer: View {
+    @State private var player: AVPlayer
+
+    init(url: URL) {
+        _player = State(initialValue: AVPlayer(url: url))
+    }
+
+    var body: some View {
+        VideoPlayer(player: player)
+            .onDisappear { player.pause() }
     }
 }
 

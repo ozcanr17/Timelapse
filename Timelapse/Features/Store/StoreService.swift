@@ -32,9 +32,18 @@ final class StoreService: StoreServiceProtocol {
     /// Admin (Apple ile giriş) Pro kilidi.
     private(set) var adminUnlocked = UserDefaults.standard.bool(forKey: OverrideKey.admin)
 
-    /// Uygulamanın her yerinde okunan tek doğruluk kaynağı. Gerçek satın alma YA DA
-    /// bir test/admin kilidi açıksa Pro'dur.
-    var isPro: Bool { entitlementActive || debugUnlocked || adminUnlocked }
+    /// Uygulamanın her yerinde okunan tek doğruluk kaynağı.
+    ///
+    /// YAYIN (Release/App Store) sürümünde Pro YALNIZCA gerçek satın almayla açılır.
+    /// Test arka kapısı ve admin kilidi SADECE DEBUG derlemelerinde etkindir — böylece
+    /// App Store'a gizli/ödemesiz Pro açan bir mekanizma gitmez (Yönerge 2.3.1 & 3.1.1).
+    var isPro: Bool {
+        #if DEBUG
+        entitlementActive || debugUnlocked || adminUnlocked
+        #else
+        entitlementActive
+        #endif
+    }
 
     private var storeProducts: [Product] = []   // satın alma için Product'ları içeride tutuyoruz
     nonisolated(unsafe) private var updatesTask: Task<Void, Never>?

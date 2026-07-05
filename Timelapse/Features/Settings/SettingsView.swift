@@ -157,6 +157,7 @@ struct SettingsView: View {
                 .foregroundStyle(theme.ink)
             }
 
+            #if DEBUG
             if isDeveloperUnlocked {
                 Section {
                     Toggle(isOn: developerProBinding) {
@@ -178,9 +179,10 @@ struct SettingsView: View {
                 } header: {
                     Text("Geliştirici")
                 } footer: {
-                    Text("Gizli test arka kapısı. Yalnızca sen görürsün.")
+                    Text("Yalnızca DEBUG derlemesinde görünen test arka kapısı.")
                 }
             }
+            #endif
 
             Section {
                 VStack(spacing: 10) {
@@ -284,6 +286,7 @@ struct SettingsView: View {
         }
     }
 
+    #if DEBUG
     private var isDeveloperUnlocked: Bool {
         devTapCount >= 7 || store.debugUnlocked
     }
@@ -294,13 +297,16 @@ struct SettingsView: View {
             set: { store.setDebugUnlocked($0) }
         )
     }
+    #endif
 
     private func revealDeveloperIfNeeded() {
+        #if DEBUG
         guard devTapCount < 7 else { return }
         devTapCount += 1
         if devTapCount >= 7 {
             UINotificationFeedbackGenerator().notificationOccurred(.success)
         }
+        #endif
     }
 
     private var appVersion: String {
