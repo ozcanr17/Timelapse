@@ -94,25 +94,30 @@ struct TimelapseExportSettings: Equatable {
     let framesPerSecond: Int32
     let includesWatermark: Bool          // ücretsiz katmanda uygulama etiketi zorunlu
     var overlay: TimelapseOverlayOptions = TimelapseOverlayOptions()
+    /// Akıllı Hizalama (Pro): dışa aktarımda özneyi yüz tespitiyle karelere sabitler.
+    var smartAlignment: Bool = false
 
     static func current(
         isPro: Bool,
         speed: TimelapseSpeed = .normal,
-        overlay: TimelapseOverlayOptions = TimelapseOverlayOptions()
+        overlay: TimelapseOverlayOptions = TimelapseOverlayOptions(),
+        smartAlignment: Bool = false
     ) -> TimelapseExportSettings {
         if FeatureGate.isUnlocked(.highResExport, isPro: isPro) {
             TimelapseExportSettings(
                 renderSize: CGSize(width: 2160, height: 2880),
                 framesPerSecond: speed.framesPerSecond,
                 includesWatermark: false,
-                overlay: overlay
+                overlay: overlay,
+                smartAlignment: smartAlignment
             )
         } else {
             TimelapseExportSettings(
                 renderSize: CGSize(width: 720, height: 960),
                 framesPerSecond: speed.framesPerSecond,
                 includesWatermark: true,
-                overlay: overlay
+                overlay: overlay,
+                smartAlignment: smartAlignment
             )
         }
     }
@@ -177,10 +182,22 @@ struct TimelapseComposer: TimelapseComposing {
         guard writer.startWriting() else { throw TimelapseComposerError.writerFailed }
         writer.startSession(atSourceTime: .zero)
 
+        // Akıllı Hizalama: her karedeki yüz çıpasını bul; ilk bulunan referans olur.
+        let anchors: [FrameAnchor?] = settings.smartAlignment
+            ? frames.map { FrameAligner.anchor(in: $0.imageData) }
+            : Array(repeating: nil, count: frames.count)
+        let reference = anchors.compactMap { $0 }.first
+
         for (index, frame) in frames.enumerated() {
             guard
                 let image = UIImage(data: frame.imageData),
-                let composed = composeFrame(image, date: frame.capturedAt, settings: settings)
+                let composed = composeFrame(
+                    image,
+                    date: frame.capturedAt,
+                    anchor: anchors[index],
+                    reference: reference,
+                    settings: settings
+                )
             else { throw TimelapseComposerError.frameDecodingFailed }
 
             while !input.isReadyForMoreMediaData { usleep(3000) }
@@ -209,7 +226,18 @@ struct TimelapseComposer: TimelapseComposing {
         return formatter
     }()
 
-    private static func composeFrame(_ image: UIImage, date: Date, settings: TimelapseExportSettings) -> CGImage? {
+    // Akıllı Hizalama hedefi: yüz karenin yatayda ortasına, dikeyde biraz yukarısına ve
+    // sabit bir yüksekliğe oturtulur; böylece özne tüm karelerde aynı yerde durur.
+    private static let alignTargetCenter = CGPoint(x: 0.5, y: 0.42)
+    private static let alignTargetFaceHeight: CGFloat = 0.34
+
+    private static func composeFrame(
+        _ image: UIImage,
+        date: Date,
+        anchor: FrameAnchor?,
+        reference: FrameAnchor?,
+        settings: TimelapseExportSettings
+    ) -> CGImage? {
         let size = settings.renderSize
         let format = UIGraphicsImageRendererFormat()
         format.scale = 1
@@ -218,20 +246,44 @@ struct TimelapseComposer: TimelapseComposing {
             UIColor.black.setFill()
             UIRectFill(CGRect(origin: .zero, size: size))
 
-            let scale = max(
-                size.width / max(image.size.width, 1),
-                size.height / max(image.size.height, 1)
-            )
-            let drawSize = CGSize(width: image.size.width * scale, height: image.size.height * scale)
-            let origin = CGPoint(
-                x: (size.width - drawSize.width) / 2,
-                y: (size.height - drawSize.height) / 2
-            )
-            image.draw(in: CGRect(origin: origin, size: drawSize))
+            let rect: CGRect
+            if settings.smartAlignment, let anchor, reference != nil {
+                rect = alignedRect(for: image, anchor: anchor, canvas: size)
+            } else {
+                rect = aspectFillRect(for: image, canvas: size)
+            }
+            image.draw(in: rect)
 
             drawOverlays(size: size, date: date, settings: settings)
         }
         return rendered.cgImage
+    }
+
+    /// Görseli tuvali dolduracak şekilde ortalar (hizalama kapalıyken varsayılan).
+    private static func aspectFillRect(for image: UIImage, canvas: CGSize) -> CGRect {
+        let scale = max(canvas.width / max(image.size.width, 1), canvas.height / max(image.size.height, 1))
+        let drawSize = CGSize(width: image.size.width * scale, height: image.size.height * scale)
+        return CGRect(
+            x: (canvas.width - drawSize.width) / 2,
+            y: (canvas.height - drawSize.height) / 2,
+            width: drawSize.width,
+            height: drawSize.height
+        )
+    }
+
+    /// Yüzü hedef konum ve boyuta getirecek şekilde görseli ölçekleyip kaydırır.
+    private static func alignedRect(for image: UIImage, anchor: FrameAnchor, canvas: CGSize) -> CGRect {
+        let faceHeightPoints = max(anchor.height * image.size.height, 1)
+        let scale = (alignTargetFaceHeight * canvas.height) / faceHeightPoints
+        let drawSize = CGSize(width: image.size.width * scale, height: image.size.height * scale)
+        let faceInScaled = CGPoint(x: anchor.center.x * drawSize.width, y: anchor.center.y * drawSize.height)
+        let target = CGPoint(x: alignTargetCenter.x * canvas.width, y: alignTargetCenter.y * canvas.height)
+        return CGRect(
+            x: target.x - faceInScaled.x,
+            y: target.y - faceInScaled.y,
+            width: drawSize.width,
+            height: drawSize.height
+        )
     }
 
     /// Tarih / not / uygulama etiketini seçilen köşelere çizer. Ücretsiz katmanda

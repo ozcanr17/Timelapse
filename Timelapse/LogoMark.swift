@@ -2,6 +2,8 @@ import SwiftUI
 
 struct LogoMark: View {
     var size: CGFloat = 96
+    /// Yalnızca içteki objektif (aperture) döner; dıştaki yuvarlatılmış kare sabit kalır.
+    var innerRotation: Angle = .zero
 
     var body: some View {
         ZStack {
@@ -11,12 +13,16 @@ struct LogoMark: View {
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 ))
-            Circle()
-                .strokeBorder(.white.opacity(0.9), lineWidth: size * 0.032)
-                .padding(size * 0.14)
-            ApertureShape()
-                .stroke(.white, style: StrokeStyle(lineWidth: size * 0.052, lineCap: .round))
-                .padding(size * 0.25)
+
+            ZStack {
+                Circle()
+                    .strokeBorder(.white.opacity(0.9), lineWidth: size * 0.032)
+                    .padding(size * 0.14)
+                ApertureShape()
+                    .stroke(.white, style: StrokeStyle(lineWidth: size * 0.052, lineCap: .round))
+                    .padding(size * 0.25)
+            }
+            .rotationEffect(innerRotation)
         }
         .frame(width: size, height: size)
         .shadow(color: Theme.brand.opacity(0.35), radius: size * 0.12, x: 0, y: size * 0.05)

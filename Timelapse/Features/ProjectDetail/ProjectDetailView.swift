@@ -97,14 +97,16 @@ struct ProjectDetailView: View {
                     }
                 }
             }
-            ToolbarItem(placement: .primaryAction) {
-                Button {
-                    inviteTapped()
-                } label: {
-                    Image(systemName: project.isCoupleMode ? "person.2.fill" : "person.badge.plus")
-                        .foregroundStyle(accent)
+            if project.isCoupleMode {
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        inviteTapped()
+                    } label: {
+                        Image(systemName: "person.badge.plus")
+                            .foregroundStyle(accent)
+                    }
+                    .accessibilityIdentifier("inviteButton")
                 }
-                .accessibilityIdentifier("inviteButton")
             }
             ToolbarItem(placement: .primaryAction) {
                 Button {
@@ -144,18 +146,13 @@ struct ProjectDetailView: View {
         String(localized: "Timelapse'te \"\(project.title)\" projesinde birlikte kayıt tutalım! Uygulamayı indirip aynı anı birlikte yakalayalım. 📸")
     }
 
-    /// Çift modu: Pro kullanıcı bir partner davet eder → proje "birlikte çekim" moduna
-    /// geçer ve kamerada bölme kılavuzu görünür. Ücretsiz kullanıcı paywall görür.
+    /// Birlikte Çekim projesinde partneri davet etmek için sistem paylaşım sayfasını açar.
     private func inviteTapped() {
-        guard store.isPro else {
+        if store.isPro {
+            showInvite = true
+        } else {
             showPaywall = true
-            return
         }
-        if !project.isCoupleMode {
-            project.isCoupleMode = true
-            try? modelContext.save()
-        }
-        showInvite = true
     }
 
     private var freeQuotaBadge: some View {

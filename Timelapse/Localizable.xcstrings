@@ -285,6 +285,9 @@
         }
       }
     },
+    "Çift modu (birlikte çekim) her projede sağ üstteki davet düğmesiyle açılır. iCloud değişikliği uygulama yeniden başlatılınca geçerli olur." : {
+
+    },
     "Çıkış yap" : {
 
     },
@@ -338,9 +341,6 @@
           }
         }
       }
-    },
-    "Etiket konumu" : {
-
     },
     "Evcil hayvan" : {
       "localizations" : {
@@ -564,6 +564,9 @@
     "Hız" : {
 
     },
+    "iCloud isteği kaydedildi; şu an yerel depoya düşülüyor (ücretli Apple hesabı gerekir)." : {
+
+    },
     "iCloud yedekleme" : {
       "localizations" : {
         "en" : {
@@ -574,7 +577,7 @@
         }
       }
     },
-    "iCloud yedekleme değişikliği uygulamayı yeniden başlatınca geçerli olur." : {
+    "iCloud yedekleme etkin." : {
 
     },
     "İlk hikayeni başlat" : {
@@ -688,6 +691,7 @@
       }
     },
     "Kareler birleştiriliyor…" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -746,6 +750,9 @@
           }
         }
       }
+    },
+    "Konum sabit; gizleyebilirsin" : {
+
     },
     "Kullanım Koşulları" : {
 
@@ -1018,6 +1025,9 @@
     "Timelapse" : {
 
     },
+    "Timelapse hazırlanıyor…" : {
+
+    },
     "Timelapse için en az 2 çekim gerekli." : {
       "localizations" : {
         "en" : {
@@ -1080,6 +1090,9 @@
           }
         }
       }
+    },
+    "Timelapse'te \"%@\" projesinde birlikte kayıt tutalım! Uygulamayı indirip aynı anı birlikte yakalayalım. 📸" : {
+
     },
     "Toplam çekim" : {
       "localizations" : {
@@ -1157,7 +1170,7 @@
         }
       }
     },
-    "Uygulama etiketi" : {
+    "Uygulama etiketi (sağ alt)" : {
 
     },
     "Vazgeç" : {

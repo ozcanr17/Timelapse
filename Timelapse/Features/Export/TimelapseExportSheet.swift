@@ -9,11 +9,15 @@ struct TimelapseExportSheet: View {
     @Environment(StoreService.self) private var store
     @Environment(\.dismiss) private var dismiss
     @Environment(\.theme) private var theme
+    @AppStorage(PremiumFeature.smartAlignment.preferenceKey!) private var smartAlignmentEnabled = false
     @State private var viewModel = TimelapseExportViewModel()
     @State private var showPaywall = false
     @State private var speed: TimelapseSpeed = .normal
     @State private var overlay = TimelapseOverlayOptions()
     @State private var noteDraft = ""
+    @State private var lastRenderedURL: URL?
+
+    private var smartAlignment: Bool { store.isPro && smartAlignmentEnabled }
 
     private var frames: [TimelapseFrame] {
         project.sortedEntries.compactMap { entry in
@@ -41,32 +45,56 @@ struct TimelapseExportSheet: View {
         }
     }
 
-    @ViewBuilder
-    private var content: some View {
+    private var isLoading: Bool {
         switch viewModel.phase {
-        case .idle, .rendering:
-            renderingView
+        case .idle, .rendering: return true
+        default: return false
+        }
+    }
+
+    private var content: some View {
+        ZStack {
+            // Arka planı boş bırakmak yerine bulunduğumuz sayfayı bulanıklaştırıp
+            // gösteriyoruz; üstünde dönen objektif animasyonu belirir.
+            contentBehind
+                .blur(radius: isLoading ? 18 : 0)
+                .allowsHitTesting(!isLoading)
+
+            if isLoading {
+                loadingOverlay
+                    .transition(.opacity)
+            }
+        }
+        .animation(.easeInOut(duration: 0.35), value: isLoading)
+        .onChange(of: viewModel.phase) {
+            if case .finished(let url) = viewModel.phase { lastRenderedURL = url }
+        }
+    }
+
+    @ViewBuilder
+    private var contentBehind: some View {
+        switch viewModel.phase {
         case .finished(let url):
             finishedView(url)
         case .failed(let message):
             failedView(message)
+        case .idle, .rendering:
+            if let lastRenderedURL {
+                finishedView(lastRenderedURL)
+            } else {
+                Color.clear
+            }
         }
     }
 
-    private var renderingView: some View {
-        VStack(spacing: 22) {
-            SpinningLogo(size: 92)
-            VStack(spacing: 6) {
-                Text("Timelapse hazırlanıyor…")
-                    .font(Theme.headline(17))
-                    .foregroundStyle(theme.ink)
-                Text(viewModel.progress, format: .percent.precision(.fractionLength(0)))
-                    .font(Theme.stamp(15))
-                    .foregroundStyle(theme.inkMuted)
-                    .contentTransition(.numericText())
-                    .animation(.easeOut(duration: 0.2), value: viewModel.progress)
-            }
+    private var loadingOverlay: some View {
+        VStack(spacing: 16) {
+            SpinningLogo(size: 96)
+            Text("Timelapse hazırlanıyor…")
+                .font(Theme.headline(16))
+                .foregroundStyle(theme.ink)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private func finishedView(_ url: URL) -> some View {
@@ -77,6 +105,13 @@ struct TimelapseExportSheet: View {
                     .aspectRatio(3.0 / 4.0, contentMode: .fit)
                     .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
                     .frame(maxHeight: 380)
+
+                if smartAlignment {
+                    Label("Akıllı hizalama açık — özne karelere sabitlendi", systemImage: "wand.and.stars")
+                        .font(Theme.caption(12))
+                        .foregroundStyle(theme.accent)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
 
                 speedControl
                 overlayControls
@@ -226,7 +261,8 @@ struct TimelapseExportSheet: View {
             frames: frames,
             isPro: store.isPro,
             speed: speed,
-            overlay: effectiveOverlay
+            overlay: effectiveOverlay,
+            smartAlignment: smartAlignment
         )
     }
 }
@@ -238,11 +274,9 @@ private struct SpinningLogo: View {
     @State private var spinning = false
 
     var body: some View {
-        LogoMark(size: size)
-            .rotationEffect(.degrees(spinning ? 360 : 0))
-            .animation(.linear(duration: 1.6).repeatForever(autoreverses: false), value: spinning)
-            .scaleEffect(spinning ? 1 : 0.85)
-            .animation(.easeInOut(duration: 0.9).repeatForever(autoreverses: true), value: spinning)
+        // Dıştaki yuvarlatılmış kare sabit; yalnızca içteki objektif sürekli döner.
+        LogoMark(size: size, innerRotation: .degrees(spinning ? 360 : 0))
+            .animation(.linear(duration: 1.8).repeatForever(autoreverses: false), value: spinning)
             .onAppear { spinning = true }
     }
 }

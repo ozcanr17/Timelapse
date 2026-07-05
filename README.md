@@ -118,7 +118,7 @@ Timelapse/
 | Area | Feature |
 |------|---------|
 | **Projects** | Create categorized projects (self, child, plant, hair & beard, pet, other), each with a cadence (daily / every other day / weekly). |
-| **Ghost-aligned capture** | Live camera overlays the previous frame + rule-of-thirds/center guides; tap to set an alignment anchor that persists across sessions. Front/back camera, smart default per category. |
+| **Guided capture** | Live camera with rule-of-thirds + center guides; front/back camera with a smart default per category. Subject alignment is applied automatically at export by Smart Alignment (Pro) rather than a manual ghost. |
 | **Streaks & activity** | Per-project day-streak, total frames, days running; a home “this week” bar chart and “capture due today” nudges. |
 | **Reminders** | Opt-in local notifications at a chosen hour; scheduled per project cadence via `UNUserNotificationCenter`. |
 | **Timelapse export** | One-tap MP4 render with a spinning-logo progress animation. **Speed:** 0.25× / 0.5× / 1× / 2× / 3×. **Overlays:** per-frame date stamp and a free-text note, each positioned in a corner (the two can never share a corner); the app mark is fixed bottom-right (free tier keeps it, Pro can hide it). Share via the system share sheet. |
@@ -143,8 +143,8 @@ Free users get a genuinely useful app; Pro removes limits and unlocks premium ca
 - Unlimited projects & unlimited photos per project.
 - 4K (2160×2880) export with **no watermark** (app mark becomes optional & positionable).
 - iCloud backup (opt-in).
-- Smart Alignment (auto-enables the ghost overlay of your last shot).
-- Couple Mode — invite a partner to a project ("capture together"); the camera shows a two-subject split guide. Full cross-device sync requires iCloud sharing (paid account); today the invite shares an invitation and enables the couple framing.
+- Smart Alignment — real, automatic subject alignment at export: `FrameAligner` uses the **Vision** framework (`VNDetectFaceRectanglesRequest`) to find the face in each frame, and the composer locks it to a consistent position and size across the whole timelapse. Frames without a detected face fall back to aspect-fill.
+- Capture Together — a dedicated **project category**: two people are photographed in the same frame with a split framing guide, and a partner can be invited via the share sheet. (Cross-device sync of two phones would additionally require iCloud sharing / a paid account.)
 
 ### Products & pricing
 | Product ID | Type | Price |

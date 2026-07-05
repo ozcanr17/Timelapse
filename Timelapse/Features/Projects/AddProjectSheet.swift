@@ -7,7 +7,9 @@ import SwiftData
 struct AddProjectSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.theme) private var theme
+    @Environment(StoreService.self) private var store
     @State private var viewModel: AddProjectViewModel
+    @State private var showPaywall = false
 
     init(repository: ProjectRepositoryProtocol) {
         _viewModel = State(initialValue: AddProjectViewModel(repository: repository))
@@ -39,6 +41,9 @@ struct AddProjectSheet: View {
             .alert("Hata", isPresented: errorBinding) {
                 Button("Tamam", role: .cancel) {}
             } message: { Text(viewModel.errorMessage ?? "") }
+            .sheet(isPresented: $showPaywall) {
+                PaywallView(store: store)
+            }
         }
     }
 
@@ -58,8 +63,17 @@ struct AddProjectSheet: View {
             Text("KATEGORİ").font(Theme.caption(12)).foregroundStyle(theme.inkMuted).tracking(1)
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 96), spacing: 10)], spacing: 10) {
                 ForEach(ProjectCategory.allCases) { category in
-                    CategoryChip(category: category, isSelected: viewModel.category == category) {
-                        viewModel.category = category
+                    let locked = category.isPro && !store.isPro
+                    CategoryChip(
+                        category: category,
+                        isSelected: viewModel.category == category,
+                        isLocked: locked
+                    ) {
+                        if locked {
+                            showPaywall = true
+                        } else {
+                            viewModel.category = category
+                        }
                     }
                 }
             }
@@ -87,6 +101,7 @@ struct AddProjectSheet: View {
 private struct CategoryChip: View {
     let category: ProjectCategory
     let isSelected: Bool
+    var isLocked: Bool = false
     let action: () -> Void
 
     @Environment(\.theme) private var theme
@@ -106,6 +121,16 @@ private struct CategoryChip: View {
             .padding(.vertical, 14)
             .background(isSelected ? accent : theme.surface)
             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .overlay(alignment: .topTrailing) {
+                if isLocked {
+                    Image(systemName: "lock.fill")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundStyle(.white)
+                        .padding(5)
+                        .background(accent, in: Circle())
+                        .padding(6)
+                }
+            }
         }
         .buttonStyle(.plain)
     }
@@ -134,4 +159,5 @@ private struct CadenceChip: View {
 
 #Preview {
     AddProjectSheet(repository: ProjectRepository(context: AppModelContainer.makeInMemory().mainContext))
+        .environment(StoreService())
 }

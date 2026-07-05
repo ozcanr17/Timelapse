@@ -24,7 +24,8 @@ final class TimelapseExportViewModel {
         frames: [TimelapseFrame],
         isPro: Bool,
         speed: TimelapseSpeed = .normal,
-        overlay: TimelapseOverlayOptions = TimelapseOverlayOptions()
+        overlay: TimelapseOverlayOptions = TimelapseOverlayOptions(),
+        smartAlignment: Bool = false
     ) async {
         guard phase != .rendering else { return }
         guard frames.count >= 2 else {
@@ -36,7 +37,7 @@ final class TimelapseExportViewModel {
         do {
             let url = try await composer.makeVideo(
                 from: frames,
-                settings: .current(isPro: isPro, speed: speed, overlay: overlay),
+                settings: .current(isPro: isPro, speed: speed, overlay: overlay, smartAlignment: smartAlignment),
                 onProgress: { [weak self] value in
                     Task { @MainActor in self?.progress = value }
                 }

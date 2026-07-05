@@ -100,6 +100,11 @@ final class TimelapseExportSettingsTests: XCTestCase {
                        ["0.25×", "0.5×", "1×", "2×", "3×"])
     }
 
+    func test_akilliHizalama_varsayilanKapali_ayarlaAcilir() {
+        XCTAssertFalse(TimelapseExportSettings.current(isPro: true).smartAlignment)
+        XCTAssertTrue(TimelapseExportSettings.current(isPro: true, smartAlignment: true).smartAlignment)
+    }
+
     func test_hizDegisikligi_cozunurlukVeFiligraniEtkilemez() {
         let free = TimelapseExportSettings.current(isPro: false, speed: .turbo)
         XCTAssertEqual(free.renderSize, CGSize(width: 720, height: 960))
