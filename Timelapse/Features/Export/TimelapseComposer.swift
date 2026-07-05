@@ -89,19 +89,49 @@ struct TimelapseFrame: Equatable {
     let capturedAt: Date
 }
 
+/// Kareler arası geçiş efekti.
+enum TimelapseTransition: String, CaseIterable, Identifiable {
+    case cut        // sert kesme (varsayılan, mevcut davranış)
+    case dissolve   // çapraz geçiş (crossfade)
+    case fade       // karartarak geçiş (fade through black)
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .cut:      "Kesme"
+        case .dissolve: "Çözülme"
+        case .fade:     "Karartma"
+        }
+    }
+}
+
+/// Manuel hizalama: kullanıcının seçtiği normalize (0…1) özne noktası tüm karelerde
+/// tuvalin ortasına getirilir; `zoom` yakınlaştırma çarpanıdır.
+struct ManualAlignment: Equatable {
+    var center: CGPoint
+    var zoom: CGFloat
+}
+
 struct TimelapseExportSettings: Equatable {
     let renderSize: CGSize
     let framesPerSecond: Int32
     let includesWatermark: Bool          // ücretsiz katmanda uygulama etiketi zorunlu
     var overlay: TimelapseOverlayOptions = TimelapseOverlayOptions()
-    /// Akıllı Hizalama (Pro): dışa aktarımda özneyi yüz tespitiyle karelere sabitler.
+    /// Akıllı Hizalama (Pro): dışa aktarımda özneyi yüz/belirginlik tespitiyle sabitler.
     var smartAlignment: Bool = false
+    /// Manuel hizalama (Pro): ayarlıysa Akıllı Hizalama'nın yerine geçer.
+    var manualAnchor: ManualAlignment? = nil
+    /// Kareler arası geçiş.
+    var transition: TimelapseTransition = .cut
 
     static func current(
         isPro: Bool,
         speed: TimelapseSpeed = .normal,
         overlay: TimelapseOverlayOptions = TimelapseOverlayOptions(),
-        smartAlignment: Bool = false
+        smartAlignment: Bool = false,
+        manualAnchor: ManualAlignment? = nil,
+        transition: TimelapseTransition = .cut
     ) -> TimelapseExportSettings {
         if FeatureGate.isUnlocked(.highResExport, isPro: isPro) {
             TimelapseExportSettings(
@@ -109,7 +139,9 @@ struct TimelapseExportSettings: Equatable {
                 framesPerSecond: speed.framesPerSecond,
                 includesWatermark: false,
                 overlay: overlay,
-                smartAlignment: smartAlignment
+                smartAlignment: smartAlignment,
+                manualAnchor: manualAnchor,
+                transition: transition
             )
         } else {
             TimelapseExportSettings(
@@ -117,7 +149,9 @@ struct TimelapseExportSettings: Equatable {
                 framesPerSecond: speed.framesPerSecond,
                 includesWatermark: true,
                 overlay: overlay,
-                smartAlignment: smartAlignment
+                smartAlignment: smartAlignment,
+                manualAnchor: manualAnchor,
+                transition: transition
             )
         }
     }
@@ -182,32 +216,58 @@ struct TimelapseComposer: TimelapseComposing {
         guard writer.startWriting() else { throw TimelapseComposerError.writerFailed }
         writer.startSession(atSourceTime: .zero)
 
-        // Akıllı Hizalama: her karedeki yüz çıpasını bul; ilk bulunan referans olur.
-        let anchors: [FrameAnchor?] = settings.smartAlignment
+        // Akıllı Hizalama: her karedeki çıpayı bul; ilk bulunan referans olur. Manuel
+        // hizalama ayarlıysa Vision'a gerek yok (tüm karelerde sabit çıpa kullanılır).
+        let anchors: [FrameAnchor?] = (settings.smartAlignment && settings.manualAnchor == nil)
             ? frames.map { FrameAligner.anchor(in: $0.imageData) }
             : Array(repeating: nil, count: frames.count)
         let reference = anchors.compactMap { $0 }.first
 
-        for (index, frame) in frames.enumerated() {
+        // Kesme'de kare başına 1 kare (mevcut davranış). Geçişlerde araya harmanlanmış
+        // kareler eklenir.
+        let transitionSteps = settings.transition == .cut ? 0 : max(2, Int(settings.framesPerSecond) / 3)
+        var presentationIndex: Int64 = 0
+
+        func append(_ cgImage: CGImage) throws {
+            while !input.isReadyForMoreMediaData { usleep(3000) }
+            let buffer = try pixelBuffer(for: cgImage, adaptor: adaptor, width: width, height: height)
+            let time = CMTime(value: presentationIndex, timescale: settings.framesPerSecond)
+            guard adaptor.append(buffer, withPresentationTime: time) else {
+                throw TimelapseComposerError.writerFailed
+            }
+            presentationIndex += 1
+        }
+
+        func keyframe(_ index: Int) throws -> CGImage {
             guard
-                let image = UIImage(data: frame.imageData),
+                let image = UIImage(data: frames[index].imageData),
                 let composed = composeFrame(
                     image,
-                    date: frame.capturedAt,
+                    date: frames[index].capturedAt,
                     anchor: anchors[index],
                     reference: reference,
                     settings: settings
                 )
             else { throw TimelapseComposerError.frameDecodingFailed }
+            return composed
+        }
 
-            while !input.isReadyForMoreMediaData { usleep(3000) }
+        var current = try keyframe(0)
+        for index in frames.indices {
+            let next = index + 1 < frames.count ? try keyframe(index + 1) : nil
+            try append(current)
 
-            let buffer = try pixelBuffer(for: composed, adaptor: adaptor, width: width, height: height)
-            let time = CMTime(value: CMTimeValue(index), timescale: settings.framesPerSecond)
-            guard adaptor.append(buffer, withPresentationTime: time) else {
-                throw TimelapseComposerError.writerFailed
+            if transitionSteps > 0, let next {
+                for step in 1...transitionSteps {
+                    let progress = CGFloat(step) / CGFloat(transitionSteps + 1)
+                    if let blended = blend(current, next, progress: progress,
+                                           transition: settings.transition, size: settings.renderSize) {
+                        try append(blended)
+                    }
+                }
             }
             onProgress(Double(index + 1) / Double(frames.count))
+            if let next { current = next }
         }
 
         input.markAsFinished()
@@ -246,7 +306,9 @@ struct TimelapseComposer: TimelapseComposing {
             UIColor.black.setFill()
             UIRectFill(CGRect(origin: .zero, size: size))
 
-            if settings.smartAlignment, let anchor, let reference {
+            if let manual = settings.manualAnchor {
+                image.draw(in: manualRect(for: image, manual: manual, canvas: size))
+            } else if settings.smartAlignment, let anchor, let reference {
                 drawAligned(image, anchor: anchor, reference: reference, canvas: size, context: context.cgContext)
             } else {
                 image.draw(in: aspectFillRect(for: image, canvas: size))
@@ -267,6 +329,50 @@ struct TimelapseComposer: TimelapseComposing {
             width: drawSize.width,
             height: drawSize.height
         )
+    }
+
+    /// Manuel hizalama: seçilen özne noktasını tuval ortasına getirip zoom uygular.
+    private static func manualRect(for image: UIImage, manual: ManualAlignment, canvas: CGSize) -> CGRect {
+        let base = max(canvas.width / max(image.size.width, 1), canvas.height / max(image.size.height, 1))
+        let scale = base * max(manual.zoom, 0.2)
+        let drawSize = CGSize(width: image.size.width * scale, height: image.size.height * scale)
+        let point = CGPoint(x: manual.center.x * drawSize.width, y: manual.center.y * drawSize.height)
+        return CGRect(
+            x: canvas.width * 0.5 - point.x,
+            y: canvas.height * 0.5 - point.y,
+            width: drawSize.width,
+            height: drawSize.height
+        )
+    }
+
+    /// İki tam kareyi geçiş türüne göre harmanlar (çözülme: çapraz geçiş; karartma:
+    /// önce siyaha, sonra bir sonraki kareye).
+    private static func blend(_ first: CGImage, _ second: CGImage, progress: CGFloat,
+                              transition: TimelapseTransition, size: CGSize) -> CGImage? {
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        format.opaque = true
+        let rendered = UIGraphicsImageRenderer(size: size, format: format).image { _ in
+            UIColor.black.setFill()
+            UIRectFill(CGRect(origin: .zero, size: size))
+            let rect = CGRect(origin: .zero, size: size)
+            let a = UIImage(cgImage: first)
+            let b = UIImage(cgImage: second)
+            switch transition {
+            case .dissolve:
+                a.draw(in: rect, blendMode: .normal, alpha: 1)
+                b.draw(in: rect, blendMode: .normal, alpha: Double(progress))
+            case .fade:
+                if progress < 0.5 {
+                    a.draw(in: rect, blendMode: .normal, alpha: Double(1 - progress * 2))
+                } else {
+                    b.draw(in: rect, blendMode: .normal, alpha: Double(progress * 2 - 1))
+                }
+            case .cut:
+                b.draw(in: rect)
+            }
+        }
+        return rendered.cgImage
     }
 
     /// Özneyi hedef konum, boyut VE açıya getirir: ölçekler, döndürür (yüz roll'ü) ve

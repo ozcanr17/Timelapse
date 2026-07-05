@@ -121,7 +121,7 @@ Timelapse/
 | **Guided capture** | Live camera with rule-of-thirds + center guides; front/back camera with a smart default per category. Subject alignment is applied automatically at export by Smart Alignment (Pro) rather than a manual ghost. |
 | **Streaks & activity** | Per-project day-streak, total frames, days running; a home “this week” bar chart and “capture due today” nudges. |
 | **Reminders** | Opt-in local notifications at a chosen hour; scheduled per project cadence via `UNUserNotificationCenter`. |
-| **Timelapse export** | One-tap MP4 render with a spinning-logo progress animation. **Speed:** 0.25× / 0.5× / 1× / 2× / 3×. **Overlays:** per-frame date stamp and a free-text note, each positioned in a corner (the two can never share a corner); the app mark is fixed bottom-right (free tier keeps it, Pro can hide it). Share via the system share sheet. |
+| **Timelapse export** | One-tap MP4 render with a spinning-lens loading animation over a blurred page. **Speed:** 0.25×–3×. **Transitions:** Cut / Dissolve / Fade. **Alignment:** Off / Smart (Vision) / Manual (tap-to-mark the subject + zoom). **Overlays:** per-frame date stamp and a free-text note, each in a corner (never overlapping); app mark fixed bottom-right (Pro can hide it). Share via the system share sheet. |
 | **Retake & manage** | View any frame full-screen, retake it in place, delete with confirmation. |
 | **Themes** | Multiple selectable color themes, light/dark aware. |
 | **Privacy-first** | Photos stay on device by default; iCloud sync is strictly opt-in. |

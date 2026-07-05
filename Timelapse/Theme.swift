@@ -223,6 +223,43 @@ struct CardBackground: ViewModifier {
 
 extension View {
     func cardStyle() -> some View { modifier(CardBackground()) }
+    /// "Liquid glass" yüzey: renk tonu + üstte parlak vurgu + ışıklı ince kenar.
+    func glassSurface(cornerRadius: CGFloat = 18, tint: Color) -> some View {
+        modifier(GlassSurface(cornerRadius: cornerRadius, tint: tint))
+    }
+}
+
+/// Sıvı cam (liquid glass) etkisi: yarı saydam ton, üstte spektral parlama ve ışıklı kenar.
+struct GlassSurface: ViewModifier {
+    var cornerRadius: CGFloat = 18
+    var tint: Color
+
+    func body(content: Content) -> some View {
+        let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+        return content
+            .background {
+                shape.fill(tint)
+                    .overlay {
+                        LinearGradient(
+                            colors: [.white.opacity(0.38), .white.opacity(0.06), .clear],
+                            startPoint: .top, endPoint: .bottom
+                        )
+                        .blendMode(.plusLighter)
+                    }
+                    .overlay {
+                        shape.fill(.ultraThinMaterial).opacity(0.14)
+                    }
+                    .clipShape(shape)
+            }
+            .overlay {
+                shape.strokeBorder(
+                    LinearGradient(colors: [.white.opacity(0.6), .white.opacity(0.12)],
+                                   startPoint: .top, endPoint: .bottom),
+                    lineWidth: 1
+                )
+            }
+            .clipShape(shape)
+    }
 }
 
 struct PrimaryButtonStyle: ButtonStyle {
@@ -233,10 +270,9 @@ struct PrimaryButtonStyle: ButtonStyle {
             .font(Theme.headline(17))
             .foregroundStyle(.white)
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 14)
-            .background(theme.accent)
-            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-            .shadow(color: (theme.glow ?? .clear).opacity(0.5), radius: 14, x: 0, y: 6)
+            .padding(.vertical, 15)
+            .glassSurface(cornerRadius: 18, tint: theme.accent)
+            .shadow(color: (theme.glow ?? theme.accent).opacity(0.45), radius: 16, x: 0, y: 7)
             .scaleEffect(configuration.isPressed ? 0.97 : 1)
             .animation(.spring(response: 0.25, dampingFraction: 0.7), value: configuration.isPressed)
     }

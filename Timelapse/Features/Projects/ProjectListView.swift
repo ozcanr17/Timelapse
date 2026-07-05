@@ -151,11 +151,7 @@ struct ProjectListView: View {
     /// doğrudan kameraya gider; birden fazlaysa alttan hızlı seçim açılır.
     private var homeCaptureButton: some View {
         Button {
-            if liveProjects.count == 1 {
-                beginCapture(liveProjects[0])
-            } else {
-                showQuickPick = true
-            }
+            showQuickPick = true
         } label: {
             HStack(spacing: 10) {
                 Image(systemName: "camera.fill").font(.system(size: 18, weight: .bold))
@@ -164,8 +160,8 @@ struct ProjectListView: View {
             .foregroundStyle(.white)
             .padding(.horizontal, 30)
             .padding(.vertical, 15)
-            .background(Capsule().fill(theme.accent))
-            .shadow(color: theme.accent.opacity(0.45), radius: 14, x: 0, y: 6)
+            .glassSurface(cornerRadius: 30, tint: theme.accent)
+            .shadow(color: theme.accent.opacity(0.45), radius: 16, x: 0, y: 7)
         }
         .buttonStyle(.plain)
         .padding(.bottom, 6)

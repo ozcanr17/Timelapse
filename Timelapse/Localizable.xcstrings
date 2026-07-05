@@ -1,1239 +1,1770 @@
 {
-  "sourceLanguage" : "tr",
-  "strings" : {
-    "" : {
-
+  "sourceLanguage": "tr",
+  "strings": {
+    "": {},
+    " çekim": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": " shots"
+          }
+        }
+      }
+    },
+    "·": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "·"
+          }
+        }
+      }
+    },
+    "%@ — Timelapse": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ — Timelapse"
+          }
+        }
+      }
+    },
+    "%@ için bugünkü kareni ekle.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add today's frame for %@."
+          }
+        }
+      }
+    },
+    "%lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld"
+          }
+        }
+      }
+    },
+    "%lld kare": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld frames"
+          }
+        }
+      }
+    },
+    "4K, filigransız export": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "4K, watermark-free export"
+          }
+        }
+      }
+    },
+    "Abonelik otomatik yenilenir; istediğin zaman Ayarlar’dan iptal edebilirsin.": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The subscription renews automatically; you can cancel anytime in Settings."
+          }
+        }
+      }
+    },
+    "Admin — Pro etkin": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Admin — Pro active"
+          }
+        }
+      }
+    },
+    "Admin olarak giriş yapıldı — Pro açıldı. 👑": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signed in as admin — Pro unlocked. 👑"
+          }
+        }
+      }
+    },
+    "Akıllı hizalama": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Smart alignment"
+          }
+        }
+      }
+    },
+    "Akıllı hizalama açık — özne karelere sabitlendi": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Smart alignment on — subject locked across frames"
+          }
+        }
+      }
+    },
+    "Apple ID ile girildi": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signed in with Apple ID"
+          }
+        }
+      }
+    },
+    "Apple ile giriş şu an kullanılamıyor (ücretli Apple Developer hesabı gerekir). Test için sürüm numarasına 7 kez dokunup geliştirici arka kapısını kullan.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in with Apple is unavailable (a paid Apple Developer account is required). To test, tap the version number 7 times and use the developer backdoor."
+          }
+        }
+      }
+    },
+    "Ayarlar": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings"
+          }
+        }
+      }
+    },
+    "Aydınlık": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daylight"
+          }
+        }
+      }
+    },
+    "Aylık abonelik dönem sonunda otomatik yenilenir; en az 24 saat önce iptal etmezsen ücret Apple Kimliği hesabından tahsil edilir. Ömür boyu seçenek tek seferlik bir satın alımdır. Aboneliğini App Store hesap ayarlarından yönetebilir veya iptal edebilirsin.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The monthly subscription auto-renews at the end of each period; unless canceled at least 24 hours beforehand, your Apple Account is charged. The lifetime option is a one-time purchase. Manage or cancel your subscription in your App Store account settings."
+          }
+        }
+      }
+    },
+    "Başla": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Get Started"
+          }
+        }
+      }
+    },
+    "BAŞLIK": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "TITLE"
+          }
+        }
+      }
+    },
+    "Beklenmeyen bir hata oluştu: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An unexpected error occurred: %@"
+          }
+        }
+      }
     },
-    " çekim" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : " shots"
+    "Bindirmeler": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Overlays"
           }
         }
       }
     },
-    "·" : {
-
+    "Birlikte": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Together"
+          }
+        }
+      }
     },
-    "%@ — Timelapse" : {
-
+    "Birlikte kaydedin": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Capture together"
+          }
+        }
+      }
     },
-    "%@ için bugünkü kareni ekle." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Add today's frame for %@."
+    "Bitki": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plant"
           }
         }
       }
     },
-    "%lld" : {
-
+    "Bu çekim kalıcı olarak silinsin mi?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete this shot permanently?"
+          }
+        }
+      }
     },
-    "4K, filigransız export" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "4K, watermark-free export"
+    "BU HAFTA": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "THIS WEEK"
           }
         }
       }
     },
-    "Abonelik otomatik yenilenir; istediğin zaman Ayarlar’dan iptal edebilirsin." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The subscription renews automatically; you can cancel anytime in Settings."
+    "Bu özellikler Timelapse Pro ile açılır.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These features unlock with Timelapse Pro."
           }
         }
       }
     },
-    "Admin — Pro etkin" : {
-
+    "Bugün": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Today"
+          }
+        }
+      }
     },
-    "Admin olarak giriş yapıldı — Pro açıldı. 👑" : {
-
+    "Bugün %lld projede çekim zamanı": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Time to capture in %lld projects today"
+          }
+        }
+      }
     },
-    "Akıllı hizalama" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Smart alignment"
+    "Bugün için her şey tamam": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All done for today"
           }
         }
       }
     },
-    "Akıllı hizalama açık — özne karelere sabitlendi" : {
-
+    "Bugün zamanı geldi": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Due today"
+          }
+        }
+      }
     },
-    "Apple ID ile girildi" : {
-
+    "Bugünün karesini çek": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Capture today's frame"
+          }
+        }
+      }
     },
-    "Apple ile giriş şu an kullanılamıyor (ücretli Apple Developer hesabı gerekir). Test için sürüm numarasına 7 kez dokunup geliştirici arka kapısını kullan." : {
-
+    "Canlı": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vivid"
+          }
+        }
+      }
     },
-    "Ayarlar" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Settings"
+    "çekim · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "shots · %@"
           }
         }
       }
     },
-    "Aydınlık" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Daylight"
+    "Çekim hatırlatıcıları": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Capture reminders"
           }
         }
       }
     },
-    "Aylık abonelik dönem sonunda otomatik yenilenir; en az 24 saat önce iptal etmezsen ücret Apple Kimliği hesabından tahsil edilir. Ömür boyu seçenek tek seferlik bir satın alımdır. Aboneliğini App Store hesap ayarlarından yönetebilir veya iptal edebilirsin." : {
-
+    "ÇEKİM SIKLIĞI": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CAPTURE CADENCE"
+          }
+        }
+      }
     },
-    "Başla" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Get Started"
+    "Çekim yarıda kesildi. Tekrar dene.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The capture was interrupted. Try again."
           }
         }
       }
     },
-    "BAŞLIK" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "TITLE"
+    "Çekim zamanı": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Time to capture"
           }
         }
       }
     },
-    "Beklenmeyen bir hata oluştu: %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "An unexpected error occurred: %@"
+    "Çift modu": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couple mode"
           }
         }
       }
     },
-    "Bindirmeler" : {
-
+    "Çift Modu": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couple Mode"
+          }
+        }
+      }
     },
-    "Birlikte Çekim" : {
-
+    "Çift modu (birlikte çekim) her projede sağ üstteki davet düğmesiyle açılır. iCloud değişikliği uygulama yeniden başlatılınca geçerli olur.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couple Mode (capture together) opens from the invite button at the top right of each project. iCloud changes take effect after an app restart."
+          }
+        }
+      }
     },
-    "Birlikte kaydedin" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Capture together"
+    "Çıkış yap": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign out"
           }
         }
       }
     },
-    "Bitki" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Plant"
+    "Çocuk": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Child"
           }
         }
       }
     },
-    "Bu çekim kalıcı olarak silinsin mi?" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Delete this shot permanently?"
+    "DEĞİŞİMİ TEK KAREDE BİRİKTİR": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "COLLECT CHANGE, ONE FRAME AT A TIME"
           }
         }
       }
     },
-    "BU HAFTA" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "THIS WEEK"
+    "Devam Et": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue"
           }
         }
       }
     },
-    "Bu özellikler Timelapse Pro ile açılır." : {
-
+    "Diğer": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Other"
+          }
+        }
+      }
     },
-    "Bugün" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Today"
+    "EN AVANTAJLI": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "BEST VALUE"
           }
         }
       }
     },
-    "Bugün %lld projede çekim zamanı" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Time to capture in %lld projects today"
+    "Evcil hayvan": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pet"
           }
         }
       }
     },
-    "Bugün için her şey tamam" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "All done for today"
+    "Filigranı kaldır, 4K'ya geç — Pro": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove the watermark, go 4K — Pro"
           }
         }
       }
     },
-    "Bugün zamanı geldi" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Due today"
+    "Fiyort": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fjord"
           }
         }
       }
     },
-    "Canlı" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vivid"
+    "Fotoğraf verisi alınamadı.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't read the photo data."
           }
         }
       }
     },
-    "çekim · %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "shots · %@"
+    "Fotoğrafların hep güvende": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your photos, always safe"
           }
         }
       }
     },
-    "Çekim hatırlatıcıları" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Capture reminders"
+    "Geri yüklenecek bir abonelik bulunamadı.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No subscription found to restore."
           }
         }
       }
     },
-    "ÇEKİM SIKLIĞI" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "CAPTURE CADENCE"
+    "Ghost hizalama": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ghost alignment"
           }
         }
       }
     },
-    "Çekim yarıda kesildi. Tekrar dene." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The capture was interrupted. Try again."
+    "Giriş yapıldı. Bu hesap admin değil; Pro açılmadı.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signed in. This account isn't an admin; Pro was not unlocked."
           }
         }
       }
     },
-    "Çekim zamanı" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Time to capture"
+    "Gizlilik Politikası": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Privacy Policy"
           }
         }
       }
     },
-    "Çift modu" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Couple mode"
+    "Görüntüle": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "View"
           }
         }
       }
     },
-    "Çift modu (birlikte çekim) her projede sağ üstteki davet düğmesiyle açılır. iCloud değişikliği uygulama yeniden başlatılınca geçerli olur." : {
-
+    "Görünüm": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Appearance"
+          }
+        }
+      }
     },
-    "Çıkış yap" : {
-
+    "Gün aşırı": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every other day"
+          }
+        }
+      }
     },
-    "Çocuk" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Child"
+    "Gün serisi": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Day streak"
           }
         }
       }
     },
-    "DEĞİŞİMİ TEK KAREDE BİRİKTİR" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "COLLECT CHANGE, ONE FRAME AT A TIME"
+    "GÜN SERİSİ": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAY STREAK"
           }
         }
       }
     },
-    "Devam Et" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Continue"
+    "GÜNDÜR": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAYS"
           }
         }
       }
     },
-    "Diğer" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Other"
+    "Gündür sürüyor": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Days running"
           }
         }
       }
     },
-    "EN AVANTAJLI" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "BEST VALUE"
+    "Haftalık": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weekly"
           }
         }
       }
     },
-    "Evcil hayvan" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pet"
+    "Hangi projeye?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Which project?"
           }
         }
       }
     },
-    "Filigranı kaldır, 4K'ya geç — Pro" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Remove the watermark, go 4K — Pro"
+    "Hata": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Error"
           }
         }
       }
     },
-    "Fiyort" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fjord"
+    "Hatırlatıcı": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reminders"
           }
         }
       }
     },
-    "Fotoğraf verisi alınamadı." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Couldn't read the photo data."
+    "Henüz çekim yok": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No shots yet"
           }
         }
       }
     },
-    "Fotoğrafların hep güvende" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Your photos, always safe"
+    "Her gün": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daily"
           }
         }
       }
     },
-    "Geri yüklenecek bir abonelik bulunamadı." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No subscription found to restore."
+    "Her gün, gün aşırı ya da haftalık — zamanı gelince hatırla": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daily, every other day or weekly — get reminded when it's time"
           }
         }
       }
     },
-    "Ghost hizalama" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ghost alignment"
+    "Hesap": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Account"
           }
         }
       }
     },
-    "Giriş yapıldı. Bu hesap admin değil; Pro açılmadı." : {
-
+    "Hikayeni en iyi haliyle anlat": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tell your story at its best"
+          }
+        }
+      }
     },
-    "Gizlilik Politikası" : {
-
+    "Hız": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speed"
+          }
+        }
+      }
     },
-    "Görüntüle" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "View"
+    "iCloud isteği kaydedildi; şu an yerel depoya düşülüyor (ücretli Apple hesabı gerekir).": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud request saved; currently falling back to local storage (a paid Apple account is required)."
           }
         }
       }
     },
-    "Görünüm" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Appearance"
+    "iCloud yedekleme": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud backup"
           }
         }
       }
     },
-    "Gün aşırı" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Every other day"
+    "iCloud yedekleme etkin.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud backup is active."
           }
         }
       }
     },
-    "Gün serisi" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Day streak"
+    "İlk hikayeni başlat": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start your first story"
           }
         }
       }
     },
-    "GÜN SERİSİ" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "DAY STREAK"
+    "İptal": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel"
           }
         }
       }
     },
-    "GÜNDÜR" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "DAYS"
+    "İşleniyor…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Processing…"
           }
         }
       }
     },
-    "Gündür sürüyor" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Days running"
+    "İstatistik": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Statistics"
           }
         }
       }
     },
-    "Haftalık" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Weekly"
+    "İstediğin kadar hikaye takip et": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Track as many stories as you like"
           }
         }
       }
     },
-    "Hata" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Error"
+    "Kadans takibi": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cadence tracking"
           }
         }
       }
     },
-    "Hatırlatıcı" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Reminders"
+    "Kamera başlatılamadı.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't start the camera."
           }
         }
       }
     },
-    "Henüz çekim yok" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No shots yet"
+    "Kamera izni ayarları": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Camera permission settings"
           }
         }
       }
     },
-    "Her gün" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Daily"
+    "Kamera izni verilmedi. Ayarlar’dan açabilirsin.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Camera access wasn't granted. You can enable it in Settings."
           }
         }
       }
     },
-    "Her gün, gün aşırı ya da haftalık — zamanı gelince hatırla" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Daily, every other day or weekly — get reminded when it's time"
+    "Kapat": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close"
           }
         }
       }
     },
-    "Hesap" : {
-
+    "Karanlık Oda": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Darkroom"
+          }
+        }
+      }
     },
-    "Hikayeni en iyi haliyle anlat" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tell your story at its best"
+    "Kare Çek": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Capture"
           }
         }
       }
     },
-    "Hız" : {
-
+    "Kareler birleştiriliyor…": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stitching your frames…"
+          }
+        }
+      }
     },
-    "iCloud isteği kaydedildi; şu an yerel depoya düşülüyor (ücretli Apple hesabı gerekir)." : {
-
+    "Karelerini tek dokunuşla videoya dönüştür ve paylaş": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn your frames into a video with one tap and share it"
+          }
+        }
+      }
     },
-    "iCloud yedekleme" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "iCloud backup"
+    "Karşılama ekranını göster": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show welcome screen"
           }
         }
       }
     },
-    "iCloud yedekleme etkin." : {
-
+    "KATEGORİ": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CATEGORY"
+          }
+        }
+      }
     },
-    "İlk hikayeni başlat" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Start your first story"
+    "Kaydet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save"
           }
         }
       }
     },
-    "İptal" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cancel"
+    "Kendim": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Myself"
           }
         }
       }
     },
-    "İşleniyor…" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Processing…"
+    "Konum sabit; gizleyebilirsin": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Position fixed; you can hide it"
           }
         }
       }
     },
-    "İstatistik" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Statistics"
+    "Kullanım Koşulları": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terms of Use"
           }
         }
       }
     },
-    "İstediğin kadar hikaye takip et" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Track as many stories as you like"
+    "Lavanta": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lavender"
           }
         }
       }
     },
-    "Kadans takibi" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cadence tracking"
+    "Negatif": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Negative"
           }
         }
       }
     },
-    "Kamera başlatılamadı." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Couldn't start the camera."
+    "Not ekle…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add a note…"
           }
         }
       }
     },
-    "Kamera izni ayarları" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Camera permission settings"
+    "Not konumu": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Note position"
           }
         }
       }
     },
-    "Kamera izni verilmedi. Ayarlar’dan açabilirsin." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Camera access wasn't granted. You can enable it in Settings."
+    "Notu uygula": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apply note"
           }
         }
       }
     },
-    "Kapat" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Close"
+    "Önceki kareyi şablon olarak gör, hep aynı açıyı yakala": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "See the previous frame as a template and nail the same angle every time"
           }
         }
       }
     },
-    "Karanlık Oda" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Darkroom"
+    "ör. Sakal": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "e.g. Beard"
           }
         }
       }
     },
-    "Kareler birleştiriliyor…" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Stitching your frames…"
+    "Otomatik kare eşleştirme": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatic frame matching"
           }
         }
       }
     },
-    "Karelerini tek dokunuşla videoya dönüştür ve paylaş" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Turn your frames into a video with one tap and share it"
+    "Paylaşıma hazır video": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share-ready video"
           }
         }
       }
     },
-    "Karşılama ekranını göster" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Show welcome screen"
+    "PRO": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PRO"
           }
         }
       }
     },
-    "KATEGORİ" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "CATEGORY"
+    "Pro (Aylık)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pro (Monthly)"
           }
         }
       }
     },
-    "Kaydet" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Save"
+    "Pro (Ömür Boyu)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pro (Lifetime)"
           }
         }
       }
     },
-    "Kendim" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Myself"
+    "Pro Özellikler": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pro Features"
           }
         }
       }
     },
-    "Konum sabit; gizleyebilirsin" : {
-
+    "Pro'da özneyi otomatik hizala; kareler pürüzsüz aksın": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auto-align the subject on Pro; frames flow smoothly"
+          }
+        }
+      }
     },
-    "Kullanım Koşulları" : {
-
+    "Pro'ya Geç": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Go Pro"
+          }
+        }
+      }
     },
-    "Lavanta" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lavender"
+    "Proje": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Projects"
           }
         }
       }
     },
-    "Negatif" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Negative"
+    "Proje kaydedilemedi: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't save the project: %@"
           }
         }
       }
     },
-    "Not ekle…" : {
-
+    "Proje ve içindeki tüm çekimler kalıcı olarak silinsin mi?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete this project and all of its shots permanently?"
+          }
+        }
+      }
     },
-    "Not konumu" : {
-
+    "Projeler": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Projects"
+          }
+        }
+      }
     },
-    "Notu uygula" : {
-
+    "Saat": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Time"
+          }
+        }
+      }
     },
-    "Önceki kareyi şablon olarak gör, hep aynı açıyı yakala" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "See the previous frame as a template and nail the same angle every time"
+    "Saç & Sakal": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hair & Beard"
           }
         }
       }
     },
-    "ör. Sakal" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "e.g. Beard"
+    "Sağ alt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bottom right"
           }
         }
       }
     },
-    "Otomatik kare eşleştirme" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Automatic frame matching"
+    "Sağ üst": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Top right"
           }
         }
       }
     },
-    "Paylaşıma hazır video" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Share-ready video"
+    "Sağ üstteki + ile bir proje oluştur,\nzamanla değişimi kaydetmeye başla.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create a project with the + up top,\nand start capturing change over time."
           }
         }
       }
     },
-    "PRO" : {
-
+    "Sağ üstteki kamera düğmesiyle ilk çekimini ekle.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add your first shot with the camera button up top."
+          }
+        }
+      }
     },
-    "Pro (Aylık)" : {
-
+    "Satın alımları geri yükle": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restore purchases"
+          }
+        }
+      }
     },
-    "Pro (Ömür Boyu)" : {
-
+    "Satın alma tamamlanamadı: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The purchase couldn't be completed: %@"
+          }
+        }
+      }
     },
-    "Pro Özellikler" : {
-
+    "Sil": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete"
+          }
+        }
+      }
     },
-    "Pro'da özneyi otomatik hizala; kareler pürüzsüz aksın" : {
-
+    "Sınırsız proje": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unlimited projects"
+          }
+        }
+      }
     },
-    "Pro'ya Geç" : {
-
+    "Sınırsız proje, 4K filigransız export": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unlimited projects, watermark-free 4K export"
+          }
+        }
+      }
     },
-    "Proje" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Projects"
+    "Sıradaki: No. %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Next: No. %lld"
           }
         }
       }
     },
-    "Proje kaydedilemedi: %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Couldn't save the project: %@"
+    "Sol alt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bottom left"
           }
         }
       }
     },
-    "Proje ve içindeki tüm çekimler kalıcı olarak silinsin mi?" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Delete this project and all of its shots permanently?"
+    "Sol üst": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Top left"
           }
         }
       }
     },
-    "Projeler" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Projects"
+    "Sürüm %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Version %@"
           }
         }
       }
     },
-    "Saat" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Time"
+    "Tamam": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
           }
         }
       }
     },
-    "Saç & Sakal" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hair & Beard"
+    "Tarih damgası": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Date stamp"
           }
         }
       }
     },
-    "Sağ alt" : {
-
+    "Tarih konumu": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Date position"
+          }
+        }
+      }
     },
-    "Sağ üst" : {
-
+    "TEK SEFERLİK": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ONE-TIME"
+          }
+        }
+      }
     },
-    "Sağ üstteki + ile bir proje oluştur,\nzamanla değişimi kaydetmeye başla." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Create a project with the + up top,\nand start capturing change over time."
+    "Tekrar dene": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try again"
           }
         }
       }
     },
-    "Sağ üstteki kamera düğmesiyle ilk çekimini ekle." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Add your first shot with the camera button up top."
+    "Timelapse": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Timelapse"
           }
         }
       }
     },
-    "Satın alımları geri yükle" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Restore purchases"
+    "Timelapse hazırlanıyor…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparing timelapse…"
           }
         }
       }
     },
-    "Satın alma tamamlanamadı: %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The purchase couldn't be completed: %@"
+    "Timelapse için en az 2 çekim gerekli.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A timelapse needs at least 2 shots."
           }
         }
       }
     },
-    "Sil" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Delete"
+    "Timelapse ile takip ediyorum": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tracking with Timelapse"
           }
         }
       }
     },
-    "Sınırsız proje" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Unlimited projects"
+    "Timelapse Pro": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Timelapse Pro"
           }
         }
       }
     },
-    "Sınırsız proje, 4K filigransız export" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Unlimited projects, watermark-free 4K export"
+    "Timelapse Pro aktif": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Timelapse Pro is active"
           }
         }
       }
     },
-    "Sol alt" : {
-
+    "Timelapse Pro'ya Geç": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Upgrade to Timelapse Pro"
+          }
+        }
+      }
     },
-    "Sol üst" : {
-
+    "Timelapse videosu": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Timelapse video"
+          }
+        }
+      }
     },
-    "Sürüm %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Version %@"
+    "Timelapse'i Oluştur": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create Timelapse"
           }
         }
       }
     },
-    "Tamam" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "OK"
+    "Timelapse'te \"%@\" projesinde birlikte çekim yapalım! Uygulamayı indirip aynı hikâyeyi birlikte biriktirelim. 📸": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Let's capture together on the \"%@\" project in Timelapse! Download the app and build the same story together. 📸"
           }
         }
       }
     },
-    "Tarih damgası" : {
-
+    "Toplam çekim": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total shots"
+          }
+        }
+      }
     },
-    "Tarih konumu" : {
-
+    "Toplam kare": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total frames"
+          }
+        }
+      }
     },
-    "TEK SEFERLİK" : {
-
+    "TOPLAM KARE": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "TOTAL FRAMES"
+          }
+        }
+      }
     },
-    "Tekrar dene" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Try again"
+    "Ücretsiz sınır doldu — devam için Pro": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Free limit reached — Pro to continue"
           }
         }
       }
     },
-    "Timelapse" : {
-
+    "Ücretsiz sınır doldu — Pro": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Free limit reached — Pro"
+          }
+        }
+      }
     },
-    "Timelapse hazırlanıyor…" : {
-
+    "Ücretsiz sürümde kaldırılamaz": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Can't be removed in the free version"
+          }
+        }
+      }
     },
-    "Timelapse için en az 2 çekim gerekli." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A timelapse needs at least 2 shots."
+    "Ücretsiz: %lld/%lld kare": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Ücretsiz: %1$lld/%2$lld kare"
           }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Free: %lld/%lld frames"
+          }
         }
       }
     },
-    "Timelapse ile takip ediyorum" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tracking with Timelapse"
+    "Üyelik": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Membership"
           }
         }
       }
     },
-    "Timelapse Pro" : {
-
+    "Uygulama": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App"
+          }
+        }
+      }
     },
-    "Timelapse Pro aktif" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Timelapse Pro is active"
+    "Uygulama dili": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App language"
           }
         }
       }
     },
-    "Timelapse Pro'ya Geç" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Upgrade to Timelapse Pro"
+    "Uygulama etiketi (sağ alt)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App mark (bottom right)"
           }
         }
       }
     },
-    "Timelapse videosu" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Timelapse video"
+    "Vazgeç": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel"
           }
         }
       }
     },
-    "Timelapse'i Oluştur" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Create Timelapse"
+    "Video oluşturulamadı: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't create the video: %@"
           }
         }
       }
     },
-    "Timelapse'te \"%@\" projesinde birlikte kayıt tutalım! Uygulamayı indirip aynı anı birlikte yakalayalım. 📸" : {
-
+    "Videoyu Paylaş": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share Video"
+          }
+        }
+      }
     },
-    "Toplam çekim" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Total shots"
+    "Yeni kare ekle": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add a new frame"
           }
         }
       }
     },
-    "Toplam kare" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Total frames"
+    "Yeni Proje": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New Project"
           }
         }
       }
     },
-    "TOPLAM KARE" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "TOTAL FRAMES"
+    "Yeniden Çek": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retake"
           }
         }
       }
     },
-    "Ücretsiz sınır doldu — devam için Pro" : {
-
+    "Geçiş": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transition"
+          }
+        }
+      }
     },
-    "Ücretsiz sürümde kaldırılamaz" : {
-
+    "Hizalama": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alignment"
+          }
+        }
+      }
     },
-    "Ücretsiz: %lld/%lld kare" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Ücretsiz: %1$lld/%2$lld kare"
+    "Kesme": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cut"
           }
         }
       }
     },
-    "Üyelik" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Membership"
+    "Çözülme": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dissolve"
           }
         }
       }
     },
-    "Uygulama" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "App"
+    "Karartma": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fade"
           }
         }
       }
     },
-    "Uygulama dili" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "App language"
+    "Kapalı": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Off"
           }
         }
       }
     },
-    "Uygulama etiketi (sağ alt)" : {
-
+    "Akıllı": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Smart"
+          }
+        }
+      }
     },
-    "Vazgeç" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cancel"
+    "Manuel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manual"
           }
         }
       }
     },
-    "Video oluşturulamadı: %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Couldn't create the video: %@"
+    "Hizalamayı Ayarla": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adjust Alignment"
           }
         }
       }
     },
-    "Videoyu Paylaş" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Share Video"
+    "Manuel Hizalama": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manual Alignment"
           }
         }
       }
     },
-    "Yeni Proje" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "New Project"
+    "Özneyi işaretlemek için dokun ve sürükle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tap and drag to mark the subject"
           }
         }
       }
     },
-    "Yeniden Çek" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Retake"
+    "Uygula": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apply"
           }
         }
       }
     }
   },
-  "version" : "1.0"
+  "version": "1.0"
 }

@@ -153,10 +153,7 @@ struct ProjectDetailView: View {
             .foregroundStyle(.white)
             .padding(.horizontal, 20)
             .padding(.vertical, 18)
-            .background(
-                LinearGradient(colors: [accent, accent.opacity(0.78)], startPoint: .leading, endPoint: .trailing)
-            )
-            .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
+            .glassSurface(cornerRadius: Theme.cornerRadius, tint: accent)
             .shadow(color: accent.opacity(0.4), radius: 14, x: 0, y: 7)
             .overlay(alignment: .topTrailing) {
                 if due {

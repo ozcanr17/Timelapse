@@ -16,8 +16,11 @@ struct TimelapseExportSheet: View {
     @State private var overlay = TimelapseOverlayOptions()
     @State private var noteDraft = ""
     @State private var lastRenderedURL: URL?
-
-    private var smartAlignment: Bool { store.isPro && smartAlignmentEnabled }
+    @State private var alignMode: AlignMode = .off
+    @State private var manual = ManualAlignment(center: CGPoint(x: 0.5, y: 0.5), zoom: 1)
+    @State private var transition: TimelapseTransition = .cut
+    @State private var showManualAlign = false
+    @State private var didInitAlign = false
 
     private var frames: [TimelapseFrame] {
         project.sortedEntries.compactMap { entry in
@@ -38,9 +41,22 @@ struct TimelapseExportSheet: View {
                     Button("Kapat") { dismiss() }
                 }
             }
-            .task { await export() }
+            .task {
+                if !didInitAlign {
+                    didInitAlign = true
+                    if store.isPro && smartAlignmentEnabled { alignMode = .smart }
+                }
+                await export()
+            }
             .sheet(isPresented: $showPaywall) {
                 PaywallView(store: store)
+            }
+            .sheet(isPresented: $showManualAlign) {
+                if let data = frames.first?.imageData {
+                    ManualAlignView(imageData: data, manual: $manual) {
+                        Task { await export() }
+                    }
+                }
             }
         }
     }
@@ -106,14 +122,9 @@ struct TimelapseExportSheet: View {
                     .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
                     .frame(maxHeight: 380)
 
-                if smartAlignment {
-                    Label("Akıllı hizalama açık — özne karelere sabitlendi", systemImage: "wand.and.stars")
-                        .font(Theme.caption(12))
-                        .foregroundStyle(theme.accent)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-
                 speedControl
+                transitionControl
+                alignmentControl
                 overlayControls
 
                 ShareLink(item: url) {
@@ -154,6 +165,65 @@ struct TimelapseExportSheet: View {
             .disabled(viewModel.phase == .rendering)
             .onChange(of: speed) {
                 Task { await export() }
+            }
+        }
+    }
+
+    private var transitionControl: some View {
+        VStack(spacing: 8) {
+            HStack {
+                Label("Geçiş", systemImage: "square.on.square.dashed")
+                    .font(Theme.caption(13))
+                    .foregroundStyle(theme.inkMuted)
+                Spacer()
+            }
+            Picker("Geçiş", selection: $transition) {
+                ForEach(TimelapseTransition.allCases) { option in
+                    Text(option.displayName).tag(option)
+                }
+            }
+            .pickerStyle(.segmented)
+            .disabled(viewModel.phase == .rendering)
+            .onChange(of: transition) { Task { await export() } }
+        }
+    }
+
+    private var alignmentControl: some View {
+        VStack(spacing: 8) {
+            HStack {
+                Label("Hizalama", systemImage: "wand.and.stars")
+                    .font(Theme.caption(13))
+                    .foregroundStyle(theme.inkMuted)
+                Spacer()
+                if !store.isPro {
+                    Text("PRO").font(.system(size: 10, weight: .bold)).foregroundStyle(.white)
+                        .padding(.horizontal, 6).padding(.vertical, 2)
+                        .background(theme.accent, in: Capsule())
+                }
+            }
+            Picker("Hizalama", selection: $alignMode) {
+                ForEach(AlignMode.allCases) { option in
+                    Text(option.displayName).tag(option)
+                }
+            }
+            .pickerStyle(.segmented)
+            .disabled(viewModel.phase == .rendering)
+            .onChange(of: alignMode) { _, mode in
+                if !store.isPro {
+                    alignMode = .off
+                    showPaywall = true
+                    return
+                }
+                if mode == .manual { showManualAlign = true } else { Task { await export() } }
+            }
+            if alignMode == .manual {
+                Button {
+                    showManualAlign = true
+                } label: {
+                    Label("Hizalamayı Ayarla", systemImage: "scope")
+                        .font(Theme.caption(13))
+                        .foregroundStyle(theme.accent)
+                }
             }
         }
     }
@@ -257,13 +327,117 @@ struct TimelapseExportSheet: View {
         // Ücretsiz kullanıcı etiketi kaldıramaz; her ihtimale karşı burada da zorluyoruz.
         var effectiveOverlay = overlay
         if !store.isPro { effectiveOverlay.showAppMark = true }
+        let proAlign = store.isPro
         await viewModel.export(
             frames: frames,
             isPro: store.isPro,
             speed: speed,
             overlay: effectiveOverlay,
-            smartAlignment: smartAlignment
+            smartAlignment: proAlign && alignMode == .smart,
+            manualAnchor: (proAlign && alignMode == .manual) ? manual : nil,
+            transition: transition
         )
+    }
+}
+
+private enum AlignMode: String, CaseIterable, Identifiable {
+    case off, smart, manual
+    var id: String { rawValue }
+    var displayName: String {
+        switch self {
+        case .off:    "Kapalı"
+        case .smart:  "Akıllı"
+        case .manual: "Manuel"
+        }
+    }
+}
+
+/// Manuel hizalama ekranı: kullanıcı ilk kare üzerinde özneyi işaretler (sürükle) ve
+/// yakınlaştırmayı ayarlar. Seçilen nokta tüm karelerde ortaya getirilir.
+private struct ManualAlignView: View {
+    let imageData: Data
+    @Binding var manual: ManualAlignment
+    let onDone: () -> Void
+
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.theme) private var theme
+    @State private var uiImage: UIImage?
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 16) {
+                Text("Özneyi işaretlemek için dokun ve sürükle")
+                    .font(Theme.caption(13))
+                    .foregroundStyle(theme.inkMuted)
+
+                GeometryReader { geo in
+                    let fit = fitRect(imageSize: uiImage?.size ?? CGSize(width: 3, height: 4), in: geo.size)
+                    ZStack(alignment: .topLeading) {
+                        Color.black
+                        if let uiImage {
+                            Image(uiImage: uiImage).resizable().scaledToFit()
+                        }
+                        Crosshair()
+                            .position(
+                                x: fit.minX + manual.center.x * fit.width,
+                                y: fit.minY + manual.center.y * fit.height
+                            )
+                    }
+                    .contentShape(Rectangle())
+                    .gesture(
+                        DragGesture(minimumDistance: 0).onChanged { value in
+                            let x = (value.location.x - fit.minX) / max(fit.width, 1)
+                            let y = (value.location.y - fit.minY) / max(fit.height, 1)
+                            manual.center = CGPoint(x: min(max(x, 0), 1), y: min(max(y, 0), 1))
+                        }
+                    )
+                }
+                .frame(maxHeight: 440)
+                .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
+
+                HStack(spacing: 12) {
+                    Image(systemName: "minus.magnifyingglass").foregroundStyle(theme.inkMuted)
+                    Slider(value: Binding(get: { Double(manual.zoom) }, set: { manual.zoom = CGFloat($0) }), in: 0.5...3)
+                        .tint(theme.accent)
+                    Image(systemName: "plus.magnifyingglass").foregroundStyle(theme.inkMuted)
+                }
+            }
+            .padding(20)
+            .background(theme.canvas)
+            .navigationTitle("Manuel Hizalama")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("İptal") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Uygula") { dismiss(); onDone() }.fontWeight(.bold)
+                }
+            }
+        }
+        .task { uiImage = await ImageDownsampler.image(from: imageData, maxPixelSize: 1400) }
+    }
+
+    private func fitRect(imageSize: CGSize, in container: CGSize) -> CGRect {
+        let imgAspect = imageSize.width / max(imageSize.height, 1)
+        let contAspect = container.width / max(container.height, 1)
+        var w = container.width
+        var h = container.height
+        if imgAspect > contAspect { h = w / imgAspect } else { w = h * imgAspect }
+        return CGRect(x: (container.width - w) / 2, y: (container.height - h) / 2, width: w, height: h)
+    }
+}
+
+private struct Crosshair: View {
+    var body: some View {
+        ZStack {
+            Circle().strokeBorder(.white, lineWidth: 2).frame(width: 44, height: 44)
+            Circle().fill(.white).frame(width: 5, height: 5)
+            Rectangle().fill(.white).frame(width: 1, height: 16)
+            Rectangle().fill(.white).frame(width: 16, height: 1)
+        }
+        .shadow(color: .black.opacity(0.6), radius: 3)
+        .allowsHitTesting(false)
     }
 }
 
