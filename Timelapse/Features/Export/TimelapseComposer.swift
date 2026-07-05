@@ -69,15 +69,18 @@ enum OverlayCorner: String, CaseIterable, Identifiable {
     }
 }
 
-/// Kullanıcının videoya eklediği metin bindirmeleri: tarih, serbest not ve uygulama
-/// etiketi. Her biri açık/kapalı ve konum seçimine sahiptir.
+/// Kullanıcının videoya eklediği metin bindirmeleri. Tarih ve not konumu seçilebilir
+/// (ve asla aynı köşeye düşmez). Uygulama etiketi her zaman SAĞ ALT köşededir; konumu
+/// değiştirilemez, yalnızca Pro kullanıcı gizleyebilir.
 struct TimelapseOverlayOptions: Equatable {
     var showDate: Bool = false
-    var datePosition: OverlayCorner = .bottomLeft
+    var datePosition: OverlayCorner = .topLeft
     var note: String = ""
-    var notePosition: OverlayCorner = .topLeft
+    var notePosition: OverlayCorner = .topRight
     var showAppMark: Bool = true
-    var appMarkPosition: OverlayCorner = .bottomRight
+
+    /// Uygulama etiketinin sabit konumu.
+    static let appMarkCorner: OverlayCorner = .bottomRight
 }
 
 /// Videoya girecek tek kare: görsel veri + çekildiği tarih (tarih bindirmesi için).
@@ -260,8 +263,9 @@ struct TimelapseComposer: TimelapseComposing {
             draw(dateFormatter.string(from: date), at: overlay.datePosition)
         }
         draw(overlay.note, at: overlay.notePosition)
+        // Uygulama etiketi her zaman sağ altta; ücretsiz katmanda zorunlu, Pro'da gizlenebilir.
         if settings.includesWatermark || overlay.showAppMark {
-            draw("TIMELAPSE", at: overlay.appMarkPosition, kern: 2)
+            draw("TIMELAPSE", at: TimelapseOverlayOptions.appMarkCorner, kern: 2)
         }
     }
 

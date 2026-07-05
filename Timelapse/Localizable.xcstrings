@@ -14,6 +14,9 @@
         }
       }
     },
+    "·" : {
+
+    },
     "%@ — Timelapse" : {
 
     },
@@ -41,6 +44,7 @@
       }
     },
     "Abonelik otomatik yenilenir; istediğin zaman Ayarlar’dan iptal edebilirsin." : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -69,6 +73,9 @@
     "Apple ID ile girildi" : {
 
     },
+    "Apple ile giriş şu an kullanılamıyor (ücretli Apple Developer hesabı gerekir). Test için sürüm numarasına 7 kez dokunup geliştirici arka kapısını kullan." : {
+
+    },
     "Ayarlar" : {
       "localizations" : {
         "en" : {
@@ -88,6 +95,9 @@
           }
         }
       }
+    },
+    "Aylık abonelik dönem sonunda otomatik yenilenir; en az 24 saat önce iptal etmezsen ücret Apple Kimliği hesabından tahsil edilir. Ömür boyu seçenek tek seferlik bir satın alımdır. Aboneliğini App Store hesap ayarlarından yönetebilir veya iptal edebilirsin." : {
+
     },
     "Başla" : {
       "localizations" : {
@@ -118,6 +128,9 @@
           }
         }
       }
+    },
+    "Bindirmeler" : {
+
     },
     "Birlikte kaydedin" : {
       "localizations" : {
@@ -326,6 +339,9 @@
         }
       }
     },
+    "Etiket konumu" : {
+
+    },
     "Evcil hayvan" : {
       "localizations" : {
         "en" : {
@@ -376,9 +392,6 @@
         }
       }
     },
-    "Geliştirici" : {
-
-    },
     "Geri yüklenecek bir abonelik bulunamadı." : {
       "localizations" : {
         "en" : {
@@ -402,7 +415,7 @@
     "Giriş yapıldı. Bu hesap admin değil; Pro açılmadı." : {
 
     },
-    "Gizli test arka kapısı. Yalnızca sen görürsün." : {
+    "Gizlilik Politikası" : {
 
     },
     "Görüntüle" : {
@@ -560,6 +573,9 @@
           }
         }
       }
+    },
+    "iCloud yedekleme değişikliği uygulamayı yeniden başlatınca geçerli olur." : {
+
     },
     "İlk hikayeni başlat" : {
       "localizations" : {
@@ -731,6 +747,9 @@
         }
       }
     },
+    "Kullanım Koşulları" : {
+
+    },
     "Lavanta" : {
       "localizations" : {
         "en" : {
@@ -750,6 +769,15 @@
           }
         }
       }
+    },
+    "Not ekle…" : {
+
+    },
+    "Not konumu" : {
+
+    },
+    "Notu uygula" : {
+
     },
     "Önceki kareyi şablon olarak gör, hep aynı açıyı yakala" : {
       "localizations" : {
@@ -794,13 +822,16 @@
     "PRO" : {
 
     },
+    "Pro (Aylık)" : {
+
+    },
+    "Pro (Ömür Boyu)" : {
+
+    },
     "Pro Özellikler" : {
 
     },
     "Pro'ya Geç" : {
-
-    },
-    "Pro'yu Test Et (ödeme yok)" : {
 
     },
     "Proje" : {
@@ -862,6 +893,12 @@
           }
         }
       }
+    },
+    "Sağ alt" : {
+
+    },
+    "Sağ üst" : {
+
     },
     "Sağ üstteki + ile bir proje oluştur,\nzamanla değişimi kaydetmeye başla." : {
       "localizations" : {
@@ -933,6 +970,12 @@
         }
       }
     },
+    "Sol alt" : {
+
+    },
+    "Sol üst" : {
+
+    },
     "Sürüm %@" : {
       "localizations" : {
         "en" : {
@@ -952,6 +995,12 @@
           }
         }
       }
+    },
+    "Tarih damgası" : {
+
+    },
+    "Tarih konumu" : {
+
     },
     "TEK SEFERLİK" : {
 
@@ -1062,10 +1111,10 @@
         }
       }
     },
-    "Tüm Pro özelliklerini satın almadan aç" : {
+    "Ücretsiz sınır doldu — devam için Pro" : {
 
     },
-    "Ücretsiz sınır doldu — devam için Pro" : {
+    "Ücretsiz sürümde kaldırılamaz" : {
 
     },
     "Ücretsiz: %lld/%lld kare" : {
@@ -1107,6 +1156,9 @@
           }
         }
       }
+    },
+    "Uygulama etiketi" : {
+
     },
     "Vazgeç" : {
       "localizations" : {

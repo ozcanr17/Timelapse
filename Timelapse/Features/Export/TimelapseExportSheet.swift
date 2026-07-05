@@ -54,19 +54,18 @@ struct TimelapseExportSheet: View {
     }
 
     private var renderingView: some View {
-        VStack(spacing: 24) {
-            LogoMark(size: 72)
-            VStack(spacing: 8) {
-                Text("Kareler birleştiriliyor…")
+        VStack(spacing: 22) {
+            SpinningLogo(size: 92)
+            VStack(spacing: 6) {
+                Text("Timelapse hazırlanıyor…")
                     .font(Theme.headline(17))
                     .foregroundStyle(theme.ink)
                 Text(viewModel.progress, format: .percent.precision(.fractionLength(0)))
                     .font(Theme.stamp(15))
                     .foregroundStyle(theme.inkMuted)
+                    .contentTransition(.numericText())
+                    .animation(.easeOut(duration: 0.2), value: viewModel.progress)
             }
-            ProgressView(value: viewModel.progress)
-                .tint(theme.accent)
-                .padding(.horizontal, 48)
         }
     }
 
@@ -137,7 +136,7 @@ struct TimelapseExportSheet: View {
             }
             .tint(theme.accent)
             if overlay.showDate {
-                cornerPicker("Tarih konumu", selection: $overlay.datePosition)
+                cornerPicker("Tarih konumu", selection: $overlay.datePosition, exclude: [overlay.notePosition])
             }
 
             Divider().overlay(theme.inkMuted.opacity(0.2))
@@ -152,7 +151,7 @@ struct TimelapseExportSheet: View {
                     .onSubmit { overlay.note = noteDraft }
             }
             if !noteDraft.isEmpty {
-                cornerPicker("Not konumu", selection: $overlay.notePosition)
+                cornerPicker("Not konumu", selection: $overlay.notePosition, exclude: [overlay.datePosition])
                 if overlay.note != noteDraft {
                     Button("Notu uygula") { overlay.note = noteDraft }
                         .font(Theme.caption(12))
@@ -165,10 +164,9 @@ struct TimelapseExportSheet: View {
             Toggle(isOn: $overlay.showAppMark) {
                 Label {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Uygulama etiketi").font(Theme.body(15)).foregroundStyle(theme.ink)
-                        if !store.isPro {
-                            Text("Ücretsiz sürümde kaldırılamaz").font(Theme.caption(11)).foregroundStyle(theme.inkMuted)
-                        }
+                        Text("Uygulama etiketi (sağ alt)").font(Theme.body(15)).foregroundStyle(theme.ink)
+                        Text(store.isPro ? "Konum sabit; gizleyebilirsin" : "Ücretsiz sürümde kaldırılamaz")
+                            .font(Theme.caption(11)).foregroundStyle(theme.inkMuted)
                     }
                 } icon: {
                     Image(systemName: "signature").foregroundStyle(theme.accent)
@@ -176,21 +174,24 @@ struct TimelapseExportSheet: View {
             }
             .tint(theme.accent)
             .disabled(!store.isPro)
-            cornerPicker("Etiket konumu", selection: $overlay.appMarkPosition)
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(theme.surface, in: RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
     }
 
-    private func cornerPicker(_ title: LocalizedStringKey, selection: Binding<OverlayCorner>) -> some View {
-        HStack {
+    /// Köşe seçici. Sağ alt (uygulama etiketi) ve `exclude`'daki köşeler seçenek dışıdır;
+    /// böylece tarih ile not asla aynı köşeye düşmez.
+    private func cornerPicker(_ title: LocalizedStringKey, selection: Binding<OverlayCorner>, exclude: Set<OverlayCorner>) -> some View {
+        let reserved = exclude.union([TimelapseOverlayOptions.appMarkCorner])
+        let options = OverlayCorner.allCases.filter { $0 == selection.wrappedValue || !reserved.contains($0) }
+        return HStack {
             Text(title)
                 .font(Theme.caption(12))
                 .foregroundStyle(theme.inkMuted)
             Spacer()
             Picker(title, selection: selection) {
-                ForEach(OverlayCorner.allCases) { corner in
+                ForEach(options) { corner in
                     Text(corner.displayName).tag(corner)
                 }
             }
@@ -227,6 +228,22 @@ struct TimelapseExportSheet: View {
             speed: speed,
             overlay: effectiveOverlay
         )
+    }
+}
+
+/// Video render edilirken gösterilen sevimli, sürekli dönen logo animasyonu
+/// (uygulama açılışındaki dönüşle aynı ruhta). Sıkıcı ilerleme çubuğunun yerini alır.
+private struct SpinningLogo: View {
+    let size: CGFloat
+    @State private var spinning = false
+
+    var body: some View {
+        LogoMark(size: size)
+            .rotationEffect(.degrees(spinning ? 360 : 0))
+            .animation(.linear(duration: 1.6).repeatForever(autoreverses: false), value: spinning)
+            .scaleEffect(spinning ? 1 : 0.85)
+            .animation(.easeInOut(duration: 0.9).repeatForever(autoreverses: true), value: spinning)
+            .onAppear { spinning = true }
     }
 }
 

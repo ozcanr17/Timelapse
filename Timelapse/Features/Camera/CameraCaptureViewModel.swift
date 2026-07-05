@@ -52,6 +52,9 @@ final class CameraCaptureViewModel {
         retakeEntry?.imageData ?? project.sortedEntries.last?.imageData
     }
 
+    /// Bu proje çift modu (birlikte çekim) için mi? Kamerada bölme kılavuzunu belirler.
+    var isCoupleMode: Bool { project.isCoupleMode }
+
     /// Kullanıcı önizlemeye dokununca referans noktasını oraya taşır.
     func setAnchor(_ point: NormalizedPoint) {
         referenceAnchor = point

@@ -15,6 +15,7 @@ struct ProjectDetailView: View {
     @State private var viewerEntry: Entry?
     @State private var shareCardURL: URL?
     @State private var showPaywall = false
+    @State private var showInvite = false
 
     private var canAddEntry: Bool {
         FeatureGate.canAddEntry(isPro: store.isPro, currentEntryCount: liveEntries.count)
@@ -98,6 +99,15 @@ struct ProjectDetailView: View {
             }
             ToolbarItem(placement: .primaryAction) {
                 Button {
+                    inviteTapped()
+                } label: {
+                    Image(systemName: project.isCoupleMode ? "person.2.fill" : "person.badge.plus")
+                        .foregroundStyle(accent)
+                }
+                .accessibilityIdentifier("inviteButton")
+            }
+            ToolbarItem(placement: .primaryAction) {
+                Button {
                     if canAddEntry {
                         isCapturing = true
                     } else {
@@ -122,9 +132,30 @@ struct ProjectDetailView: View {
         .sheet(isPresented: $showPaywall) {
             PaywallView(store: store)
         }
+        .sheet(isPresented: $showInvite) {
+            ActivityView(activityItems: [inviteText])
+        }
         .task(id: liveEntries.count) {
             shareCardURL = renderShareCard()
         }
+    }
+
+    private var inviteText: String {
+        String(localized: "Timelapse'te \"\(project.title)\" projesinde birlikte kayıt tutalım! Uygulamayı indirip aynı anı birlikte yakalayalım. 📸")
+    }
+
+    /// Çift modu: Pro kullanıcı bir partner davet eder → proje "birlikte çekim" moduna
+    /// geçer ve kamerada bölme kılavuzu görünür. Ücretsiz kullanıcı paywall görür.
+    private func inviteTapped() {
+        guard store.isPro else {
+            showPaywall = true
+            return
+        }
+        if !project.isCoupleMode {
+            project.isCoupleMode = true
+            try? modelContext.save()
+        }
+        showInvite = true
     }
 
     private var freeQuotaBadge: some View {
@@ -232,6 +263,9 @@ struct ProjectDetailView: View {
                 if project.isCaptureDue() {
                     Label("Bugün zamanı geldi", systemImage: "bell.fill")
                 }
+                if project.isCoupleMode {
+                    Label("Çift modu", systemImage: "person.2.fill")
+                }
             }
             .font(Theme.caption(12))
             .foregroundStyle(.white.opacity(0.9))
@@ -260,6 +294,18 @@ struct ProjectDetailView: View {
         .frame(maxWidth: .infinity)
         .padding(.top, 50)
     }
+}
+
+/// Sistem paylaşım sayfasını (UIActivityViewController) SwiftUI'da sunar — çift modu
+/// davetini paylaşmak için.
+private struct ActivityView: UIViewControllerRepresentable {
+    let activityItems: [Any]
+
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        UIActivityViewController(activityItems: activityItems, applicationActivities: nil)
+    }
+
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
 
 private struct StatTile: View {

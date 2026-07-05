@@ -43,16 +43,16 @@ private struct CameraSessionView: View {
     @Environment(StoreService.self) private var store
 
     @AppStorage(PremiumFeature.smartAlignment.preferenceKey!) private var smartAlignmentPref = false
-    @AppStorage(PremiumFeature.coupleMode.preferenceKey!) private var coupleModePref = false
 
     @State private var showGhost = false
     @State private var ghostImage: UIImage?
     @State private var ghostOpacity: Double = 0.35
     @State private var flashOpacity: Double = 0
 
-    /// Pro özellikleri yalnızca gerçekten Pro isek ve tercih açıksa devreye girsin.
+    /// Pro özellikleri yalnızca gerçekten Pro isek devreye girsin. Akıllı hizalama global
+    /// bir tercih; çift modu ise projeye bağlıdır (partner davet edildiyse).
     private var smartAlignment: Bool { store.isPro && smartAlignmentPref }
-    private var coupleMode: Bool { store.isPro && coupleModePref }
+    private var coupleMode: Bool { store.isPro && viewModel.isCoupleMode }
 
     private var isReady: Bool {
         viewModel.state == .ready || viewModel.state == .capturing
@@ -114,6 +114,11 @@ private struct CameraSessionView: View {
 
             VStack(spacing: 0) {
                 topBar
+
+                if !hasFailed, smartAlignment || coupleMode {
+                    activeModeChips
+                        .padding(.top, 8)
+                }
 
                 Spacer()
 
@@ -211,6 +216,27 @@ private struct CameraSessionView: View {
             )
         }
         .disabled(ghostImage == nil)
+    }
+
+    private var activeModeChips: some View {
+        HStack(spacing: 8) {
+            if smartAlignment {
+                modeChip("Akıllı hizalama", systemImage: "wand.and.stars")
+            }
+            if coupleMode {
+                modeChip("Çift modu", systemImage: "person.2.fill")
+            }
+        }
+    }
+
+    private func modeChip(_ text: LocalizedStringKey, systemImage: String) -> some View {
+        Label(text, systemImage: systemImage)
+            .font(.system(size: 12, weight: .semibold))
+            .foregroundStyle(.white)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(.ultraThinMaterial, in: Capsule())
+            .overlay(Capsule().strokeBorder(.white.opacity(0.25), lineWidth: 1))
     }
 
     private var shutterButton: some View {

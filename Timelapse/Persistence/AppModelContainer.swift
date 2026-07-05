@@ -17,6 +17,11 @@ enum AppModelContainer {
         return UserDefaults.standard.bool(forKey: key)
     }
 
+    /// Son açılışta CloudKit senkronunun gerçekten aktif olup olmadığı. Ayarlar bunu
+    /// gösterir: kullanıcı iCloud'u açtı ama (ör. ücretsiz hesap/entitlement yok) yerel'e
+    /// düştüyse durumu görebilir.
+    static let iCloudBackupActiveKey = "icloud.backup.active"
+
     /// Üretim: yerel diskte saklar. Kullanıcı iCloud yedeklemeyi (Pro) açtıysa ayrıca
     /// kişisel iCloud'una (CloudKit) otomatik senkron eder. CloudKit kurulamazsa uygulama
     /// çökmez; yerel-only depoya düşer.
@@ -28,9 +33,11 @@ enum AppModelContainer {
                 cloudKitDatabase: .automatic
             )
             if let container = try? ModelContainer(for: schema, configurations: [cloudConfiguration]) {
+                UserDefaults.standard.set(true, forKey: iCloudBackupActiveKey)
                 return container
             }
         }
+        UserDefaults.standard.set(false, forKey: iCloudBackupActiveKey)
 
         let localConfiguration = ModelConfiguration(
             schema: schema,

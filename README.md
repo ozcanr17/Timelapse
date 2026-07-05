@@ -121,7 +121,7 @@ Timelapse/
 | **Ghost-aligned capture** | Live camera overlays the previous frame + rule-of-thirds/center guides; tap to set an alignment anchor that persists across sessions. Front/back camera, smart default per category. |
 | **Streaks & activity** | Per-project day-streak, total frames, days running; a home “this week” bar chart and “capture due today” nudges. |
 | **Reminders** | Opt-in local notifications at a chosen hour; scheduled per project cadence via `UNUserNotificationCenter`. |
-| **Timelapse export** | One-tap MP4 render. **Speed:** 0.25× / 0.5× / 1× / 2× / 3×. **Overlays:** per-frame date stamp, a free-text note, and the app mark — each independently toggled and positioned in any corner. Share via the system share sheet. |
+| **Timelapse export** | One-tap MP4 render with a spinning-logo progress animation. **Speed:** 0.25× / 0.5× / 1× / 2× / 3×. **Overlays:** per-frame date stamp and a free-text note, each positioned in a corner (the two can never share a corner); the app mark is fixed bottom-right (free tier keeps it, Pro can hide it). Share via the system share sheet. |
 | **Retake & manage** | View any frame full-screen, retake it in place, delete with confirmation. |
 | **Themes** | Multiple selectable color themes, light/dark aware. |
 | **Privacy-first** | Photos stay on device by default; iCloud sync is strictly opt-in. |
@@ -143,8 +143,8 @@ Free users get a genuinely useful app; Pro removes limits and unlocks premium ca
 - Unlimited projects & unlimited photos per project.
 - 4K (2160×2880) export with **no watermark** (app mark becomes optional & positionable).
 - iCloud backup (opt-in).
-- Smart Alignment (auto-enable the ghost overlay).
-- Couple Mode (two-subject framing guide).
+- Smart Alignment (auto-enables the ghost overlay of your last shot).
+- Couple Mode — invite a partner to a project ("capture together"); the camera shows a two-subject split guide. Full cross-device sync requires iCloud sharing (paid account); today the invite shares an invitation and enables the couple framing.
 
 ### Products & pricing
 | Product ID | Type | Price |

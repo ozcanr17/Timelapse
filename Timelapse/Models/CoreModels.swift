@@ -125,6 +125,10 @@ final class Project {
     var category: ProjectCategory = ProjectCategory.other
     var cadence: CaptureCadence = CaptureCadence.daily
 
+    // Çift modu (couple mode): bir partner davet edildiğinde açılır. Kamerada "birlikte
+    // çekim" bölme kılavuzunu etkinleştirir. CloudKit için varsayılan değeri var.
+    var isCoupleMode: Bool = false
+
     // Bir proje silinince çekimleri de silinsin: .cascade.
     // CloudKit kısıtı gereği to-many ilişki optional olmak zorunda.
     @Relationship(deleteRule: .cascade, inverse: \Entry.project)

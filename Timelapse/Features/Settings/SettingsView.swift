@@ -14,7 +14,6 @@ struct SettingsView: View {
     @AppStorage(AppTheme.storageKey) private var themeID = AppTheme.filmNegative.rawValue
     @AppStorage(ReminderScheduler.enabledKey) private var remindersEnabled = false
     @AppStorage(ReminderScheduler.hourKey) private var reminderHour = 19
-    @AppStorage(PremiumFeature.coupleMode.preferenceKey!) private var coupleModeEnabled = false
     @AppStorage(PremiumFeature.smartAlignment.preferenceKey!) private var smartAlignmentEnabled = false
     @AppStorage(PremiumFeature.cloudBackup.preferenceKey!) private var cloudBackupEnabled = false
 
@@ -79,11 +78,6 @@ struct SettingsView: View {
 
             Section {
                 ProToggleRow(
-                    feature: .coupleMode,
-                    isOn: $coupleModeEnabled,
-                    isPro: store.isPro
-                ) { showPaywall = true }
-                ProToggleRow(
                     feature: .smartAlignment,
                     isOn: $smartAlignmentEnabled,
                     isPro: store.isPro
@@ -93,11 +87,23 @@ struct SettingsView: View {
                     isOn: $cloudBackupEnabled,
                     isPro: store.isPro
                 ) { showPaywall = true }
+                if store.isPro, cloudBackupEnabled {
+                    Label {
+                        Text(iCloudActive
+                             ? "iCloud yedekleme etkin."
+                             : "iCloud isteği kaydedildi; şu an yerel depoya düşülüyor (ücretli Apple hesabı gerekir).")
+                            .font(Theme.caption(12))
+                            .foregroundStyle(theme.inkMuted)
+                    } icon: {
+                        Image(systemName: iCloudActive ? "checkmark.icloud.fill" : "icloud.slash")
+                            .foregroundStyle(iCloudActive ? theme.accent : theme.inkMuted)
+                    }
+                }
             } header: {
                 Text("Pro Özellikler")
             } footer: {
                 if store.isPro {
-                    Text("iCloud yedekleme değişikliği uygulamayı yeniden başlatınca geçerli olur.")
+                    Text("Çift modu (birlikte çekim) her projede sağ üstteki davet düğmesiyle açılır. iCloud değişikliği uygulama yeniden başlatılınca geçerli olur.")
                 } else {
                     Text("Bu özellikler Timelapse Pro ile açılır.")
                 }
@@ -307,6 +313,10 @@ struct SettingsView: View {
             UINotificationFeedbackGenerator().notificationOccurred(.success)
         }
         #endif
+    }
+
+    private var iCloudActive: Bool {
+        UserDefaults.standard.bool(forKey: AppModelContainer.iCloudBackupActiveKey)
     }
 
     private var appVersion: String {
