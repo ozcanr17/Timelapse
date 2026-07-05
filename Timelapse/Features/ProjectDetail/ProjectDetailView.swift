@@ -151,6 +151,7 @@ struct ProjectDetailView: View {
                 Image(systemName: "chevron.right").font(.system(size: 15, weight: .bold)).opacity(0.75)
             }
             .foregroundStyle(.white)
+            .shadow(color: .black.opacity(0.28), radius: 2, x: 0, y: 1)
             .padding(.horizontal, 20)
             .padding(.vertical, 18)
             .glassSurface(cornerRadius: Theme.cornerRadius, tint: accent)

@@ -103,6 +103,17 @@
         }
       }
     },
+    "Akıllı": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Smart"
+          }
+        }
+      }
+    },
     "Akıllı hizalama": {
       "localizations": {
         "en": {
@@ -114,6 +125,7 @@
       }
     },
     "Akıllı hizalama açık — özne karelere sabitlendi": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -433,6 +445,17 @@
         }
       }
     },
+    "Çözülme": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dissolve"
+          }
+        }
+      }
+    },
     "DEĞİŞİMİ TEK KAREDE BİRİKTİR": {
       "localizations": {
         "en": {
@@ -520,6 +543,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Your photos, always safe"
+          }
+        }
+      }
+    },
+    "Geçiş": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transition"
           }
         }
       }
@@ -725,6 +759,28 @@
         }
       }
     },
+    "Hizalama": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alignment"
+          }
+        }
+      }
+    },
+    "Hizalamayı Ayarla": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adjust Alignment"
+          }
+        }
+      }
+    },
     "Hız": {
       "localizations": {
         "en": {
@@ -855,6 +911,17 @@
         }
       }
     },
+    "Kapalı": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Off"
+          }
+        }
+      }
+    },
     "Kapat": {
       "localizations": {
         "en": {
@@ -871,6 +938,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Darkroom"
+          }
+        }
+      }
+    },
+    "Karartma": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fade"
           }
         }
       }
@@ -946,6 +1024,17 @@
         }
       }
     },
+    "Kesme": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cut"
+          }
+        }
+      }
+    },
     "Konum sabit; gizleyebilirsin": {
       "localizations": {
         "en": {
@@ -972,6 +1061,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "Lavender"
+          }
+        }
+      }
+    },
+    "Manuel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manual"
+          }
+        }
+      }
+    },
+    "Manuel Hizalama": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manual Alignment"
           }
         }
       }
@@ -1043,6 +1154,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Automatic frame matching"
+          }
+        }
+      }
+    },
+    "Özneyi işaretlemek için dokun ve sürükle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tap and drag to mark the subject"
           }
         }
       }
@@ -1519,16 +1641,16 @@
     },
     "Ücretsiz: %lld/%lld kare": {
       "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "new",
-            "value": "Ücretsiz: %1$lld/%2$lld kare"
-          }
-        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Free: %lld/%lld frames"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Ücretsiz: %1$lld/%2$lld kare"
           }
         }
       }
@@ -1539,6 +1661,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Membership"
+          }
+        }
+      }
+    },
+    "Uygula": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apply"
           }
         }
       }
@@ -1633,134 +1766,35 @@
         }
       }
     },
-    "Geçiş": {
+    "Efekt yok": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Transition"
+            "value": "No effect"
           }
         }
       }
     },
-    "Hizalama": {
+    "Yumuşak": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Alignment"
+            "value": "Smooth"
           }
         }
       }
     },
-    "Kesme": {
+    "Fotoğrafı sürükleyerek özneyi ortala": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cut"
-          }
-        }
-      }
-    },
-    "Çözülme": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dissolve"
-          }
-        }
-      }
-    },
-    "Karartma": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fade"
-          }
-        }
-      }
-    },
-    "Kapalı": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Off"
-          }
-        }
-      }
-    },
-    "Akıllı": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Smart"
-          }
-        }
-      }
-    },
-    "Manuel": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Manual"
-          }
-        }
-      }
-    },
-    "Hizalamayı Ayarla": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Adjust Alignment"
-          }
-        }
-      }
-    },
-    "Manuel Hizalama": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Manual Alignment"
-          }
-        }
-      }
-    },
-    "Özneyi işaretlemek için dokun ve sürükle": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tap and drag to mark the subject"
-          }
-        }
-      }
-    },
-    "Uygula": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Apply"
+            "value": "Drag the photo to center the subject"
           }
         }
       }

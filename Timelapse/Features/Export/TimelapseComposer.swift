@@ -89,19 +89,17 @@ struct TimelapseFrame: Equatable {
     let capturedAt: Date
 }
 
-/// Kareler arası geçiş efekti.
+/// Kareler arası geçiş: efekt yok ya da kısa, yumuşak bir çapraz geçiş.
 enum TimelapseTransition: String, CaseIterable, Identifiable {
-    case cut        // sert kesme (varsayılan, mevcut davranış)
-    case dissolve   // çapraz geçiş (crossfade)
-    case fade       // karartarak geçiş (fade through black)
+    case cut        // efekt yok (sert kesme)
+    case smooth     // kısa çapraz geçiş (crossfade)
 
     var id: String { rawValue }
 
     var displayName: String {
         switch self {
-        case .cut:      "Kesme"
-        case .dissolve: "Çözülme"
-        case .fade:     "Karartma"
+        case .cut:    "Efekt yok"
+        case .smooth: "Yumuşak"
         }
     }
 }
@@ -223,15 +221,22 @@ struct TimelapseComposer: TimelapseComposing {
             : Array(repeating: nil, count: frames.count)
         let reference = anchors.compactMap { $0 }.first
 
-        // Kesme'de kare başına 1 kare (mevcut davranış). Geçişlerde araya harmanlanmış
-        // kareler eklenir.
-        let transitionSteps = settings.transition == .cut ? 0 : max(2, Int(settings.framesPerSecond) / 3)
+        // Sabit 30 fps çıktı; her fotoğraf `holdFrames` kadar tutulur (hız bunu belirler).
+        // Yumuşak geçiş, fotoğrafın SON birkaç karesini bir sonrakine kısa bir çapraz
+        // geçişle bindirir — böylece video da geçiş de akıcı olur, süre uzamaz ve geçiş
+        // her zaman kısa kalır (hızlı hızlarda otomatik daha da kısalır).
+        let outputFPS: Int32 = 30
+        let holdFrames = max(1, Int((Double(outputFPS) / Double(settings.framesPerSecond)).rounded()))
+        let transitionFrames = settings.transition == .smooth
+            ? min(holdFrames - 1, max(1, Int((0.14 * Double(outputFPS)).rounded())))
+            : 0
+        let solidFrames = holdFrames - transitionFrames
         var presentationIndex: Int64 = 0
 
         func append(_ cgImage: CGImage) throws {
             while !input.isReadyForMoreMediaData { usleep(3000) }
             let buffer = try pixelBuffer(for: cgImage, adaptor: adaptor, width: width, height: height)
-            let time = CMTime(value: presentationIndex, timescale: settings.framesPerSecond)
+            let time = CMTime(value: presentationIndex, timescale: outputFPS)
             guard adaptor.append(buffer, withPresentationTime: time) else {
                 throw TimelapseComposerError.writerFailed
             }
@@ -255,17 +260,20 @@ struct TimelapseComposer: TimelapseComposing {
         var current = try keyframe(0)
         for index in frames.indices {
             let next = index + 1 < frames.count ? try keyframe(index + 1) : nil
-            try append(current)
 
-            if transitionSteps > 0, let next {
-                for step in 1...transitionSteps {
-                    let progress = CGFloat(step) / CGFloat(transitionSteps + 1)
-                    if let blended = blend(current, next, progress: progress,
-                                           transition: settings.transition, size: settings.renderSize) {
+            for _ in 0..<solidFrames { try append(current) }
+
+            if transitionFrames > 0, let next {
+                for step in 1...transitionFrames {
+                    let progress = CGFloat(step) / CGFloat(transitionFrames)
+                    if let blended = blend(current, next, progress: progress, size: settings.renderSize) {
                         try append(blended)
                     }
                 }
+            } else {
+                for _ in 0..<transitionFrames { try append(current) }   // son fotoğraf: kalanı tut
             }
+
             onProgress(Double(index + 1) / Double(frames.count))
             if let next { current = next }
         }
@@ -345,32 +353,17 @@ struct TimelapseComposer: TimelapseComposing {
         )
     }
 
-    /// İki tam kareyi geçiş türüne göre harmanlar (çözülme: çapraz geçiş; karartma:
-    /// önce siyaha, sonra bir sonraki kareye).
-    private static func blend(_ first: CGImage, _ second: CGImage, progress: CGFloat,
-                              transition: TimelapseTransition, size: CGSize) -> CGImage? {
+    /// İki tam kareyi yumuşak çapraz geçişle harmanlar (crossfade).
+    private static func blend(_ first: CGImage, _ second: CGImage, progress: CGFloat, size: CGSize) -> CGImage? {
         let format = UIGraphicsImageRendererFormat()
         format.scale = 1
         format.opaque = true
         let rendered = UIGraphicsImageRenderer(size: size, format: format).image { _ in
-            UIColor.black.setFill()
-            UIRectFill(CGRect(origin: .zero, size: size))
             let rect = CGRect(origin: .zero, size: size)
-            let a = UIImage(cgImage: first)
-            let b = UIImage(cgImage: second)
-            switch transition {
-            case .dissolve:
-                a.draw(in: rect, blendMode: .normal, alpha: 1)
-                b.draw(in: rect, blendMode: .normal, alpha: Double(progress))
-            case .fade:
-                if progress < 0.5 {
-                    a.draw(in: rect, blendMode: .normal, alpha: Double(1 - progress * 2))
-                } else {
-                    b.draw(in: rect, blendMode: .normal, alpha: Double(progress * 2 - 1))
-                }
-            case .cut:
-                b.draw(in: rect)
-            }
+            UIColor.black.setFill()
+            UIRectFill(rect)
+            UIImage(cgImage: first).draw(in: rect, blendMode: .normal, alpha: 1)
+            UIImage(cgImage: second).draw(in: rect, blendMode: .normal, alpha: Double(progress))
         }
         return rendered.cgImage
     }

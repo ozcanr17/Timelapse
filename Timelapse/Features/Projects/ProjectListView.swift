@@ -14,6 +14,7 @@ struct ProjectListView: View {
     @State private var pendingDeletion: [Project] = []
     @State private var showQuickPick = false
     @State private var captureTarget: Project?
+    @State private var pendingCapture: Project?
 
     private enum ActiveSheet: Identifiable {
         case addProject
@@ -97,9 +98,10 @@ struct ProjectListView: View {
                 PaywallView(store: store)
             }
         }
-        .sheet(isPresented: $showQuickPick) {
+        .sheet(isPresented: $showQuickPick, onDismiss: presentPendingCapture) {
             QuickCaptureSheet(projects: liveProjects) { project in
-                beginCapture(project)
+                pendingCapture = project
+                showQuickPick = false
             }
             .presentationDetents([.medium, .large])
             .presentationDragIndicator(.visible)
@@ -158,6 +160,7 @@ struct ProjectListView: View {
                 Text("Kare Çek").font(Theme.headline(17))
             }
             .foregroundStyle(.white)
+            .shadow(color: .black.opacity(0.28), radius: 2, x: 0, y: 1)
             .padding(.horizontal, 30)
             .padding(.vertical, 15)
             .glassSurface(cornerRadius: 30, tint: theme.accent)
@@ -168,23 +171,16 @@ struct ProjectListView: View {
         .accessibilityIdentifier("homeCaptureButton")
     }
 
-    private func beginCapture(_ project: Project) {
+    /// Hızlı seçim sayfası KAPANDIKTAN sonra çağrılır (onDismiss). Böylece kamera, sayfa
+    /// tamamen kapandığı anda gecikmesiz açılır — iki modal çakışmaz.
+    private func presentPendingCapture() {
+        guard let project = pendingCapture else { return }
+        pendingCapture = nil
         let count = project.sortedEntries.filter { !$0.isDeleted }.count
-        guard FeatureGate.canAddEntry(isPro: store.isPro, currentEntryCount: count) else {
-            showQuickPick = false
-            activeSheet = .paywall
-            return
-        }
-        if showQuickPick {
-            // Hızlı seçim sayfasını kapatıp kamerayı sun; iki modalin çakışmaması için
-            // kısa bir gecikme veriyoruz.
-            showQuickPick = false
-            Task { @MainActor in
-                try? await Task.sleep(for: .milliseconds(380))
-                captureTarget = project
-            }
-        } else {
+        if FeatureGate.canAddEntry(isPro: store.isPro, currentEntryCount: count) {
             captureTarget = project
+        } else {
+            activeSheet = .paywall
         }
     }
 

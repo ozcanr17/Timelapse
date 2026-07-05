@@ -352,8 +352,9 @@ private enum AlignMode: String, CaseIterable, Identifiable {
     }
 }
 
-/// Manuel hizalama ekranı: kullanıcı ilk kare üzerinde özneyi işaretler (sürükle) ve
-/// yakınlaştırmayı ayarlar. Seçilen nokta tüm karelerde ortaya getirilir.
+/// Manuel hizalama ekranı — WYSIWYG. Kutu, videonun çıktısıyla aynı (3:4) orandadır;
+/// kullanıcı fotoğrafı SÜRÜKLEYEREK özneyi ortalar ve yakınlaştırmayı ayarlar. Kutuda
+/// ne görüyorsa videoda o olur. Bu seçim tüm karelere uygulanır.
 private struct ManualAlignView: View {
     let imageData: Data
     @Binding var manual: ManualAlignment
@@ -362,42 +363,57 @@ private struct ManualAlignView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.theme) private var theme
     @State private var uiImage: UIImage?
+    @State private var dragStart: CGPoint?
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 16) {
-                Text("Özneyi işaretlemek için dokun ve sürükle")
+            VStack(spacing: 18) {
+                Text("Fotoğrafı sürükleyerek özneyi ortala")
                     .font(Theme.caption(13))
                     .foregroundStyle(theme.inkMuted)
 
                 GeometryReader { geo in
-                    let fit = fitRect(imageSize: uiImage?.size ?? CGSize(width: 3, height: 4), in: geo.size)
-                    ZStack(alignment: .topLeading) {
+                    ZStack {
                         Color.black
                         if let uiImage {
-                            Image(uiImage: uiImage).resizable().scaledToFit()
+                            let disp = displaySize(image: uiImage.size, container: geo.size)
+                            let point = CGPoint(x: manual.center.x * disp.width, y: manual.center.y * disp.height)
+                            Image(uiImage: uiImage)
+                                .resizable()
+                                .frame(width: disp.width, height: disp.height)
+                                .position(
+                                    x: geo.size.width / 2 + disp.width / 2 - point.x,
+                                    y: geo.size.height / 2 + disp.height / 2 - point.y
+                                )
                         }
-                        Crosshair()
-                            .position(
-                                x: fit.minX + manual.center.x * fit.width,
-                                y: fit.minY + manual.center.y * fit.height
-                            )
+                        ThirdsReticle()
                     }
                     .contentShape(Rectangle())
                     .gesture(
-                        DragGesture(minimumDistance: 0).onChanged { value in
-                            let x = (value.location.x - fit.minX) / max(fit.width, 1)
-                            let y = (value.location.y - fit.minY) / max(fit.height, 1)
-                            manual.center = CGPoint(x: min(max(x, 0), 1), y: min(max(y, 0), 1))
-                        }
+                        DragGesture()
+                            .onChanged { value in
+                                guard let uiImage else { return }
+                                let disp = displaySize(image: uiImage.size, container: geo.size)
+                                if dragStart == nil { dragStart = manual.center }
+                                let start = dragStart ?? manual.center
+                                let nx = start.x - value.translation.width / max(disp.width, 1)
+                                let ny = start.y - value.translation.height / max(disp.height, 1)
+                                manual.center = CGPoint(x: min(max(nx, 0), 1), y: min(max(ny, 0), 1))
+                            }
+                            .onEnded { _ in dragStart = nil }
                     )
+                    .clipped()
                 }
-                .frame(maxHeight: 440)
+                .aspectRatio(3.0 / 4.0, contentMode: .fit)
                 .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
+                        .strokeBorder(theme.inkMuted.opacity(0.3), lineWidth: 1)
+                )
 
                 HStack(spacing: 12) {
                     Image(systemName: "minus.magnifyingglass").foregroundStyle(theme.inkMuted)
-                    Slider(value: Binding(get: { Double(manual.zoom) }, set: { manual.zoom = CGFloat($0) }), in: 0.5...3)
+                    Slider(value: Binding(get: { Double(manual.zoom) }, set: { manual.zoom = CGFloat($0) }), in: 1...3)
                         .tint(theme.accent)
                     Image(systemName: "plus.magnifyingglass").foregroundStyle(theme.inkMuted)
                 }
@@ -418,25 +434,34 @@ private struct ManualAlignView: View {
         .task { uiImage = await ImageDownsampler.image(from: imageData, maxPixelSize: 1400) }
     }
 
-    private func fitRect(imageSize: CGSize, in container: CGSize) -> CGRect {
-        let imgAspect = imageSize.width / max(imageSize.height, 1)
-        let contAspect = container.width / max(container.height, 1)
-        var w = container.width
-        var h = container.height
-        if imgAspect > contAspect { h = w / imgAspect } else { w = h * imgAspect }
-        return CGRect(x: (container.width - w) / 2, y: (container.height - h) / 2, width: w, height: h)
+    /// Görselin kutu içindeki gösterim boyutu: doldur (aspect-fill) × zoom. Composer'daki
+    /// manualRect ile aynı mantık, böylece önizleme birebir çıktıyı gösterir.
+    private func displaySize(image: CGSize, container: CGSize) -> CGSize {
+        let fill = max(container.width / max(image.width, 1), container.height / max(image.height, 1))
+        let scale = fill * max(manual.zoom, 0.2)
+        return CGSize(width: image.width * scale, height: image.height * scale)
     }
 }
 
-private struct Crosshair: View {
+/// Ortalamaya yardımcı hafif üçler kuralı + merkez nişangâhı.
+private struct ThirdsReticle: View {
     var body: some View {
-        ZStack {
-            Circle().strokeBorder(.white, lineWidth: 2).frame(width: 44, height: 44)
-            Circle().fill(.white).frame(width: 5, height: 5)
-            Rectangle().fill(.white).frame(width: 1, height: 16)
-            Rectangle().fill(.white).frame(width: 16, height: 1)
+        GeometryReader { geo in
+            ZStack {
+                Path { path in
+                    for f in [1.0 / 3.0, 2.0 / 3.0] {
+                        path.move(to: CGPoint(x: geo.size.width * f, y: 0))
+                        path.addLine(to: CGPoint(x: geo.size.width * f, y: geo.size.height))
+                        path.move(to: CGPoint(x: 0, y: geo.size.height * f))
+                        path.addLine(to: CGPoint(x: geo.size.width, y: geo.size.height * f))
+                    }
+                }
+                .stroke(.white.opacity(0.28), lineWidth: 1)
+
+                Circle().strokeBorder(.white.opacity(0.9), lineWidth: 2).frame(width: 22, height: 22)
+                    .position(x: geo.size.width / 2, y: geo.size.height / 2)
+            }
         }
-        .shadow(color: .black.opacity(0.6), radius: 3)
         .allowsHitTesting(false)
     }
 }

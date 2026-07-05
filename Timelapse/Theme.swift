@@ -229,7 +229,8 @@ extension View {
     }
 }
 
-/// Sıvı cam (liquid glass) etkisi: yarı saydam ton, üstte spektral parlama ve ışıklı kenar.
+/// Sıvı cam (liquid glass) etkisi: yumuşak, buzlu bir ton. Aynası/parlaklığı düşük tutulur
+/// ki üzerindeki beyaz yazı rahat okunsun.
 struct GlassSurface: ViewModifier {
     var cornerRadius: CGFloat = 18
     var tint: Color
@@ -240,23 +241,16 @@ struct GlassSurface: ViewModifier {
             .background {
                 shape.fill(tint)
                     .overlay {
+                        // Üstte çok hafif parlama, altta hafif derinlik — hafif "cam" hissi.
                         LinearGradient(
-                            colors: [.white.opacity(0.38), .white.opacity(0.06), .clear],
+                            colors: [.white.opacity(0.16), .clear, .black.opacity(0.10)],
                             startPoint: .top, endPoint: .bottom
                         )
-                        .blendMode(.plusLighter)
-                    }
-                    .overlay {
-                        shape.fill(.ultraThinMaterial).opacity(0.14)
                     }
                     .clipShape(shape)
             }
             .overlay {
-                shape.strokeBorder(
-                    LinearGradient(colors: [.white.opacity(0.6), .white.opacity(0.12)],
-                                   startPoint: .top, endPoint: .bottom),
-                    lineWidth: 1
-                )
+                shape.strokeBorder(.white.opacity(0.20), lineWidth: 1)
             }
             .clipShape(shape)
     }
@@ -269,6 +263,7 @@ struct PrimaryButtonStyle: ButtonStyle {
         configuration.label
             .font(Theme.headline(17))
             .foregroundStyle(.white)
+            .shadow(color: .black.opacity(0.28), radius: 2, x: 0, y: 1)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 15)
             .glassSurface(cornerRadius: 18, tint: theme.accent)
