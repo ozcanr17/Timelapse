@@ -1,10 +1,33 @@
 {
   "sourceLanguage" : "tr",
   "strings" : {
-    "NSCameraUsageDescription" : {
+    "CFBundleName" : {
+      "comment" : "Bundle name",
+      "extractionState" : "extracted_with_value",
       "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Camera access is needed to take your progress photos." } },
-        "tr" : { "stringUnit" : { "state" : "translated", "value" : "Gelişim fotoğraflarını çekmek için kameraya erişim gerekir." } }
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Timelapse"
+          }
+        }
+      }
+    },
+    "NSCameraUsageDescription" : {
+      "comment" : "Privacy - Camera Usage Description",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Camera access is needed to take your progress photos."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gelişim fotoğraflarını çekmek için kameraya erişim gerekir."
+          }
+        }
       }
     }
   },
