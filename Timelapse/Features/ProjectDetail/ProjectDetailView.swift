@@ -7,12 +7,18 @@ struct ProjectDetailView: View {
     let project: Project
 
     @Environment(\.modelContext) private var modelContext
+    @Environment(StoreService.self) private var store
     @Environment(\.theme) private var theme
 
     @State private var isCapturing = false
     @State private var isExporting = false
     @State private var viewerEntry: Entry?
     @State private var shareCardURL: URL?
+    @State private var showPaywall = false
+
+    private var canAddEntry: Bool {
+        FeatureGate.canAddEntry(isPro: store.isPro, currentEntryCount: liveEntries.count)
+    }
 
     private let columns = [GridItem(.adaptive(minimum: 100), spacing: 12)]
     private var accent: Color { Theme.accent(for: project.category) }
@@ -28,6 +34,10 @@ struct ProjectDetailView: View {
 
                 if !project.sortedEntries.isEmpty {
                     statsRow
+                }
+
+                if !store.isPro {
+                    freeQuotaBadge
                 }
 
                 if project.sortedEntries.count >= 2 {
@@ -88,7 +98,11 @@ struct ProjectDetailView: View {
             }
             ToolbarItem(placement: .primaryAction) {
                 Button {
-                    isCapturing = true
+                    if canAddEntry {
+                        isCapturing = true
+                    } else {
+                        showPaywall = true
+                    }
                 } label: {
                     Image(systemName: "camera.fill")
                         .foregroundStyle(accent)
@@ -105,9 +119,38 @@ struct ProjectDetailView: View {
         .sheet(isPresented: $isExporting) {
             TimelapseExportSheet(project: project)
         }
+        .sheet(isPresented: $showPaywall) {
+            PaywallView(store: store)
+        }
         .task(id: liveEntries.count) {
             shareCardURL = renderShareCard()
         }
+    }
+
+    private var freeQuotaBadge: some View {
+        let count = liveEntries.count
+        let atLimit = count >= FeatureGate.freeEntryLimit
+        return HStack(spacing: 8) {
+            Image(systemName: atLimit ? "lock.fill" : "camera.badge.clock")
+                .font(.system(size: 13, weight: .semibold))
+            Text(atLimit
+                 ? "Ücretsiz sınır doldu — devam için Pro"
+                 : "Ücretsiz: \(count)/\(FeatureGate.freeEntryLimit) kare")
+                .font(Theme.caption(12))
+            Spacer()
+            if atLimit {
+                Text("Pro'ya Geç")
+                    .font(Theme.caption(12))
+                    .foregroundStyle(theme.accent)
+            }
+        }
+        .foregroundStyle(atLimit ? theme.accent : theme.inkMuted)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(theme.surface, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .contentShape(Rectangle())
+        .onTapGesture { if atLimit { showPaywall = true } }
     }
 
     private func renderShareCard() -> URL? {
@@ -318,4 +361,5 @@ private struct EntryThumbnail: View {
         ProjectDetailView(project: project)
     }
     .modelContainer(container)
+    .environment(StoreService())
 }

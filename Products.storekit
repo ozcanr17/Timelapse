@@ -1,7 +1,23 @@
 {
   "identifier" : "TL000001",
   "nonRenewingSubscriptions" : [],
-  "products" : [],
+  "products" : [
+    {
+      "displayPrice" : "3.99",
+      "familyShareable" : false,
+      "internalID" : "40000001",
+      "localizations" : [
+        {
+          "description" : "Tek seferlik odeme ile omur boyu Pro",
+          "displayName" : "Pro (Omur Boyu)",
+          "locale" : "tr_TR"
+        }
+      ],
+      "productID" : "com.ridvan.timelapse.pro.lifetime",
+      "referenceName" : "Pro Lifetime",
+      "type" : "NonConsumable"
+    }
+  ],
   "settings" : {
     "_applicationInternalID" : "",
     "_developerTeamID" : "",
@@ -16,7 +32,7 @@
         {
           "adHocOffers" : [],
           "codeOffers" : [],
-          "displayPrice" : "49.99",
+          "displayPrice" : "0.50",
           "familyShareable" : false,
           "groupNumber" : 1,
           "internalID" : "30000001",
@@ -31,27 +47,6 @@
           "productID" : "com.ridvan.timelapse.pro.monthly",
           "recurringSubscriptionPeriod" : "P1M",
           "referenceName" : "Pro Monthly",
-          "subscriptionGroupID" : "20000001",
-          "type" : "RecurringSubscription"
-        },
-        {
-          "adHocOffers" : [],
-          "codeOffers" : [],
-          "displayPrice" : "399.99",
-          "familyShareable" : false,
-          "groupNumber" : 1,
-          "internalID" : "30000002",
-          "introductoryOffer" : null,
-          "localizations" : [
-            {
-              "description" : "Yillik Pro aboneligi",
-              "displayName" : "Pro (Yillik)",
-              "locale" : "tr_TR"
-            }
-          ],
-          "productID" : "com.ridvan.timelapse.pro.yearly",
-          "recurringSubscriptionPeriod" : "P1Y",
-          "referenceName" : "Pro Yearly",
           "subscriptionGroupID" : "20000001",
           "type" : "RecurringSubscription"
         }

@@ -88,7 +88,7 @@ struct PaywallView: View {
                 ForEach(viewModel.packages) { package in
                     PackageCard(
                         package: package,
-                        isYearly: package.id.contains("yearly"),
+                        isBestValue: package.id.contains("lifetime"),
                         isSelected: selectedPackageID == package.id
                     ) {
                         selectedPackageID = package.id
@@ -109,7 +109,7 @@ struct PaywallView: View {
         }
         .onChange(of: viewModel.packages) { _, packages in
             if selectedPackageID == nil {
-                selectedPackageID = packages.first(where: { $0.id.contains("yearly") })?.id ?? packages.first?.id
+                selectedPackageID = packages.first(where: { $0.id.contains("lifetime") })?.id ?? packages.first?.id
             }
         }
     }
@@ -157,7 +157,7 @@ private struct ProFeatureRow: View {
 
 private struct PackageCard: View {
     let package: StorePackage
-    let isYearly: Bool
+    let isBestValue: Bool
     let isSelected: Bool
     let action: () -> Void
 
@@ -169,8 +169,8 @@ private struct PackageCard: View {
                 VStack(alignment: .leading, spacing: 4) {
                     HStack(spacing: 6) {
                         Text(package.displayName).font(Theme.headline(16)).foregroundStyle(theme.ink)
-                        if isYearly {
-                            Text("EN AVANTAJLI")
+                        if isBestValue {
+                            Text("TEK SEFERLİK")
                                 .font(.system(size: 10, weight: .bold))
                                 .foregroundStyle(.white)
                                 .padding(.horizontal, 6).padding(.vertical, 2)

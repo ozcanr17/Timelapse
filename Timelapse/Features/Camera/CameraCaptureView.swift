@@ -40,11 +40,19 @@ private struct CameraSessionView: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.theme) private var theme
+    @Environment(StoreService.self) private var store
+
+    @AppStorage(PremiumFeature.smartAlignment.preferenceKey!) private var smartAlignmentPref = false
+    @AppStorage(PremiumFeature.coupleMode.preferenceKey!) private var coupleModePref = false
 
     @State private var showGhost = false
     @State private var ghostImage: UIImage?
     @State private var ghostOpacity: Double = 0.35
     @State private var flashOpacity: Double = 0
+
+    /// Pro özellikleri yalnızca gerçekten Pro isek ve tercih açıksa devreye girsin.
+    private var smartAlignment: Bool { store.isPro && smartAlignmentPref }
+    private var coupleMode: Bool { store.isPro && coupleModePref }
 
     private var isReady: Bool {
         viewModel.state == .ready || viewModel.state == .capturing
@@ -81,6 +89,10 @@ private struct CameraSessionView: View {
                     if !hasFailed {
                         AlignmentGuideOverlay()
                     }
+
+                    if !hasFailed, coupleMode {
+                        CoupleSplitOverlay()
+                    }
                 }
             }
             .ignoresSafeArea()
@@ -116,6 +128,9 @@ private struct CameraSessionView: View {
         }
         .task {
             ghostImage = await ImageDownsampler.image(from: viewModel.ghostImageData, maxPixelSize: 1400)
+            if smartAlignment, viewModel.ghostImageData != nil {
+                showGhost = true
+            }
         }
     }
 
@@ -246,6 +261,40 @@ private struct AlignmentGuideOverlay: View {
                 .stroke(.white.opacity(0.45), style: StrokeStyle(lineWidth: 1.5, lineCap: .round))
         }
         .allowsHitTesting(false)
+    }
+}
+
+/// Çift modu (couple mode) kılavuzu: kareyi ikiye bölen dikey çizgi ve her yarı için
+/// "kişi" etiketi. İki kişinin zamanla aynı çerçevede hizalanmasını kolaylaştırır.
+private struct CoupleSplitOverlay: View {
+    var body: some View {
+        GeometryReader { geo in
+            ZStack {
+                Rectangle()
+                    .fill(.white.opacity(0.55))
+                    .frame(width: 1.5)
+                    .frame(maxHeight: .infinity)
+
+                HStack(spacing: 0) {
+                    coupleLabel("1")
+                    coupleLabel("2")
+                }
+                .frame(width: geo.size.width)
+                .padding(.top, 12)
+                .frame(maxHeight: .infinity, alignment: .top)
+            }
+        }
+        .allowsHitTesting(false)
+    }
+
+    private func coupleLabel(_ text: String) -> some View {
+        Text(text)
+            .font(.system(size: 12, weight: .bold))
+            .foregroundStyle(.white)
+            .frame(width: 22, height: 22)
+            .background(.black.opacity(0.35), in: Circle())
+            .overlay(Circle().strokeBorder(.white.opacity(0.6), lineWidth: 1))
+            .frame(maxWidth: .infinity)
     }
 }
 

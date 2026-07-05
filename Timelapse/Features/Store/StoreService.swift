@@ -16,8 +16,25 @@ protocol StoreServiceProtocol: AnyObject {
 @Observable
 final class StoreService: StoreServiceProtocol {
 
+    private enum OverrideKey {
+        static let debug = "override.debugPro"   // gizli test arka kapısı
+        static let admin = "override.adminPro"   // Apple ile giriş yapan admin
+    }
+
     private(set) var packages: [StorePackage] = []
-    private(set) var isPro = false
+
+    /// StoreKit'ten türetilen gerçek satın alma durumu.
+    private(set) var entitlementActive = false
+
+    /// Gizli geliştirici arka kapısı: ödeme yapmadan Pro'yu açar/kapar.
+    private(set) var debugUnlocked = UserDefaults.standard.bool(forKey: OverrideKey.debug)
+
+    /// Admin (Apple ile giriş) Pro kilidi.
+    private(set) var adminUnlocked = UserDefaults.standard.bool(forKey: OverrideKey.admin)
+
+    /// Uygulamanın her yerinde okunan tek doğruluk kaynağı. Gerçek satın alma YA DA
+    /// bir test/admin kilidi açıksa Pro'dur.
+    var isPro: Bool { entitlementActive || debugUnlocked || adminUnlocked }
 
     private var storeProducts: [Product] = []   // satın alma için Product'ları içeride tutuyoruz
     nonisolated(unsafe) private var updatesTask: Task<Void, Never>?
@@ -30,6 +47,18 @@ final class StoreService: StoreServiceProtocol {
                 await self?.handle(update)
             }
         }
+    }
+
+    /// Test arka kapısı — Ayarlar'daki gizli Geliştirici bölümünden açılır.
+    func setDebugUnlocked(_ unlocked: Bool) {
+        debugUnlocked = unlocked
+        UserDefaults.standard.set(unlocked, forKey: OverrideKey.debug)
+    }
+
+    /// Admin kilidi — Apple ile giriş yapan yetkili kullanıcıya Pro verir.
+    func setAdminUnlocked(_ unlocked: Bool) {
+        adminUnlocked = unlocked
+        UserDefaults.standard.set(unlocked, forKey: OverrideKey.admin)
     }
 
     deinit { updatesTask?.cancel() }
@@ -82,7 +111,7 @@ final class StoreService: StoreServiceProtocol {
                 active = true   // bizim ürünümüz ve iade/iptal edilmemiş
             }
         }
-        isPro = active
+        entitlementActive = active
     }
 
     private func handle(_ result: VerificationResult<Transaction>) async {

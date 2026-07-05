@@ -1,12 +1,14 @@
 import SwiftUI
 import SwiftData
 import UIKit
+import AuthenticationServices
 
 struct SettingsView: View {
 
     @Environment(StoreService.self) private var store
     @Environment(\.openURL) private var openURL
     @Environment(\.theme) private var theme
+    @Environment(\.colorScheme) private var colorScheme
     @Query private var projects: [Project]
 
     @AppStorage(AppTheme.storageKey) private var themeID = AppTheme.filmNegative.rawValue
@@ -15,8 +17,11 @@ struct SettingsView: View {
     @AppStorage(PremiumFeature.coupleMode.preferenceKey!) private var coupleModeEnabled = false
     @AppStorage(PremiumFeature.smartAlignment.preferenceKey!) private var smartAlignmentEnabled = false
 
+    @State private var auth = AuthService()
     @State private var showPaywall = false
     @State private var showWelcome = false
+    @State private var devTapCount = 0
+    @State private var adminSignInMessage: String?
 
     private var totalEntries: Int {
         projects.reduce(0) { $0 + ($1.entries?.count ?? 0) }
@@ -58,6 +63,17 @@ struct SettingsView: View {
                 }
                 .font(Theme.body(15))
                 .foregroundStyle(theme.secondary)
+            }
+
+            Section {
+                accountContent
+            } header: {
+                Text("Hesap")
+            } footer: {
+                if let adminSignInMessage {
+                    Text(adminSignInMessage)
+                        .foregroundStyle(theme.accent)
+                }
             }
 
             Section {
@@ -133,6 +149,31 @@ struct SettingsView: View {
                 .foregroundStyle(theme.ink)
             }
 
+            if isDeveloperUnlocked {
+                Section {
+                    Toggle(isOn: developerProBinding) {
+                        Label {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Pro'yu Test Et (ödeme yok)")
+                                    .font(Theme.headline(15))
+                                    .foregroundStyle(theme.ink)
+                                Text("Tüm Pro özelliklerini satın almadan aç")
+                                    .font(Theme.caption(12))
+                                    .foregroundStyle(theme.inkMuted)
+                            }
+                        } icon: {
+                            Image(systemName: "ladybug.fill")
+                                .foregroundStyle(theme.accent)
+                        }
+                    }
+                    .tint(theme.accent)
+                } header: {
+                    Text("Geliştirici")
+                } footer: {
+                    Text("Gizli test arka kapısı. Yalnızca sen görürsün.")
+                }
+            }
+
             Section {
                 VStack(spacing: 10) {
                     LogoMark(size: 56)
@@ -142,6 +183,8 @@ struct SettingsView: View {
                     Text("Sürüm \(appVersion)")
                         .font(Theme.stamp(12, weight: .regular))
                         .foregroundStyle(theme.inkMuted)
+                        .contentShape(Rectangle())
+                        .onTapGesture { revealDeveloperIfNeeded() }
                 }
                 .frame(maxWidth: .infinity)
                 .listRowBackground(Color.clear)
@@ -173,6 +216,82 @@ struct SettingsView: View {
         }
         .onChange(of: reminderHour) {
             ReminderScheduler.shared.sync(projects: projects)
+        }
+    }
+
+    @ViewBuilder
+    private var accountContent: some View {
+        if auth.isSignedIn {
+            Label {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(auth.displayName ?? auth.email ?? String(localized: "Apple ID ile girildi"))
+                        .font(Theme.headline(15))
+                        .foregroundStyle(theme.ink)
+                    if let email = auth.email {
+                        Text(email)
+                            .font(Theme.caption(12))
+                            .foregroundStyle(theme.inkMuted)
+                    }
+                    if auth.isAdmin {
+                        Text("Admin — Pro etkin")
+                            .font(Theme.caption(12))
+                            .foregroundStyle(theme.accent)
+                    }
+                }
+            } icon: {
+                Image(systemName: "apple.logo")
+                    .foregroundStyle(theme.ink)
+            }
+            Button("Çıkış yap") {
+                auth.signOut()
+                store.setAdminUnlocked(false)
+                adminSignInMessage = nil
+            }
+            .font(Theme.body(15))
+            .foregroundStyle(theme.secondary)
+        } else {
+            SignInWithAppleButton(.signIn) { request in
+                request.requestedScopes = [.fullName, .email]
+            } onCompletion: { result in
+                handleSignIn(result)
+            }
+            .signInWithAppleButtonStyle(colorScheme == .dark ? .white : .black)
+            .frame(height: 46)
+            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+        }
+    }
+
+    private func handleSignIn(_ result: Result<ASAuthorization, Error>) {
+        switch result {
+        case .success(let authorization):
+            if auth.handle(authorization) {
+                store.setAdminUnlocked(true)
+                adminSignInMessage = String(localized: "Admin olarak giriş yapıldı — Pro açıldı. 👑")
+            } else {
+                adminSignInMessage = String(localized: "Giriş yapıldı. Bu hesap admin değil; Pro açılmadı.")
+            }
+        case .failure:
+            adminSignInMessage = nil
+        }
+    }
+
+    private var isDeveloperUnlocked: Bool {
+        devTapCount >= 7 || store.debugUnlocked
+    }
+
+    private var developerProBinding: Binding<Bool> {
+        Binding(
+            get: { store.debugUnlocked },
+            set: { store.setDebugUnlocked($0) }
+        )
+    }
+
+    private func revealDeveloperIfNeeded() {
+        guard devTapCount < 7 else { return }
+        devTapCount += 1
+        if devTapCount >= 7 {
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
         }
     }
 

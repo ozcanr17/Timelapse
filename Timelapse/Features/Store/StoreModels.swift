@@ -1,8 +1,8 @@
 /// Uygulamanın premium ürün kimlikleri. App Store Connect'te ve .storekit test
 /// dosyasında bu ID'lerle eşleşen abonelikleri tanımlamalısın.
 enum StoreProduct: String, CaseIterable {
-    case monthly = "com.ridvan.timelapse.pro.monthly"
-    case yearly  = "com.ridvan.timelapse.pro.yearly"
+    case monthly  = "com.ridvan.timelapse.pro.monthly"    // aylık abonelik
+    case lifetime = "com.ridvan.timelapse.pro.lifetime"   // tek seferlik (kalıcı) satın alma
 }
 
 /// StoreKit'in `Product` tipini uygulamanın geri kalanından soyutlayan değer tipi.

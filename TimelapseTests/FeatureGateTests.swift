@@ -28,4 +28,18 @@ final class FeatureGateTests: XCTestCase {
         XCTAssertTrue(FeatureGate.isUnlocked(.highResExport, isPro: true))
         XCTAssertTrue(FeatureGate.isUnlocked(.unlimitedProjects, isPro: true))
     }
+
+    func test_ucretsizKullanici_14KareyeKadarEkleyebilir() {
+        XCTAssertTrue(FeatureGate.canAddEntry(isPro: false, currentEntryCount: 0))
+        XCTAssertTrue(FeatureGate.canAddEntry(isPro: false, currentEntryCount: 13))
+    }
+
+    func test_ucretsizKullanici_14KaredenSonrasiKilitli() {
+        XCTAssertFalse(FeatureGate.canAddEntry(isPro: false, currentEntryCount: 14))
+        XCTAssertFalse(FeatureGate.canAddEntry(isPro: false, currentEntryCount: 20))
+    }
+
+    func test_proKullanici_sinirsizKareEkleyebilir() {
+        XCTAssertTrue(FeatureGate.canAddEntry(isPro: true, currentEntryCount: 500))
+    }
 }

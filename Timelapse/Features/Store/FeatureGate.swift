@@ -58,9 +58,19 @@ enum FeatureGate {
     /// Ücretsiz katmanda izin verilen en fazla aktif proje sayısı.
     static let freeProjectLimit = 1
 
+    /// Ücretsiz katmanda tek projeye eklenebilecek en fazla çekim (fotoğraf) sayısı.
+    /// Bu sınıra ulaşınca yeni çekim için Pro gerekir.
+    static let freeEntryLimit = 14
+
     /// Yeni bir proje oluşturulabilir mi?
     static func canCreateProject(isPro: Bool, currentProjectCount: Int) -> Bool {
         isPro || currentProjectCount < freeProjectLimit
+    }
+
+    /// Bu projeye yeni bir çekim eklenebilir mi? Ücretsiz kullanıcı ilk 14 kareye
+    /// kadar çekebilir; sonrası Pro ister.
+    static func canAddEntry(isPro: Bool, currentEntryCount: Int) -> Bool {
+        isPro || currentEntryCount < freeEntryLimit
     }
 
     /// Bir premium özellik açık mı? Şimdilik hepsi tek kapıdan (Pro aboneliği) açılır.
