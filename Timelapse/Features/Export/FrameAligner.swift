@@ -21,20 +21,35 @@ enum FrameAligner {
         let orientation = cgOrientation(from: image.imageOrientation)
         let handler = VNImageRequestHandler(cgImage: cgImage, orientation: orientation, options: [:])
 
-        if let landmarks = landmarkAnchor(handler) { return landmarks }
-        return saliencyAnchor(handler)
-    }
-
-    /// Göz kilit noktalarıyla hizalama (birincil ve en iyi yol). Gözler bulunamazsa
-    /// yüz kutusu + roll'e düşer.
-    private static func landmarkAnchor(_ handler: VNImageRequestHandler) -> FrameAnchor? {
         let request = VNDetectFaceLandmarksRequest()
         try? handler.perform([request])
-        guard let face = request.results?.max(by: { $0.boundingBox.height < $1.boundingBox.height }) else {
+        guard let faces = request.results, !faces.isEmpty else { return nil }
+
+        if faces.count == 1 { return faceAnchor(faces[0]) }
+        return groupAnchor(faces)
+    }
+
+    static func translationOffset(targetData: Data, referenceData: Data) -> CGSize? {
+        let working = CGSize(width: 480, height: 640)
+        guard
+            let target = normalized(targetData, size: working),
+            let reference = normalized(referenceData, size: working)
+        else { return nil }
+
+        let request = VNTranslationalImageRegistrationRequest(targetedCGImage: target)
+        do {
+            try VNImageRequestHandler(cgImage: reference, options: [:]).perform([request])
+        } catch { return nil }
+
+        guard let observation = request.results?.first as? VNImageTranslationAlignmentObservation else {
             return nil
         }
-        let box = face.boundingBox
+        let transform = observation.alignmentTransform
+        return CGSize(width: transform.tx / working.width, height: transform.ty / working.height)
+    }
 
+    private static func faceAnchor(_ face: VNFaceObservation) -> FrameAnchor {
+        let box = face.boundingBox
         if
             let left = eyeCenter(face.landmarks?.leftEye, box: box),
             let right = eyeCenter(face.landmarks?.rightEye, box: box)
@@ -42,11 +57,9 @@ enum FrameAligner {
             return FrameAnchor(
                 center: CGPoint(x: (left.x + right.x) / 2, y: (left.y + right.y) / 2),
                 height: box.height,
-                roll: atan2(right.y - left.y, right.x - left.x)   // göz çizgisi eğimi
+                roll: atan2(right.y - left.y, right.x - left.x)
             )
         }
-
-        // Kilit nokta yok: yüz kutusu + gözlemin roll'ü.
         return FrameAnchor(
             center: CGPoint(x: box.midX, y: 1 - box.midY),
             height: box.height,
@@ -54,17 +67,28 @@ enum FrameAligner {
         )
     }
 
-    /// Yüz yoksa: en belirgin nesnenin kutusu. Roll ölçülmez.
-    private static func saliencyAnchor(_ handler: VNImageRequestHandler) -> FrameAnchor? {
-        let request = VNGenerateAttentionBasedSaliencyImageRequest()
-        try? handler.perform([request])
-        guard
-            let observation = request.results?.first as? VNSaliencyImageObservation,
-            let salient = observation.salientObjects?.max(by: { $0.boundingBox.height < $1.boundingBox.height })
-        else { return nil }
+    private static func groupAnchor(_ faces: [VNFaceObservation]) -> FrameAnchor {
+        let centers = faces.map { CGPoint(x: $0.boundingBox.midX, y: 1 - $0.boundingBox.midY) }
+        let cx = centers.map(\.x).reduce(0, +) / CGFloat(centers.count)
+        let cy = centers.map(\.y).reduce(0, +) / CGFloat(centers.count)
+        let tops = faces.map { 1 - $0.boundingBox.maxY }
+        let bottoms = faces.map { 1 - $0.boundingBox.minY }
+        let span = (bottoms.max() ?? 1) - (tops.min() ?? 0)
+        return FrameAnchor(center: CGPoint(x: cx, y: cy), height: max(span, 0.1), roll: 0)
+    }
 
-        let box = salient.boundingBox
-        return FrameAnchor(center: CGPoint(x: box.midX, y: 1 - box.midY), height: box.height, roll: 0)
+    private static func normalized(_ data: Data, size: CGSize) -> CGImage? {
+        guard let image = UIImage(data: data) else { return nil }
+        let scale = max(size.width / max(image.size.width, 1), size.height / max(image.size.height, 1))
+        let drawSize = CGSize(width: image.size.width * scale, height: image.size.height * scale)
+        let origin = CGPoint(x: (size.width - drawSize.width) / 2, y: (size.height - drawSize.height) / 2)
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        format.opaque = true
+        let rendered = UIGraphicsImageRenderer(size: size, format: format).image { _ in
+            image.draw(in: CGRect(origin: origin, size: drawSize))
+        }
+        return rendered.cgImage
     }
 
     /// Bir göz bölgesinin merkezini görsel-normalize (sol-üst origin) koordinata çevirir.

@@ -229,12 +229,20 @@ struct TimelapseComposer: TimelapseComposing {
         guard writer.startWriting() else { throw TimelapseComposerError.writerFailed }
         writer.startSession(atSourceTime: .zero)
 
-        // Akıllı Hizalama: her karedeki çıpayı bul; ilk bulunan referans olur. Manuel
-        // hizalama ayarlıysa Vision'a gerek yok (tüm karelerde sabit çıpa kullanılır).
-        let anchors: [FrameAnchor?] = (settings.smartAlignment && settings.manualAnchor == nil)
+        let useSmart = settings.smartAlignment && settings.manualAnchor == nil
+        let anchors: [FrameAnchor?] = useSmart
             ? frames.map { FrameAligner.anchor(in: $0.imageData) }
             : Array(repeating: nil, count: frames.count)
         let reference = anchors.compactMap { $0 }.first
+
+        let offsets: [CGSize?]
+        if useSmart, reference == nil, let referenceData = frames.first?.imageData {
+            offsets = frames.enumerated().map { index, frame in
+                index == 0 ? .zero : FrameAligner.translationOffset(targetData: frame.imageData, referenceData: referenceData)
+            }
+        } else {
+            offsets = Array(repeating: nil, count: frames.count)
+        }
 
         // Sabit 30 fps çıktı; her fotoğraf `holdFrames` kadar tutulur (hız bunu belirler).
         // Yumuşak geçiş, fotoğrafın SON birkaç karesini bir sonrakine kısa bir çapraz
@@ -266,6 +274,7 @@ struct TimelapseComposer: TimelapseComposing {
                     date: frames[index].capturedAt,
                     anchor: anchors[index],
                     reference: reference,
+                    offset: offsets[index],
                     settings: settings
                 )
             else { throw TimelapseComposerError.frameDecodingFailed }
@@ -333,6 +342,7 @@ struct TimelapseComposer: TimelapseComposing {
         date: Date,
         anchor: FrameAnchor?,
         reference: FrameAnchor?,
+        offset: CGSize?,
         settings: TimelapseExportSettings
     ) -> CGImage? {
         let size = settings.renderSize
@@ -347,6 +357,8 @@ struct TimelapseComposer: TimelapseComposing {
                 image.draw(in: manualRect(for: image, manual: manual, canvas: size))
             } else if settings.smartAlignment, let anchor, let reference {
                 drawAligned(image, anchor: anchor, reference: reference, canvas: size, context: context.cgContext)
+            } else if settings.smartAlignment, let offset {
+                image.draw(in: aspectFillRect(for: image, canvas: size, offset: offset))
             } else {
                 image.draw(in: aspectFillRect(for: image, canvas: size))
             }
@@ -357,12 +369,12 @@ struct TimelapseComposer: TimelapseComposing {
     }
 
     /// Görseli tuvali dolduracak şekilde ortalar (hizalama kapalıyken varsayılan).
-    private static func aspectFillRect(for image: UIImage, canvas: CGSize) -> CGRect {
+    private static func aspectFillRect(for image: UIImage, canvas: CGSize, offset: CGSize = .zero) -> CGRect {
         let scale = max(canvas.width / max(image.size.width, 1), canvas.height / max(image.size.height, 1))
         let drawSize = CGSize(width: image.size.width * scale, height: image.size.height * scale)
         return CGRect(
-            x: (canvas.width - drawSize.width) / 2,
-            y: (canvas.height - drawSize.height) / 2,
+            x: (canvas.width - drawSize.width) / 2 + offset.width * drawSize.width,
+            y: (canvas.height - drawSize.height) / 2 - offset.height * drawSize.height,
             width: drawSize.width,
             height: drawSize.height
         )
