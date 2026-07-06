@@ -36,6 +36,23 @@ final class TimelapseComposerTests: XCTestCase {
         XCTAssertEqual(duration.seconds, 1.0, accuracy: 0.3)
     }
 
+    func test_yumusakGecis_yuksekCozunurlukte_videoUretir() async throws {
+        let frames = (0..<8).map(frame)
+        let settings = TimelapseExportSettings(
+            renderSize: CGSize(width: 2160, height: 2880),
+            framesPerSecond: 8,
+            includesWatermark: false,
+            transition: .smooth
+        )
+
+        let url = try await TimelapseComposer().makeVideo(from: frames, settings: settings, onProgress: { _ in })
+        defer { try? FileManager.default.removeItem(at: url) }
+
+        XCTAssertTrue(FileManager.default.fileExists(atPath: url.path))
+        let duration = try await AVURLAsset(url: url).load(.duration)
+        XCTAssertEqual(duration.seconds, 1.0, accuracy: 0.3)
+    }
+
     func test_ikidenAzKare_hataVerir() async {
         do {
             _ = try await TimelapseComposer().makeVideo(

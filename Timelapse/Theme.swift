@@ -30,7 +30,7 @@ enum AppTheme: String, CaseIterable, Identifiable {
         case .filmNegative: String(localized: "Negatif")
         case .daylight:     String(localized: "Aydınlık")
         case .bright:       String(localized: "Canlı")
-        case .cyber:        "Cyber"
+        case .cyber:        String(localized: "Grafit")
         case .darkroom:     String(localized: "Karanlık Oda")
         case .fjord:        String(localized: "Fiyort")
         case .lavender:     String(localized: "Lavanta")
@@ -76,14 +76,12 @@ enum AppTheme: String, CaseIterable, Identifiable {
             )
         case .cyber:
             ThemePalette(
-                accent: Color(light: "7B5CFF", dark: "7B5CFF"),
-                secondary: Color(light: "37E6C4", dark: "37E6C4"),
-                canvas: Color(light: "07070C", dark: "07070C"),
-                surface: Color(light: "14141F", dark: "14141F"),
-                ink: Color(light: "F3F2FA", dark: "F3F2FA"),
-                inkMuted: Color(light: "8B89A8", dark: "8B89A8"),
-                isGlass: true,
-                glow: Color(light: "7B5CFF", dark: "7B5CFF")
+                accent: Color(light: "3B6EA5", dark: "6FA8DC"),
+                secondary: Color(light: "5A6472", dark: "9AA4B2"),
+                canvas: Color(light: "0F1115", dark: "0F1115"),
+                surface: Color(light: "1A1D23", dark: "1A1D23"),
+                ink: Color(light: "F2F3F5", dark: "F2F3F5"),
+                inkMuted: Color(light: "9AA0A8", dark: "9AA0A8")
             )
         case .darkroom:
             ThemePalette(
@@ -149,13 +147,13 @@ enum Theme {
     }
 
     static func headline(_ size: CGFloat = 20) -> Font {
-        .system(size: size, weight: .bold, design: .rounded)
+        .system(size: size, weight: .semibold, design: .default)
     }
     static func body(_ size: CGFloat = 16) -> Font {
-        .system(size: size, weight: .regular, design: .rounded)
+        .system(size: size, weight: .regular, design: .default)
     }
     static func caption(_ size: CGFloat = 13) -> Font {
-        .system(size: size, weight: .medium, design: .rounded)
+        .system(size: size, weight: .medium, design: .default)
     }
     static func stamp(_ size: CGFloat = 15, weight: Font.Weight = .semibold) -> Font {
         .system(size: size, weight: weight, design: .monospaced)
@@ -202,35 +200,24 @@ struct CardBackground: ViewModifier {
     @Environment(\.theme) private var theme
 
     func body(content: Content) -> some View {
-        if theme.isGlass {
-            content
-                .background(.ultraThinMaterial)
-                .background(theme.surface.opacity(0.35))
-                .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
-                .overlay(
-                    RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
-                        .strokeBorder(.white.opacity(0.14), lineWidth: 1)
-                )
-                .shadow(color: (theme.glow ?? .clear).opacity(0.35), radius: 18, x: 0, y: 8)
-        } else {
-            content
-                .background(theme.surface)
-                .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
-                .shadow(color: .black.opacity(0.06), radius: 12, x: 0, y: 6)
-        }
+        content
+            .background(theme.surface)
+            .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
+                    .strokeBorder(theme.ink.opacity(0.06), lineWidth: 0.5)
+            )
+            .shadow(color: .black.opacity(0.05), radius: 10, x: 0, y: 4)
     }
 }
 
 extension View {
     func cardStyle() -> some View { modifier(CardBackground()) }
-    /// "Liquid glass" yüzey: renk tonu + üstte parlak vurgu + ışıklı ince kenar.
     func glassSurface(cornerRadius: CGFloat = 18, tint: Color) -> some View {
         modifier(GlassSurface(cornerRadius: cornerRadius, tint: tint))
     }
 }
 
-/// Sıvı cam (liquid glass) etkisi: yumuşak, buzlu bir ton. Aynası/parlaklığı düşük tutulur
-/// ki üzerindeki beyaz yazı rahat okunsun.
 struct GlassSurface: ViewModifier {
     var cornerRadius: CGFloat = 18
     var tint: Color
@@ -241,16 +228,12 @@ struct GlassSurface: ViewModifier {
             .background {
                 shape.fill(tint)
                     .overlay {
-                        // Üstte çok hafif parlama, altta hafif derinlik — hafif "cam" hissi.
                         LinearGradient(
-                            colors: [.white.opacity(0.16), .clear, .black.opacity(0.10)],
+                            colors: [.white.opacity(0.06), .clear],
                             startPoint: .top, endPoint: .bottom
                         )
+                        .clipShape(shape)
                     }
-                    .clipShape(shape)
-            }
-            .overlay {
-                shape.strokeBorder(.white.opacity(0.20), lineWidth: 1)
             }
             .clipShape(shape)
     }
@@ -263,13 +246,13 @@ struct PrimaryButtonStyle: ButtonStyle {
         configuration.label
             .font(Theme.headline(17))
             .foregroundStyle(.white)
-            .shadow(color: .black.opacity(0.28), radius: 2, x: 0, y: 1)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 15)
-            .glassSurface(cornerRadius: 18, tint: theme.accent)
-            .shadow(color: (theme.glow ?? theme.accent).opacity(0.45), radius: 16, x: 0, y: 7)
-            .scaleEffect(configuration.isPressed ? 0.97 : 1)
-            .animation(.spring(response: 0.25, dampingFraction: 0.7), value: configuration.isPressed)
+            .glassSurface(cornerRadius: 14, tint: theme.accent)
+            .shadow(color: .black.opacity(0.12), radius: 8, x: 0, y: 3)
+            .opacity(configuration.isPressed ? 0.85 : 1)
+            .scaleEffect(configuration.isPressed ? 0.98 : 1)
+            .animation(.spring(response: 0.3, dampingFraction: 0.8), value: configuration.isPressed)
     }
 }
 

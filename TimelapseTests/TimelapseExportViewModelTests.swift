@@ -33,7 +33,8 @@ final class TimelapseExportViewModelTests: XCTestCase {
         let composer = FakeComposer()
         let viewModel = TimelapseExportViewModel(composer: composer)
 
-        await viewModel.export(frames: frames(2), isPro: false)
+        viewModel.export(frames: frames(2), isPro: false)
+        await viewModel.waitForRender()
 
         XCTAssertEqual(viewModel.phase, .finished(URL(fileURLWithPath: "/tmp/fake.mp4")))
         XCTAssertEqual(composer.receivedFrames.count, 2)
@@ -44,7 +45,8 @@ final class TimelapseExportViewModelTests: XCTestCase {
         let composer = FakeComposer()
         let viewModel = TimelapseExportViewModel(composer: composer)
 
-        await viewModel.export(frames: frames(2), isPro: true)
+        viewModel.export(frames: frames(2), isPro: true)
+        await viewModel.waitForRender()
 
         XCTAssertEqual(composer.receivedSettings, .current(isPro: true))
     }
@@ -53,7 +55,8 @@ final class TimelapseExportViewModelTests: XCTestCase {
         let composer = FakeComposer()
         let viewModel = TimelapseExportViewModel(composer: composer)
 
-        await viewModel.export(frames: frames(1), isPro: false)
+        viewModel.export(frames: frames(1), isPro: false)
+        await viewModel.waitForRender()
 
         guard case .failed = viewModel.phase else {
             return XCTFail("Durum .failed olmalıydı, ama \(viewModel.phase) bulundu")
@@ -66,7 +69,8 @@ final class TimelapseExportViewModelTests: XCTestCase {
         composer.result = .failure(DummyError())
         let viewModel = TimelapseExportViewModel(composer: composer)
 
-        await viewModel.export(frames: frames(2), isPro: false)
+        viewModel.export(frames: frames(2), isPro: false)
+        await viewModel.waitForRender()
 
         guard case .failed = viewModel.phase else {
             return XCTFail("Durum .failed olmalıydı, ama \(viewModel.phase) bulundu")

@@ -48,8 +48,13 @@ struct ProjectDetailView: View {
                         isExporting = true
                     } label: {
                         Label("Timelapse'i Oluştur", systemImage: "film.stack")
+                            .font(Theme.headline(17))
+                            .foregroundStyle(accent)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 15)
+                            .background(accent.opacity(0.12), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                     }
-                    .buttonStyle(.timelapsePrimary)
+                    .buttonStyle(.plain)
                 }
 
                 if project.sortedEntries.isEmpty {
@@ -151,11 +156,10 @@ struct ProjectDetailView: View {
                 Image(systemName: "chevron.right").font(.system(size: 15, weight: .bold)).opacity(0.75)
             }
             .foregroundStyle(.white)
-            .shadow(color: .black.opacity(0.28), radius: 2, x: 0, y: 1)
             .padding(.horizontal, 20)
             .padding(.vertical, 18)
-            .glassSurface(cornerRadius: Theme.cornerRadius, tint: accent)
-            .shadow(color: accent.opacity(0.4), radius: 14, x: 0, y: 7)
+            .background(accent, in: RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
+            .shadow(color: .black.opacity(0.12), radius: 8, x: 0, y: 4)
             .overlay(alignment: .topTrailing) {
                 if due {
                     Circle().fill(.white).frame(width: 10, height: 10).padding(12)
@@ -230,17 +234,20 @@ struct ProjectDetailView: View {
                 icon: "flame.fill",
                 value: "\(streak)",
                 label: "Gün serisi",
+                accent: accent,
                 isAlive: streak > 0
             )
             StatTile(
                 icon: "photo.stack",
                 value: "\(dates.count)",
-                label: "Toplam kare"
+                label: "Toplam kare",
+                accent: accent
             )
             StatTile(
                 icon: "calendar",
                 value: "\(ActivitySummary.daysRunning(firstCapture: dates.first))",
-                label: "Gündür sürüyor"
+                label: "Gündür sürüyor",
+                accent: accent
             )
         }
     }
@@ -257,54 +264,54 @@ struct ProjectDetailView: View {
     }
 
     private var header: some View {
-        VStack(alignment: .leading, spacing: 18) {
-            HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(project.category.displayName.uppercased())
-                        .font(Theme.caption(12))
-                        .foregroundStyle(.white.opacity(0.8))
-                        .tracking(1.2)
+        VStack(alignment: .leading, spacing: 16) {
+            HStack(alignment: .center, spacing: 14) {
+                ZStack {
+                    Circle().fill(accent.opacity(0.15)).frame(width: 56, height: 56)
+                    Image(systemName: Theme.icon(for: project.category))
+                        .font(.system(size: 24, weight: .semibold))
+                        .foregroundStyle(accent)
+                }
 
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(project.category.displayName)
+                        .font(Theme.caption(13))
+                        .foregroundStyle(theme.inkMuted)
                     (
                         Text("\(project.sortedEntries.count)")
-                            .font(Theme.stamp(40, weight: .bold))
-                            .foregroundStyle(.white)
+                            .font(.system(size: 28, weight: .bold, design: .default))
+                            .monospacedDigit()
                         +
                         Text(" çekim")
-                            .font(Theme.headline(17))
-                            .foregroundStyle(.white.opacity(0.85))
+                            .font(Theme.headline(16))
+                            .foregroundStyle(theme.inkMuted)
                     )
+                    .foregroundStyle(theme.ink)
                 }
                 Spacer()
-                ZStack {
-                    Circle().fill(.white.opacity(0.18)).frame(width: 54, height: 54)
-                    Image(systemName: Theme.icon(for: project.category))
-                        .font(.system(size: 22, weight: .semibold))
-                        .foregroundStyle(.white)
-                }
             }
 
             HStack(spacing: 14) {
                 Label(project.cadence.displayName, systemImage: "calendar")
+                    .foregroundStyle(theme.inkMuted)
                 if project.isCaptureDue() {
                     Label("Bugün zamanı geldi", systemImage: "bell.fill")
+                        .foregroundStyle(accent)
                 }
                 if project.isCoupleMode {
                     Label("Çift modu", systemImage: "person.2.fill")
+                        .foregroundStyle(theme.inkMuted)
                 }
                 if project.isCollaborative {
                     Label("Birlikte", systemImage: "person.3.fill")
+                        .foregroundStyle(theme.inkMuted)
                 }
             }
             .font(Theme.caption(12))
-            .foregroundStyle(.white.opacity(0.9))
         }
         .padding(20)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            LinearGradient(colors: [accent, accent.opacity(0.7)], startPoint: .topLeading, endPoint: .bottomTrailing)
-        )
-        .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
+        .cardStyle()
     }
 
     private var emptyState: some View {
@@ -341,27 +348,19 @@ private struct StatTile: View {
     let icon: String
     let value: String
     let label: LocalizedStringKey
+    var accent: Color
     var isAlive: Bool = false
 
     @Environment(\.theme) private var theme
-    @State private var isBreathing = false
 
     var body: some View {
         VStack(spacing: 6) {
             Image(systemName: icon)
                 .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(theme.accent)
-                .scaleEffect(isAlive && isBreathing ? 1.18 : 1)
-                .shadow(color: isAlive ? theme.accent.opacity(isBreathing ? 0.55 : 0.15) : .clear, radius: 6)
-                .animation(
-                    isAlive
-                        ? .easeInOut(duration: 1.1).repeatForever(autoreverses: true)
-                        : .default,
-                    value: isBreathing
-                )
-                .onAppear { if isAlive { isBreathing = true } }
+                .foregroundStyle(isAlive ? accent : theme.inkMuted)
             Text(value)
-                .font(Theme.stamp(20, weight: .bold))
+                .font(.system(size: 20, weight: .bold, design: .default))
+                .monospacedDigit()
                 .foregroundStyle(theme.ink)
             Text(label)
                 .font(Theme.caption(11))
@@ -414,7 +413,7 @@ private struct EntryThumbnail: View {
             .shadow(color: .black.opacity(0.08), radius: 6, x: 0, y: 3)
 
             Text(entry.capturedAt, format: .dateTime.day().month())
-                .font(Theme.stamp(11, weight: .regular))
+                .font(Theme.caption(11))
                 .foregroundStyle(theme.inkMuted)
         }
         .task(id: entry.imageData?.count) {

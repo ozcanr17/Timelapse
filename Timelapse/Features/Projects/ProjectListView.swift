@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import UIKit
 
 /// Projeleri listeleyen ana ekran.
 struct ProjectListView: View {
@@ -31,7 +32,7 @@ struct ProjectListView: View {
             theme.canvas.ignoresSafeArea()
 
             if projects.isEmpty {
-                EmptyProjectsView()
+                EmptyProjectsView(onCreate: addProjectTapped)
             } else {
                 List {
                     ActivityHeroCard(projects: projects)
@@ -42,15 +43,22 @@ struct ProjectListView: View {
                     ForEach(projects) { project in
                         if !project.isDeleted {
                             ProjectCard(project: project)
-                                .background(
-                                    NavigationLink("") {
+                                .overlay {
+                                    NavigationLink {
                                         ProjectDetailView(project: project)
+                                    } label: {
+                                        Color.clear
+                                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                            .contentShape(Rectangle())
                                     }
-                                    .opacity(0)
-                                )
+                                    .buttonStyle(.plain)
+                                }
+                                .accessibilityElement(children: .combine)
+                                .accessibilityAddTraits(.isButton)
+                                .accessibilityIdentifier("projectCard-\(project.title)")
                                 .listRowSeparator(.hidden)
                                 .listRowBackground(Color.clear)
-                                .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
+                                .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
                         }
                     }
                     .onDelete(perform: deleteProjects)
@@ -155,16 +163,15 @@ struct ProjectListView: View {
         Button {
             showQuickPick = true
         } label: {
-            HStack(spacing: 10) {
-                Image(systemName: "camera.fill").font(.system(size: 18, weight: .bold))
+            HStack(spacing: 8) {
+                Image(systemName: "camera.fill").font(.system(size: 16, weight: .semibold))
                 Text("Kare Çek").font(Theme.headline(17))
             }
             .foregroundStyle(.white)
-            .shadow(color: .black.opacity(0.28), radius: 2, x: 0, y: 1)
-            .padding(.horizontal, 30)
+            .padding(.horizontal, 28)
             .padding(.vertical, 15)
-            .glassSurface(cornerRadius: 30, tint: theme.accent)
-            .shadow(color: theme.accent.opacity(0.45), radius: 16, x: 0, y: 7)
+            .background(theme.accent, in: Capsule())
+            .shadow(color: .black.opacity(0.15), radius: 8, x: 0, y: 4)
         }
         .buttonStyle(.plain)
         .padding(.bottom, 6)
@@ -251,7 +258,6 @@ private struct ActivityHeroCard: View {
     let projects: [Project]
 
     @Environment(\.theme) private var theme
-    @State private var isBreathing = false
 
     private var liveProjects: [Project] {
         projects.filter { !$0.isDeleted }
@@ -283,7 +289,8 @@ private struct ActivityHeroCard: View {
                         .tracking(1.2)
                     (
                         Text("\(weekTotal)")
-                            .font(Theme.stamp(32, weight: .bold))
+                            .font(.system(size: 32, weight: .bold, design: .default))
+                            .monospacedDigit()
                             .foregroundStyle(theme.ink)
                         +
                         Text(" çekim")
@@ -302,10 +309,6 @@ private struct ActivityHeroCard: View {
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)
                     .background(theme.accent, in: Capsule())
-                    .shadow(color: theme.accent.opacity(isBreathing ? 0.55 : 0.15), radius: isBreathing ? 10 : 3)
-                    .scaleEffect(isBreathing ? 1.03 : 1)
-                    .animation(.easeInOut(duration: 1.3).repeatForever(autoreverses: true), value: isBreathing)
-                    .onAppear { isBreathing = true }
             } else {
                 Label("Bugün için her şey tamam", systemImage: "checkmark.circle.fill")
                     .font(Theme.caption(12))
@@ -336,81 +339,122 @@ private struct WeeklyBars: View {
     }
 }
 
-/// Liste satırı: kategori renkli ikon rozeti + başlık + damga fontuyla çekim sayısı.
+/// Büyük foto-kahraman kartı: projenin son karesi arka plan olur; üstüne okunabilirlik
+/// için koyu geçiş, başlık ve ilerleme biner. Fotoğraf yoksa kategori rengine düşer.
 private struct ProjectCard: View {
     let project: Project
 
     @Environment(\.theme) private var theme
+    @State private var photo: UIImage?
 
     private var accent: Color { Theme.accent(for: project.category) }
+    private var count: Int { project.sortedEntries.filter { !$0.isDeleted }.count }
 
     var body: some View {
-        HStack(spacing: 14) {
-            ZStack {
-                Circle().fill(accent.opacity(0.15)).frame(width: 52, height: 52)
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(alignment: .top) {
                 Image(systemName: Theme.icon(for: project.category))
-                    .font(.system(size: 20, weight: .semibold))
-                    .foregroundStyle(accent)
-            }
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text(project.title)
-                    .font(Theme.headline(17))
-                    .foregroundStyle(theme.ink)
-
-                HStack(spacing: 6) {
-                    Text("\(project.sortedEntries.count)")
-                        .font(Theme.stamp(13))
-                    Text("çekim · \(project.cadence.displayName)")
-                }
-                .font(Theme.caption())
-                .foregroundStyle(theme.inkMuted)
-            }
-
-            Spacer()
-
-            if project.isCaptureDue() {
-                Text("Bugün")
-                    .font(Theme.caption(12))
+                    .font(.system(size: 16, weight: .semibold))
                     .foregroundStyle(.white)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 5)
-                    .background(accent)
-                    .clipShape(Capsule())
-            } else {
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(theme.inkMuted.opacity(0.4))
+                    .frame(width: 40, height: 40)
+                    .background(.black.opacity(0.28), in: Circle())
+                Spacer()
+                if project.isCaptureDue() {
+                    Text("Bugün")
+                        .font(Theme.caption(12))
+                        .foregroundStyle(theme.ink)
+                        .padding(.horizontal, 11)
+                        .padding(.vertical, 6)
+                        .background(.white, in: Capsule())
+                }
+            }
+
+            Spacer(minLength: 12)
+
+            Text(project.title)
+                .font(.system(size: 24, weight: .bold, design: .default))
+                .foregroundStyle(.white)
+            HStack(spacing: 6) {
+                Text("\(count)")
+                    .monospacedDigit()
+                    .fontWeight(.semibold)
+                Text("kare · \(project.cadence.displayName)")
+            }
+            .font(Theme.caption(13))
+            .foregroundStyle(.white.opacity(0.92))
+            .padding(.top, 3)
+        }
+        .padding(18)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(height: 188)
+        .background {
+            ZStack {
+                if let photo {
+                    Image(uiImage: photo)
+                        .resizable()
+                        .scaledToFill()
+                } else {
+                    LinearGradient(
+                        colors: [accent, accent.opacity(0.7)],
+                        startPoint: .topLeading, endPoint: .bottomTrailing
+                    )
+                }
+                LinearGradient(
+                    colors: [.black.opacity(0.25), .clear, .black.opacity(0.55)],
+                    startPoint: .top, endPoint: .bottom
+                )
             }
         }
-        .padding(16)
-        .cardStyle()
+        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .shadow(color: .black.opacity(0.12), radius: 12, x: 0, y: 6)
+        .task(id: project.sortedEntries.last?.imageData?.count) {
+            photo = await ImageDownsampler.image(from: project.sortedEntries.last?.imageData, maxPixelSize: 800)
+        }
     }
 }
 
 private struct EmptyProjectsView: View {
+    let onCreate: () -> Void
+
     @Environment(\.theme) private var theme
 
     var body: some View {
-        VStack(spacing: 18) {
-            ZStack {
-                Circle().fill(theme.accent.opacity(0.12)).frame(width: 96, height: 96)
-                Image(systemName: "camera.aperture")
-                    .font(.system(size: 36, weight: .medium))
-                    .foregroundStyle(theme.accent)
-            }
-            VStack(spacing: 6) {
+        VStack(spacing: 24) {
+            Spacer()
+
+            RoundedRectangle(cornerRadius: 28, style: .continuous)
+                .fill(theme.accent.opacity(0.12))
+                .frame(width: 108, height: 108)
+                .overlay(
+                    Image(systemName: "camera.aperture")
+                        .font(.system(size: 46, weight: .regular))
+                        .foregroundStyle(theme.accent)
+                )
+
+            VStack(spacing: 8) {
                 Text("İlk hikayeni başlat")
-                    .font(Theme.headline(22))
+                    .font(.system(size: 26, weight: .bold, design: .default))
                     .foregroundStyle(theme.ink)
-                Text("Sağ üstteki + ile bir proje oluştur,\nzamanla değişimi kaydetmeye başla.")
-                    .font(Theme.body(15))
+                Text("Günde bir kare çek; zamanla değişimin\nkendiliğinden bir timelapse'e dönüşsün.")
+                    .font(.system(size: 16, weight: .regular, design: .default))
                     .foregroundStyle(theme.inkMuted)
                     .multilineTextAlignment(.center)
+                    .lineSpacing(2)
             }
+
+            Button(action: onCreate) {
+                Label("Yeni Proje", systemImage: "plus")
+                    .font(Theme.headline(17))
+            }
+            .buttonStyle(.timelapsePrimary)
+            .frame(maxWidth: 260)
+            .padding(.top, 4)
+
+            Spacer()
+            Spacer()
         }
         .frame(maxWidth: .infinity)
-        .padding(.top, 90)
+        .padding(.horizontal, 32)
     }
 }
 

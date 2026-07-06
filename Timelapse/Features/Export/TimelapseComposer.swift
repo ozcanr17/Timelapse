@@ -1,5 +1,13 @@
 import AVFoundation
+import Foundation
 import UIKit
+
+private final class CancellationToken: @unchecked Sendable {
+    private let lock = NSLock()
+    private var cancelled = false
+    func cancel() { lock.lock(); cancelled = true; lock.unlock() }
+    var isCancelled: Bool { lock.lock(); defer { lock.unlock() }; return cancelled }
+}
 
 /// Timelapse oynatma hızı. Kare hızını (fps) belirler; daha yüksek fps daha hızlı,
 /// akıcı bir video demek. Herkese açık bir özellik — Pro gerektirmez.
@@ -177,14 +185,21 @@ struct TimelapseComposer: TimelapseComposing {
         onProgress: @escaping @Sendable (Double) -> Void
     ) async throws -> URL {
         guard frames.count >= 2 else { throw TimelapseComposerError.notEnoughFrames }
-        return try await Task.detached(priority: .userInitiated) {
-            try Self.render(frames: frames, settings: settings, onProgress: onProgress)
-        }.value
+        let token = CancellationToken()
+        return try await withTaskCancellationHandler {
+            try await Task.detached(priority: .userInitiated) {
+                try Self.render(frames: frames, settings: settings,
+                                isCancelled: { token.isCancelled }, onProgress: onProgress)
+            }.value
+        } onCancel: {
+            token.cancel()
+        }
     }
 
     private static func render(
         frames: [TimelapseFrame],
         settings: TimelapseExportSettings,
+        isCancelled: @Sendable () -> Bool,
         onProgress: @Sendable (Double) -> Void
     ) throws -> URL {
         let outputURL = FileManager.default.temporaryDirectory
@@ -257,21 +272,35 @@ struct TimelapseComposer: TimelapseComposing {
             return composed
         }
 
+        func abortIfCancelled() throws {
+            guard isCancelled() else { return }
+            writer.cancelWriting()
+            try? FileManager.default.removeItem(at: outputURL)
+            throw CancellationError()
+        }
+
         var current = try keyframe(0)
         for index in frames.indices {
-            let next = index + 1 < frames.count ? try keyframe(index + 1) : nil
+            try abortIfCancelled()
+            let next = try index + 1 < frames.count ? autoreleasepool { try keyframe(index + 1) } : nil
 
-            for _ in 0..<solidFrames { try append(current) }
+            for _ in 0..<solidFrames {
+                try autoreleasepool { try append(current) }
+            }
 
             if transitionFrames > 0, let next {
                 for step in 1...transitionFrames {
-                    let progress = CGFloat(step) / CGFloat(transitionFrames)
-                    if let blended = blend(current, next, progress: progress, size: settings.renderSize) {
-                        try append(blended)
+                    try autoreleasepool {
+                        let progress = CGFloat(step) / CGFloat(transitionFrames)
+                        if let blended = blend(current, next, progress: progress, size: settings.renderSize) {
+                            try append(blended)
+                        }
                     }
                 }
             } else {
-                for _ in 0..<transitionFrames { try append(current) }   // son fotoğraf: kalanı tut
+                for _ in 0..<transitionFrames {
+                    try autoreleasepool { try append(current) }
+                }
             }
 
             onProgress(Double(index + 1) / Double(frames.count))

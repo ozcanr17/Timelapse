@@ -29,7 +29,7 @@ final class TimelapseUITests: XCTestCase {
         app.buttons["Saç & Sakal"].tap()
         app.buttons["Kaydet"].tap()
 
-        let card = app.staticTexts["Sakal"]
+        let card = app.buttons["projectCard-Sakal"]
         XCTAssertTrue(card.waitForExistence(timeout: 5))
         attachScreenshot(of: app, named: "project-list")
 
@@ -45,6 +45,12 @@ final class TimelapseUITests: XCTestCase {
         attachScreenshot(of: app, named: "settings")
 
         let darkroomTheme = app.buttons["theme-darkroom"]
+        let settingsScroll = app.collectionViews.firstMatch
+        var scrollAttempts = 0
+        while !darkroomTheme.exists, scrollAttempts < 10 {
+            settingsScroll.swipeUp()
+            scrollAttempts += 1
+        }
         XCTAssertTrue(darkroomTheme.waitForExistence(timeout: 5))
         darkroomTheme.tap()
         attachScreenshot(of: app, named: "settings-darkroom-theme")

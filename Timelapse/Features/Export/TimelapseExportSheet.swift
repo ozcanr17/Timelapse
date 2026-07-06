@@ -46,15 +46,16 @@ struct TimelapseExportSheet: View {
                     didInitAlign = true
                     if store.isPro && smartAlignmentEnabled { alignMode = .smart }
                 }
-                await export()
+                export()
             }
+            .onDisappear { viewModel.cancel() }
             .sheet(isPresented: $showPaywall) {
                 PaywallView(store: store)
             }
             .sheet(isPresented: $showManualAlign) {
                 if let data = frames.first?.imageData {
                     ManualAlignView(imageData: data, manual: $manual) {
-                        Task { await export() }
+                        export()
                     }
                 }
             }
@@ -145,7 +146,7 @@ struct TimelapseExportSheet: View {
             }
             .padding(20)
         }
-        .onChange(of: overlay) { Task { await export() } }
+        .onChange(of: overlay) { export() }
     }
 
     private var speedControl: some View {
@@ -164,7 +165,7 @@ struct TimelapseExportSheet: View {
             .pickerStyle(.segmented)
             .disabled(viewModel.phase == .rendering)
             .onChange(of: speed) {
-                Task { await export() }
+                export()
             }
         }
     }
@@ -184,7 +185,7 @@ struct TimelapseExportSheet: View {
             }
             .pickerStyle(.segmented)
             .disabled(viewModel.phase == .rendering)
-            .onChange(of: transition) { Task { await export() } }
+            .onChange(of: transition) { export() }
         }
     }
 
@@ -214,7 +215,7 @@ struct TimelapseExportSheet: View {
                     showPaywall = true
                     return
                 }
-                if mode == .manual { showManualAlign = true } else { Task { await export() } }
+                if mode == .manual { showManualAlign = true } else { export() }
             }
             if alignMode == .manual {
                 Button {
@@ -315,7 +316,7 @@ struct TimelapseExportSheet: View {
                 .foregroundStyle(theme.ink)
                 .multilineTextAlignment(.center)
             Button("Tekrar dene") {
-                Task { await export() }
+                export()
             }
             .buttonStyle(.timelapsePrimary)
             .frame(width: 200)
@@ -323,12 +324,11 @@ struct TimelapseExportSheet: View {
         .padding(24)
     }
 
-    private func export() async {
-        // Ücretsiz kullanıcı etiketi kaldıramaz; her ihtimale karşı burada da zorluyoruz.
+    private func export() {
         var effectiveOverlay = overlay
         if !store.isPro { effectiveOverlay.showAppMark = true }
         let proAlign = store.isPro
-        await viewModel.export(
+        viewModel.export(
             frames: frames,
             isPro: store.isPro,
             speed: speed,

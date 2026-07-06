@@ -124,7 +124,7 @@ struct SettingsView: View {
                     Picker("Saat", selection: $reminderHour) {
                         ForEach(0..<24, id: \.self) { hour in
                             Text(String(format: "%02d:00", hour))
-                                .font(Theme.stamp(14))
+                                .font(Theme.body(15)).monospacedDigit()
                                 .tag(hour)
                         }
                     }
@@ -133,10 +133,10 @@ struct SettingsView: View {
 
             Section("İstatistik") {
                 LabeledContent("Proje") {
-                    Text("\(projects.count)").font(Theme.stamp(15))
+                    Text("\(projects.count)").font(Theme.body(15)).monospacedDigit()
                 }
                 LabeledContent("Toplam çekim") {
-                    Text("\(totalEntries)").font(Theme.stamp(15))
+                    Text("\(totalEntries)").font(Theme.body(15)).monospacedDigit()
                 }
             }
 
@@ -197,7 +197,7 @@ struct SettingsView: View {
                         .font(Theme.headline(17))
                         .foregroundStyle(theme.ink)
                     Text("Sürüm \(appVersion)")
-                        .font(Theme.stamp(12, weight: .regular))
+                        .font(Theme.caption(12))
                         .foregroundStyle(theme.inkMuted)
                         .contentShape(Rectangle())
                         .onTapGesture { revealDeveloperIfNeeded() }

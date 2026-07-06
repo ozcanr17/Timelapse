@@ -47,7 +47,7 @@ struct StreakShareCard: View {
                     Image(systemName: "camera.aperture")
                         .foregroundStyle(.white.opacity(0.85))
                     Text("Timelapse ile takip ediyorum")
-                        .font(Theme.stamp(16, weight: .medium))
+                        .font(.system(size: 16, weight: .medium, design: .default))
                         .foregroundStyle(.white.opacity(0.85))
                 }
                 .padding(.bottom, 56)
@@ -65,7 +65,8 @@ private struct ShareStatColumn: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(value)
-                .font(Theme.stamp(44, weight: .bold))
+                .font(.system(size: 44, weight: .bold, design: .default))
+                .monospacedDigit()
                 .foregroundStyle(.white)
             Text(label)
                 .font(Theme.caption(13))

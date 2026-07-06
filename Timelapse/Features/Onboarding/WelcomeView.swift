@@ -30,7 +30,7 @@ struct WelcomeView: View {
                     .padding(.top, 24)
 
                 Text("DEĞİŞİMİ TEK KAREDE BİRİKTİR")
-                    .font(Theme.stamp(12))
+                    .font(Theme.caption(12))
                     .foregroundStyle(theme.inkMuted)
                     .tracking(2)
                     .padding(.top, 6)

@@ -15,6 +15,7 @@ final class TimelapseExportViewModel {
     private(set) var progress: Double = 0
 
     private let composer: any TimelapseComposing
+    private var renderTask: Task<Void, Never>?
 
     init(composer: any TimelapseComposing = TimelapseComposer()) {
         self.composer = composer
@@ -28,26 +29,46 @@ final class TimelapseExportViewModel {
         smartAlignment: Bool = false,
         manualAnchor: ManualAlignment? = nil,
         transition: TimelapseTransition = .cut
-    ) async {
-        guard phase != .rendering else { return }
+    ) {
+        renderTask?.cancel()
         guard frames.count >= 2 else {
             phase = .failed(String(localized: "Timelapse için en az 2 çekim gerekli."))
             return
         }
+        let settings = TimelapseExportSettings.current(
+            isPro: isPro, speed: speed, overlay: overlay,
+            smartAlignment: smartAlignment, manualAnchor: manualAnchor, transition: transition
+        )
+        let composer = composer
         phase = .rendering
         progress = 0
-        do {
-            let url = try await composer.makeVideo(
-                from: frames,
-                settings: .current(isPro: isPro, speed: speed, overlay: overlay,
-                                   smartAlignment: smartAlignment, manualAnchor: manualAnchor, transition: transition),
-                onProgress: { [weak self] value in
-                    Task { @MainActor in self?.progress = value }
-                }
-            )
-            phase = .finished(url)
-        } catch {
-            phase = .failed(String(localized: "Video oluşturulamadı: \(error.localizedDescription)"))
+        renderTask = Task { [weak self] in
+            do {
+                let url = try await composer.makeVideo(
+                    from: frames,
+                    settings: settings,
+                    onProgress: { [weak self] value in
+                        Task { @MainActor in
+                            guard let self, !Task.isCancelled else { return }
+                            self.progress = value
+                        }
+                    }
+                )
+                try Task.checkCancellation()
+                self?.phase = .finished(url)
+            } catch is CancellationError {
+            } catch {
+                guard !Task.isCancelled else { return }
+                self?.phase = .failed(String(localized: "Video oluşturulamadı: \(error.localizedDescription)"))
+            }
         }
+    }
+
+    func cancel() {
+        renderTask?.cancel()
+    }
+
+    func waitForRender() async {
+        await renderTask?.value
     }
 }

@@ -188,7 +188,9 @@ private struct PackageCard: View {
                                 .clipShape(Capsule())
                         }
                     }
-                    Text(package.displayPrice).font(Theme.stamp(15)).foregroundStyle(theme.inkMuted)
+                    Text(package.displayPrice)
+                        .font(Theme.body(15)).monospacedDigit()
+                        .foregroundStyle(theme.inkMuted)
                 }
                 Spacer()
                 Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
