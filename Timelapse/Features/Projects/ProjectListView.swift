@@ -14,13 +14,25 @@ struct ProjectListView: View {
     @State private var isShowingSettings = false
     @State private var pendingDeletion: [Project] = []
     @State private var showQuickPick = false
-    @State private var captureTarget: Project?
+    @State private var captureRoute: CaptureRoute?
     @State private var pendingCapture: Project?
 
     private enum ActiveSheet: Identifiable {
         case addProject
+        case importNew
         case paywall
         var id: Int { hashValue }
+    }
+
+    private enum CaptureRoute: Identifiable {
+        case project(Project)
+        case auto
+        var id: String {
+            switch self {
+            case .project(let project): project.id.uuidString
+            case .auto: "auto"
+            }
+        }
     }
 
     private var liveProjects: [Project] {
@@ -81,6 +93,16 @@ struct ProjectListView: View {
             }
             ToolbarItem(placement: .primaryAction) {
                 Button {
+                    importTapped()
+                } label: {
+                    Image(systemName: "photo.on.rectangle.angled")
+                        .font(.system(size: 18))
+                        .foregroundStyle(theme.accent)
+                }
+                .accessibilityIdentifier("importProjectButton")
+            }
+            ToolbarItem(placement: .primaryAction) {
+                Button {
                     addProjectTapped()
                 } label: {
                     Image(systemName: "plus.circle.fill")
@@ -102,6 +124,8 @@ struct ProjectListView: View {
             switch sheet {
             case .addProject:
                 AddProjectSheet(repository: ProjectRepository(context: modelContext))
+            case .importNew:
+                PhotoImportSheet(mode: .newProject, repository: ProjectRepository(context: modelContext))
             case .paywall:
                 PaywallView(store: store)
             }
@@ -114,8 +138,13 @@ struct ProjectListView: View {
             .presentationDetents([.medium, .large])
             .presentationDragIndicator(.visible)
         }
-        .fullScreenCover(item: $captureTarget) { project in
-            CameraCaptureView(project: project)
+        .fullScreenCover(item: $captureRoute) { route in
+            switch route {
+            case .project(let project):
+                CameraCaptureView(project: project)
+            case .auto:
+                AutoCaptureFlow(projects: liveProjects)
+            }
         }
         .confirmationDialog(
             "Proje ve içindeki tüm çekimler kalıcı olarak silinsin mi?",
@@ -157,11 +186,15 @@ struct ProjectListView: View {
         }
     }
 
+    private func importTapped() {
+        activeSheet = store.isPro ? .importNew : .paywall
+    }
+
     /// Ana ekranda öne çıkan çekim düğmesi: uygulamanın asıl amacı. Tek proje varsa
     /// doğrudan kameraya gider; birden fazlaysa alttan hızlı seçim açılır.
     private var homeCaptureButton: some View {
         Button {
-            showQuickPick = true
+            if store.isPro { captureRoute = .auto } else { showQuickPick = true }
         } label: {
             HStack(spacing: 8) {
                 Image(systemName: "camera.fill").font(.system(size: 16, weight: .semibold))
@@ -185,7 +218,7 @@ struct ProjectListView: View {
         pendingCapture = nil
         let count = project.sortedEntries.filter { !$0.isDeleted }.count
         if FeatureGate.canAddEntry(isPro: store.isPro, currentEntryCount: count) {
-            captureTarget = project
+            captureRoute = .project(project)
         } else {
             activeSheet = .paywall
         }

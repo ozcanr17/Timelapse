@@ -42,6 +42,7 @@ final class CameraCaptureViewModelTests: XCTestCase {
         }
         func allProjects() throws -> [Project] { [] }
         func addEntry(_ entry: Entry, to project: Project) throws { addedEntries.append(entry) }
+        func addEntries(_ entries: [Entry], to project: Project) throws { addedEntries.append(contentsOf: entries) }
         func replaceImage(for entry: Entry, with data: Data) throws {
             replacedEntryIDs.append(entry.id)
             lastReplacedData = data

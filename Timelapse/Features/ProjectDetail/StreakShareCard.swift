@@ -46,7 +46,7 @@ struct StreakShareCard: View {
                 HStack(spacing: 10) {
                     Image(systemName: "camera.aperture")
                         .foregroundStyle(.white.opacity(0.85))
-                    Text("Timelapse ile takip ediyorum")
+                    Text("Flapse ile takip ediyorum")
                         .font(.system(size: 16, weight: .medium, design: .default))
                         .foregroundStyle(.white.opacity(0.85))
                 }

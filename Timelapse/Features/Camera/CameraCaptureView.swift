@@ -5,8 +5,9 @@ import UIKit
 
 struct CameraCaptureView: View {
 
-    let project: Project
+    var project: Project? = nil
     var retakeEntry: Entry? = nil
+    var onAutoCaptured: ((Data) -> Void)? = nil
 
     @Environment(\.modelContext) private var modelContext
     @State private var viewModel: CameraCaptureViewModel?
@@ -15,7 +16,7 @@ struct CameraCaptureView: View {
         ZStack {
             Color.black.ignoresSafeArea()
             if let viewModel {
-                CameraSessionView(viewModel: viewModel)
+                CameraSessionView(viewModel: viewModel, isAuto: onAutoCaptured != nil)
             }
         }
         .environment(\.colorScheme, .dark)
@@ -25,7 +26,8 @@ struct CameraCaptureView: View {
                 camera: CameraService(),
                 repository: ProjectRepository(context: modelContext),
                 project: project,
-                retakeEntry: retakeEntry
+                retakeEntry: retakeEntry,
+                onCaptured: onAutoCaptured
             )
             viewModel = model
             await model.start()
@@ -37,6 +39,7 @@ struct CameraCaptureView: View {
 private struct CameraSessionView: View {
 
     let viewModel: CameraCaptureViewModel
+    var isAuto: Bool = false
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.theme) private var theme
@@ -183,7 +186,7 @@ private struct CameraSessionView: View {
         withAnimation(.easeOut(duration: 0.25)) { flashOpacity = 0 }
         if saved {
             UINotificationFeedbackGenerator().notificationOccurred(.success)
-            dismiss()
+            if !isAuto { dismiss() }
         }
     }
 

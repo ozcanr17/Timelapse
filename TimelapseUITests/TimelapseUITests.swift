@@ -61,7 +61,7 @@ final class TimelapseUITests: XCTestCase {
 
         XCTAssertTrue(addButton.waitForExistence(timeout: 5))
         addButton.tap()
-        XCTAssertTrue(app.staticTexts["Timelapse Pro"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Flapse Pro"].waitForExistence(timeout: 5))
         attachScreenshot(of: app, named: "paywall")
     }
 

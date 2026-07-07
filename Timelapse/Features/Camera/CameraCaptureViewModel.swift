@@ -26,21 +26,27 @@ final class CameraCaptureViewModel {
 
     private let camera: CameraServiceProtocol
     private let repository: ProjectRepositoryProtocol
-    private let project: Project
+    private let project: Project?
     private let retakeEntry: Entry?
+    private let classifier: SubjectClassifying
+    private let onCaptured: ((Data) -> Void)?
 
     init(
         camera: CameraServiceProtocol,
         repository: ProjectRepositoryProtocol,
-        project: Project,
-        retakeEntry: Entry? = nil
+        project: Project? = nil,
+        retakeEntry: Entry? = nil,
+        classifier: SubjectClassifying = SubjectClassifier(),
+        onCaptured: ((Data) -> Void)? = nil
     ) {
         self.camera = camera
         self.repository = repository
         self.project = project
         self.retakeEntry = retakeEntry
+        self.classifier = classifier
+        self.onCaptured = onCaptured
         self.referenceAnchor = Self.initialAnchor(for: project)
-        self.position = Self.initialPosition(for: project.category)
+        self.position = Self.initialPosition(for: project?.category ?? .other)
     }
 
     /// Önizleme katmanının bağlanacağı oturum.
@@ -49,11 +55,11 @@ final class CameraCaptureViewModel {
     /// "Ghost" bindirmesi için referans fotoğraf: yeniden çekimde karenin kendisi,
     /// normal çekimde bir önceki (en yeni) çekim.
     var ghostImageData: Data? {
-        retakeEntry?.imageData ?? project.sortedEntries.last?.imageData
+        retakeEntry?.imageData ?? project?.sortedEntries.last?.imageData
     }
 
     /// Bu proje çift modu (birlikte çekim) için mi? Kamerada bölme kılavuzunu belirler.
-    var isCoupleMode: Bool { project.isCoupleMode }
+    var isCoupleMode: Bool { project?.isCoupleMode ?? false }
 
     /// Kullanıcı önizlemeye dokununca referans noktasını oraya taşır.
     func setAnchor(_ point: NormalizedPoint) {
@@ -94,15 +100,23 @@ final class CameraCaptureViewModel {
         state = .capturing
         do {
             let data = try await camera.capturePhoto()
-            if let retakeEntry {
+            if let onCaptured {
+                onCaptured(data)
+            } else if let retakeEntry {
                 try repository.replaceImage(for: retakeEntry, with: data)
-            } else {
+            } else if let project {
+                let signature = await classifier.signature(for: data)
                 let entry = Entry(
                     imageData: data,
                     anchorX: referenceAnchor.x,
-                    anchorY: referenceAnchor.y
+                    anchorY: referenceAnchor.y,
+                    subjectKindRaw: signature.kind == .unknown ? nil : signature.kind.rawValue,
+                    featurePrintData: signature.isEmpty ? nil : FeatureVector.data(from: signature.vector)
                 )
                 try repository.addEntry(entry, to: project)
+            } else {
+                state = .ready
+                return false
             }
             state = .ready
             return true
@@ -120,8 +134,8 @@ final class CameraCaptureViewModel {
     }
 
     // Referans noktası: önceki çekimde tanımlıysa onu sürdür, yoksa ortadan başla.
-    private static func initialAnchor(for project: Project) -> NormalizedPoint {
-        if let last = project.sortedEntries.last, let x = last.anchorX, let y = last.anchorY {
+    private static func initialAnchor(for project: Project?) -> NormalizedPoint {
+        if let last = project?.sortedEntries.last, let x = last.anchorX, let y = last.anchorY {
             return NormalizedPoint(x: x, y: y)
         }
         return NormalizedPoint(x: 0.5, y: 0.5)

@@ -13,6 +13,7 @@ protocol ProjectRepositoryProtocol {
     func createProject(title: String, category: ProjectCategory, cadence: CaptureCadence) throws -> Project
     func allProjects() throws -> [Project]
     func addEntry(_ entry: Entry, to project: Project) throws
+    func addEntries(_ entries: [Entry], to project: Project) throws
     func replaceImage(for entry: Entry, with data: Data) throws
     func deleteEntry(_ entry: Entry) throws
     func deleteProject(_ project: Project) throws
@@ -49,6 +50,14 @@ final class ProjectRepository: ProjectRepositoryProtocol {
     func addEntry(_ entry: Entry, to project: Project) throws {
         entry.project = project       // ilişkiyi kur; inverse (project.entries) otomatik güncellenir
         context.insert(entry)
+        try context.save()
+    }
+
+    func addEntries(_ entries: [Entry], to project: Project) throws {
+        for entry in entries {
+            entry.project = project
+            context.insert(entry)
+        }
         try context.save()
     }
 

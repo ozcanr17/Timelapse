@@ -1,14 +1,14 @@
-# Timelapse
+# Flapse
 
 > Capture the same subject one frame at a time and watch change unfold as a shareable timelapse video.
 
-Timelapse is a native iOS app (Swift + SwiftUI) for building day-by-day “progress” timelapses — beard growth, a child growing up, a plant, a fitness journey, a pet. You take one aligned photo per day (or on your own cadence), the app keeps you on streak, and turns your frames into a polished video with optional date/note/branding overlays.
+Flapse is a native iOS app (Swift + SwiftUI) for building day-by-day “progress” timelapses — beard growth, a child growing up, a plant, a fitness journey, a pet. You take one aligned photo per day (or on your own cadence), the app keeps you on streak, and turns your frames into a polished video with optional date/note/branding overlays.
 
 - **Platform:** iOS 17.0+ (iPhone & iPad)
 - **Stack:** Swift 5, SwiftUI, SwiftData, StoreKit 2, AVFoundation, CloudKit (optional), AuthenticationServices
 - **Dependencies:** None (100% first-party Apple frameworks)
 - **Monetization:** Freemium + auto-renewable subscription and a one-time unlock
-- **Bundle ID:** `rozcan.Timelapse` · **Version:** 1.0 (1)
+- **Bundle ID:** `rozcan.Flapse` · **Version:** 1.0 (1)
 
 ---
 
@@ -18,7 +18,7 @@ Timelapse is a native iOS app (Swift + SwiftUI) for building day-by-day “progr
 People want to document gradual physical change (a beard, a baby, weight loss, a growing plant) but end up with a messy camera roll of misaligned, hard-to-find photos and never turn them into anything. Consistency and alignment are the two things that make a good progress timelapse — and both are hard to do by hand.
 
 ### What the app does
-Timelapse gives each “story” its own project and solves the two hard problems:
+Flapse gives each “story” its own project and solves the two hard problems:
 
 1. **Alignment** — a semi-transparent *ghost* of your previous shot is overlaid on the live camera so every photo lines up.
 2. **Consistency** — per-project cadence (daily / every other day / weekly), a streak counter, and local reminders keep you coming back.
@@ -139,7 +139,7 @@ Free users get a genuinely useful app; Pro removes limits and unlocks premium ca
 - **Up to 14 photos** in that project (`freeEntryLimit = 14`); the 15th prompts the paywall.
 - Exports are **720×960 with a “TIMELAPSE” watermark**.
 
-**Timelapse Pro unlocks:**
+**Flapse Pro unlocks:**
 - Unlimited projects & unlimited photos per project.
 - 4K (2160×2880) export with **no watermark** (app mark becomes optional & positionable).
 - iCloud backup (opt-in).

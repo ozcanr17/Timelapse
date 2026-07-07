@@ -32,7 +32,7 @@ struct SettingsView: View {
             Section("Üyelik") {
                 if store.isPro {
                     Label {
-                        Text("Timelapse Pro aktif")
+                        Text("Flapse Pro aktif")
                             .font(Theme.headline(15))
                             .foregroundStyle(theme.ink)
                     } icon: {
@@ -45,7 +45,7 @@ struct SettingsView: View {
                     } label: {
                         Label {
                             VStack(alignment: .leading, spacing: 2) {
-                                Text("Timelapse Pro'ya Geç")
+                                Text("Flapse Pro'ya Geç")
                                     .font(Theme.headline(15))
                                     .foregroundStyle(theme.ink)
                                 Text("Sınırsız proje, 4K filigransız export")
@@ -105,7 +105,7 @@ struct SettingsView: View {
                 if store.isPro {
                     Text("Çift modu (birlikte çekim) her projede sağ üstteki davet düğmesiyle açılır. iCloud değişikliği uygulama yeniden başlatılınca geçerli olur.")
                 } else {
-                    Text("Bu özellikler Timelapse Pro ile açılır.")
+                    Text("Bu özellikler Flapse Pro ile açılır.")
                 }
             }
 
@@ -193,7 +193,7 @@ struct SettingsView: View {
             Section {
                 VStack(spacing: 10) {
                     LogoMark(size: 56)
-                    Text("Timelapse")
+                    Text("Flapse")
                         .font(Theme.headline(17))
                         .foregroundStyle(theme.ink)
                     Text("Sürüm \(appVersion)")

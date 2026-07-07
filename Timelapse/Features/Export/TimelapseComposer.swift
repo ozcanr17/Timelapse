@@ -462,7 +462,7 @@ struct TimelapseComposer: TimelapseComposing {
         draw(overlay.note, at: overlay.notePosition)
         // Uygulama etiketi her zaman sağ altta; ücretsiz katmanda zorunlu, Pro'da gizlenebilir.
         if settings.includesWatermark || overlay.showAppMark {
-            draw("TIMELAPSE", at: TimelapseOverlayOptions.appMarkCorner, kern: 2)
+            draw("FLAPSE", at: TimelapseOverlayOptions.appMarkCorner, kern: 2)
         }
     }
 

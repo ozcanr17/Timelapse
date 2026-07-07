@@ -24,7 +24,7 @@ struct WelcomeView: View {
                     .opacity(isAnimating ? 1 : 0)
                     .animation(.spring(response: 0.9, dampingFraction: 0.7), value: isAnimating)
 
-                Text("Timelapse")
+                Text("Flapse")
                     .font(Theme.headline(34))
                     .foregroundStyle(theme.ink)
                     .padding(.top, 24)

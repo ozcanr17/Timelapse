@@ -57,7 +57,7 @@ struct PaywallView: View {
                 Circle().fill(.white.opacity(0.2)).frame(width: 72, height: 72)
                 Image(systemName: "crown.fill").font(.system(size: 30)).foregroundStyle(.white)
             }
-            Text("Timelapse Pro")
+            Text("Flapse Pro")
                 .font(Theme.headline(26))
                 .foregroundStyle(.white)
             Text("Hikayeni en iyi haliyle anlat")
@@ -73,6 +73,8 @@ struct PaywallView: View {
             ProFeatureRow(icon: "wand.and.stars", title: "Akıllı hizalama", subtitle: "Otomatik kare eşleştirme")
             ProFeatureRow(icon: "icloud.fill", title: "iCloud yedekleme", subtitle: "Fotoğrafların hep güvende")
             ProFeatureRow(icon: "person.2.fill", title: "Çift modu", subtitle: "Birlikte kaydedin")
+            ProFeatureRow(icon: "photo.on.rectangle.angled", title: "Fotoğraflardan içe aktar", subtitle: "Var olan kareleri timelapse yap")
+            ProFeatureRow(icon: "wand.and.rays", title: "Otomatik proje ayırma", subtitle: "Kare doğru projeye kendiliğinden gitsin")
             ProFeatureRow(icon: "film", title: "4K, filigransız export", subtitle: "Paylaşıma hazır video")
         }
         .padding(18)

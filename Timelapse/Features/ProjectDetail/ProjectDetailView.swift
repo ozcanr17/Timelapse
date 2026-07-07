@@ -16,6 +16,7 @@ struct ProjectDetailView: View {
     @State private var shareCardURL: URL?
     @State private var showPaywall = false
     @State private var showInvite = false
+    @State private var showImport = false
 
     private var canAddEntry: Bool {
         FeatureGate.canAddEntry(isPro: store.isPro, currentEntryCount: liveEntries.count)
@@ -95,7 +96,7 @@ struct ProjectDetailView: View {
                     ShareLink(
                         item: shareCardURL,
                         preview: SharePreview(
-                            "\(project.title) — Timelapse",
+                            "\(project.title) — Flapse",
                             image: Image(systemName: "camera.aperture")
                         )
                     ) {
@@ -103,6 +104,15 @@ struct ProjectDetailView: View {
                             .foregroundStyle(accent)
                     }
                 }
+            }
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    importTapped()
+                } label: {
+                    Image(systemName: "photo.badge.plus")
+                        .foregroundStyle(accent)
+                }
+                .accessibilityIdentifier("importButton")
             }
             ToolbarItem(placement: .primaryAction) {
                 Button {
@@ -128,6 +138,9 @@ struct ProjectDetailView: View {
         }
         .sheet(isPresented: $showInvite) {
             ActivityView(activityItems: [inviteText])
+        }
+        .sheet(isPresented: $showImport) {
+            PhotoImportSheet(mode: .existing(project), repository: ProjectRepository(context: modelContext))
         }
         .task(id: liveEntries.count) {
             shareCardURL = renderShareCard()
@@ -171,11 +184,15 @@ struct ProjectDetailView: View {
     }
 
     private var inviteText: String {
-        String(localized: "Timelapse'te \"\(project.title)\" projesinde birlikte çekim yapalım! Uygulamayı indirip aynı hikâyeyi birlikte biriktirelim. 📸")
+        String(localized: "Flapse'te \"\(project.title)\" projesinde birlikte çekim yapalım! Uygulamayı indirip aynı hikâyeyi birlikte biriktirelim. 📸")
     }
 
     /// Birlikte Çekim: arkadaşları davet edip aynı projeye birlikte katkı yapmak için
     /// sistem paylaşım sayfasını açar (Pro). Ücretsiz kullanıcı paywall görür.
+    private func importTapped() {
+        if store.isPro { showImport = true } else { showPaywall = true }
+    }
+
     private func inviteTapped() {
         guard store.isPro else {
             showPaywall = true

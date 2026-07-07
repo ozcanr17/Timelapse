@@ -64,7 +64,7 @@ private struct LaunchSplashView: View {
                     .scaleEffect(isAnimating ? 1 : 0.6)
                     .opacity(isAnimating ? 1 : 0)
 
-                Text("Timelapse")
+                Text("Flapse")
                     .font(Theme.headline(24))
                     .foregroundStyle(theme.ink)
                     .opacity(isAnimating ? 1 : 0)

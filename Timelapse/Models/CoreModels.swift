@@ -99,6 +99,10 @@ final class Entry {
     var anchorX: Double?
     var anchorY: Double?
 
+    var sourceAssetIdentifier: String?
+    var subjectKindRaw: String?
+    @Attribute(.externalStorage) var featurePrintData: Data?
+
     // Ait olduğu proje. Ters ilişki (inverse) Project tarafında tanımlı.
     // CloudKit kısıtı gereği optional.
     var project: Project?
@@ -108,13 +112,19 @@ final class Entry {
         capturedAt: Date = Date(),
         imageData: Data? = nil,
         anchorX: Double? = nil,
-        anchorY: Double? = nil
+        anchorY: Double? = nil,
+        sourceAssetIdentifier: String? = nil,
+        subjectKindRaw: String? = nil,
+        featurePrintData: Data? = nil
     ) {
         self.id = id
         self.capturedAt = capturedAt
         self.imageData = imageData
         self.anchorX = anchorX
         self.anchorY = anchorY
+        self.sourceAssetIdentifier = sourceAssetIdentifier
+        self.subjectKindRaw = subjectKindRaw
+        self.featurePrintData = featurePrintData
     }
 }
 
