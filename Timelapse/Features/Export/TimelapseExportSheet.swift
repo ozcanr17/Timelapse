@@ -145,6 +145,7 @@ struct TimelapseExportSheet: View {
                     .foregroundStyle(.white.opacity(0.92))
             }
         }
+        .allowsHitTesting(false)
         .task(id: frames.last?.imageData.count) {
             poster = await ImageDownsampler.image(from: frames.last?.imageData, maxPixelSize: 800)
         }

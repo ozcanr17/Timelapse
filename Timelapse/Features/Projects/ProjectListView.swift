@@ -439,6 +439,7 @@ private struct ProjectCard: View {
             }
         }
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .contentShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .shadow(color: .black.opacity(0.12), radius: 12, x: 0, y: 6)
         .task(id: project.sortedEntries.last?.imageData?.count) {
             photo = await ImageDownsampler.image(from: project.sortedEntries.last?.imageData, maxPixelSize: 800)

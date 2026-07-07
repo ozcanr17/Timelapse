@@ -582,6 +582,7 @@ private struct TimelineEntryRow: View {
             .overlay(alignment: .topLeading) { locationTag }
             .overlay(alignment: .bottomLeading) { timeStamp }
             .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
                     .strokeBorder(theme.ink.opacity(0.06), lineWidth: 1)
@@ -601,24 +602,26 @@ private struct TimelineEntryRow: View {
     private var locationTag: some View {
         if let place = entry.placeName, !place.isEmpty {
             Label(place, systemImage: "mappin.and.ellipse")
-                .font(Theme.caption(12))
+                .font(Theme.caption(11))
                 .fontWeight(.semibold)
                 .foregroundStyle(.white)
                 .lineLimit(1)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 6)
-                .background(.black.opacity(0.4), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-                .padding(10)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 5)
+                .background(.black.opacity(0.38), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                .padding(8)
         }
     }
 
     private var timeStamp: some View {
         Label(entry.capturedAt.formatted(.dateTime.hour().minute()), systemImage: "clock.fill")
-            .font(Theme.caption(12))
+            .font(Theme.caption(11))
             .fontWeight(.semibold)
             .foregroundStyle(.white)
-            .shadow(color: .black.opacity(0.55), radius: 3, x: 0, y: 1)
-            .padding(12)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 5)
+            .background(.black.opacity(0.38), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+            .padding(8)
     }
 
     private func resolvePlaceIfNeeded() async {
