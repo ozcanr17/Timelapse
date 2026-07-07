@@ -51,10 +51,12 @@ final class LocationService: NSObject, LocationProviding, CLLocationManagerDeleg
     static func reverseGeocode(_ location: CLLocation) async -> String? {
         let placemarks = try? await CLGeocoder().reverseGeocodeLocation(location)
         guard let placemark = placemarks?.first else { return nil }
-        return placemark.areasOfInterest?.first
-            ?? placemark.name
-            ?? placemark.locality
+        if let landmark = placemark.areasOfInterest?.first { return landmark }
+        let parts = [placemark.subLocality, placemark.locality].compactMap { $0 }
+        if !parts.isEmpty { return parts.joined(separator: ", ") }
+        return placemark.locality
             ?? placemark.administrativeArea
+            ?? placemark.name
     }
 
     nonisolated func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {

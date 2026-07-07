@@ -124,13 +124,16 @@ struct ProjectDetailView: View {
                 PhotoImportSheet(mode: .existing(project), repository: ProjectRepository(context: modelContext))
             }
         }
-        .fullScreenCover(item: $activeCover) { cover in
-            switch cover {
-            case .capture:
-                CameraCaptureView(project: project)
-            case .viewer(let entry):
-                EntryViewerView(project: project, initialEntry: entry)
-            }
+        .background {
+            Color.clear
+                .fullScreenCover(item: $activeCover) { cover in
+                    switch cover {
+                    case .capture:
+                        CameraCaptureView(project: project)
+                    case .viewer(let entry):
+                        EntryViewerView(project: project, initialEntry: entry)
+                    }
+                }
         }
         .task(id: liveEntries.count) {
             shareCardURL = renderShareCard()
@@ -563,37 +566,21 @@ private struct TimelineEntryRow: View {
 
     private var card: some View {
         Button(action: onTap) {
-            ZStack(alignment: .bottomLeading) {
-                ZStack {
-                    if let photo {
-                        Image(uiImage: photo)
-                            .resizable()
-                            .scaledToFill()
-                    } else {
-                        Rectangle().fill(theme.surface)
-                        Image(systemName: "camera").foregroundStyle(theme.inkMuted)
-                    }
-                }
-                .frame(maxWidth: .infinity)
-                .frame(height: cardHeight)
-                .clipped()
-
-                if let place = entry.placeName, !place.isEmpty {
-                    LinearGradient(colors: [.clear, .black.opacity(0.6)], startPoint: .center, endPoint: .bottom)
-                    VStack(alignment: .leading, spacing: 3) {
-                        Label(place, systemImage: "mappin.and.ellipse")
-                            .font(Theme.caption(13))
-                            .fontWeight(.semibold)
-                            .lineLimit(1)
-                        Text(entry.capturedAt, format: .dateTime.hour().minute())
-                            .font(Theme.caption(11))
-                            .opacity(0.9)
-                    }
-                    .foregroundStyle(.white)
-                    .padding(12)
+            ZStack {
+                if let photo {
+                    Image(uiImage: photo)
+                        .resizable()
+                        .scaledToFill()
+                } else {
+                    Rectangle().fill(theme.surface)
+                    Image(systemName: "camera").foregroundStyle(theme.inkMuted)
                 }
             }
+            .frame(maxWidth: .infinity)
             .frame(height: cardHeight)
+            .clipped()
+            .overlay(alignment: .topLeading) { locationTag }
+            .overlay(alignment: .bottomLeading) { timeStamp }
             .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
@@ -603,10 +590,35 @@ private struct TimelineEntryRow: View {
         }
         .buttonStyle(.plain)
         .padding(.bottom, rowGap)
+        .accessibilityIdentifier("timelineCard")
         .task(id: entry.imageData?.count) {
             photo = await ImageDownsampler.image(from: entry.imageData, maxPixelSize: 700)
             await resolvePlaceIfNeeded()
         }
+    }
+
+    @ViewBuilder
+    private var locationTag: some View {
+        if let place = entry.placeName, !place.isEmpty {
+            Label(place, systemImage: "mappin.and.ellipse")
+                .font(Theme.caption(12))
+                .fontWeight(.semibold)
+                .foregroundStyle(.white)
+                .lineLimit(1)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(.black.opacity(0.4), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                .padding(10)
+        }
+    }
+
+    private var timeStamp: some View {
+        Label(entry.capturedAt.formatted(.dateTime.hour().minute()), systemImage: "clock.fill")
+            .font(Theme.caption(12))
+            .fontWeight(.semibold)
+            .foregroundStyle(.white)
+            .shadow(color: .black.opacity(0.55), radius: 3, x: 0, y: 1)
+            .padding(12)
     }
 
     private func resolvePlaceIfNeeded() async {

@@ -1,171 +1,6 @@
 {
   "sourceLanguage" : "tr",
   "strings" : {
-    "Tümü" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "All" } }
-      }
-    },
-    "Hamilelik" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Pregnancy" } }
-      }
-    },
-    "Bebek" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Baby" } }
-      }
-    },
-    "Ayarları seç, sonra oluştur" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Choose settings, then create" } }
-      }
-    },
-    "Timelapse Oluştur" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Create Timelapse" } }
-      }
-    },
-    "Yeniden Oluştur" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Recreate" } }
-      }
-    },
-    "Tekrar Dene" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Try Again" } }
-      }
-    },
-    "Oluşturuluyor…" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Creating…" } }
-      }
-    },
-    "Timelapse için en az 2 kare gerekli." : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "A timelapse needs at least 2 frames." } }
-      }
-    },
-    "Fotoğraflardan Oluştur" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Create from Photos" } }
-      }
-    },
-    "Fotoğraf Ekle" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Add Photos" } }
-      }
-    },
-    "Fotoğraf Seç" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Select Photos" } }
-      }
-    },
-    "Fotoğraf seç" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Select photos" } }
-      }
-    },
-    "%lld fotoğraf seçildi" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "%lld photos selected" } }
-      }
-    },
-    "%lld fotoğrafı içe aktar" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Import %lld photos" } }
-      }
-    },
-    "Kütüphanenden yüzlerce kare seçebilirsin" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Pick hundreds of frames from your library" } }
-      }
-    },
-    "Değiştirmek için dokun" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Tap to change" } }
-      }
-    },
-    "ör. Tatil" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "e.g. Vacation" } }
-      }
-    },
-    "Şuraya eklenecek" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Will be added to" } }
-      }
-    },
-    "Kareler tarihe göre sıralanıyor" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Sorting frames by date" } }
-      }
-    },
-    "%lld kare eklendi" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "%lld frames added" } }
-      }
-    },
-    "Bu projeye çekmeye devam edebilirsin." : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "You can keep capturing into this project." } }
-      }
-    },
-    "Seçilen fotoğraflar içe aktarılamadı." : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Couldn't import the selected photos." } }
-      }
-    },
-    "İçe aktarma başarısız: %@" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Import failed: %@" } }
-      }
-    },
-    "Kare tanınıyor…" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Recognizing photo…" } }
-      }
-    },
-    "%@ projesine eklendi" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Added to %@" } }
-      }
-    },
-    "Bu karede: %@" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "In this photo: %@" } }
-      }
-    },
-    "Öneri" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Suggestion" } }
-      }
-    },
-    "Yeni proje oluştur" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Create new project" } }
-      }
-    },
-    "Fotoğraflardan içe aktar" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Import from Photos" } }
-      }
-    },
-    "Var olan kareleri timelapse yap" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Turn existing photos into a timelapse" } }
-      }
-    },
-    "Otomatik proje ayırma" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Automatic sorting" } }
-      }
-    },
-    "Kare doğru projeye kendiliğinden gitsin" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Photos land in the right project on their own" } }
-      }
-    },
     " çekim" : {
       "localizations" : {
         "en" : {
@@ -206,6 +41,16 @@
         }
       }
     },
+    "%@ projesine eklendi" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Added to %@"
+          }
+        }
+      }
+    },
     "%lld" : {
       "localizations" : {
         "en" : {
@@ -216,12 +61,42 @@
         }
       }
     },
+    "%lld fotoğraf seçildi" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld photos selected"
+          }
+        }
+      }
+    },
+    "%lld fotoğrafı içe aktar" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Import %lld photos"
+          }
+        }
+      }
+    },
     "%lld kare" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld frames"
+          }
+        }
+      }
+    },
+    "%lld kare eklendi" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld frames added"
           }
         }
       }
@@ -329,6 +204,16 @@
         }
       }
     },
+    "Ayarları seç, sonra oluştur" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose settings, then create"
+          }
+        }
+      }
+    },
     "Aydınlık" : {
       "localizations" : {
         "en" : {
@@ -369,6 +254,16 @@
         }
       }
     },
+    "Bebek" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Baby"
+          }
+        }
+      }
+    },
     "Beklenmeyen bir hata oluştu: %@" : {
       "localizations" : {
         "en" : {
@@ -390,6 +285,7 @@
       }
     },
     "Birlikte" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -419,6 +315,9 @@
         }
       }
     },
+    "Bitti" : {
+
+    },
     "Bu çekim kalıcı olarak silinsin mi?" : {
       "localizations" : {
         "en" : {
@@ -439,12 +338,32 @@
         }
       }
     },
+    "Bu karede: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In this photo: %@"
+          }
+        }
+      }
+    },
     "Bu özellikler Flapse Pro ile açılır." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "These features unlock with Flapse Pro."
+          }
+        }
+      }
+    },
+    "Bu projeye çekmeye devam edebilirsin." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You can keep capturing into this project."
           }
         }
       }
@@ -480,6 +399,7 @@
       }
     },
     "Bugün zamanı geldi" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -631,6 +551,16 @@
         }
       }
     },
+    "Değiştirmek için dokun" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap to change"
+          }
+        }
+      }
+    },
     "Devam Et" : {
       "localizations" : {
         "en" : {
@@ -693,12 +623,105 @@
         }
       }
     },
+    "Fitness" : {
+
+    },
     "Fiyort" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Fjord"
+          }
+        }
+      }
+    },
+    "Flapse" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Flapse"
+          }
+        }
+      }
+    },
+    "Flapse ile takip ediyorum" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tracking with Flapse"
+          }
+        }
+      }
+    },
+    "Flapse Pro" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Flapse Pro"
+          }
+        }
+      }
+    },
+    "Flapse Pro aktif" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Flapse Pro is active"
+          }
+        }
+      }
+    },
+    "Flapse Pro'ya Geç" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Upgrade to Flapse Pro"
+          }
+        }
+      }
+    },
+    "Flapse'te \"%@\" projesinde birlikte çekim yapalım! Uygulamayı indirip aynı hikâyeyi birlikte biriktirelim. 📸" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Let's capture together on the \"%@\" project in Flapse! Download the app and build the same story together. 📸"
+          }
+        }
+      }
+    },
+    "Fotoğraf Ekle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add Photos"
+          }
+        }
+      }
+    },
+    "Fotoğraf seç" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select photos"
+          }
+        }
+      }
+    },
+    "Fotoğraf Seç" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select Photos"
           }
         }
       }
@@ -720,6 +743,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Drag the photo to center the subject"
+          }
+        }
+      }
+    },
+    "Fotoğraflardan içe aktar" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Import from Photos"
+          }
+        }
+      }
+    },
+    "Fotoğraflardan Oluştur" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Create from Photos"
           }
         }
       }
@@ -872,6 +915,16 @@
         }
       }
     },
+    "Hamilelik" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pregnancy"
+          }
+        }
+      }
+    },
     "Hangi projeye?" : {
       "localizations" : {
         "en" : {
@@ -980,6 +1033,19 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Speed"
+          }
+        }
+      }
+    },
+    "İçe aktarılıyor… %%%lld" : {
+
+    },
+    "İçe aktarma başarısız: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Import failed: %@"
           }
         }
       }
@@ -1159,6 +1225,26 @@
         }
       }
     },
+    "Kare doğru projeye kendiliğinden gitsin" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Photos land in the right project on their own"
+          }
+        }
+      }
+    },
+    "Kare tanınıyor…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recognizing photo…"
+          }
+        }
+      }
+    },
     "Kareler birleştiriliyor…" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -1166,6 +1252,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Stitching your frames…"
+          }
+        }
+      }
+    },
+    "Kareler tarihe göre sıralanıyor" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sorting frames by date"
           }
         }
       }
@@ -1189,6 +1285,9 @@
           }
         }
       }
+    },
+    "Kategori" : {
+
     },
     "KATEGORİ" : {
       "localizations" : {
@@ -1247,6 +1346,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Terms of Use"
+          }
+        }
+      }
+    },
+    "Kütüphanenden yüzlerce kare seçebilirsin" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pick hundreds of frames from your library"
           }
         }
       }
@@ -1323,6 +1432,16 @@
         }
       }
     },
+    "Oluşturuluyor…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Creating…"
+          }
+        }
+      }
+    },
     "Önceki kareyi şablon olarak gör, hep aynı açıyı yakala" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -1330,6 +1449,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "See the previous frame as a template and nail the same angle every time"
+          }
+        }
+      }
+    },
+    "Öneri" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suggestion"
           }
         }
       }
@@ -1344,12 +1473,32 @@
         }
       }
     },
+    "ör. Tatil" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "e.g. Vacation"
+          }
+        }
+      }
+    },
     "Otomatik kare eşleştirme" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Automatic frame matching"
+          }
+        }
+      }
+    },
+    "Otomatik proje ayırma" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatic sorting"
           }
         }
       }
@@ -1556,6 +1705,16 @@
         }
       }
     },
+    "Seçilen fotoğraflar içe aktarılamadı." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't import the selected photos."
+          }
+        }
+      }
+    },
     "Sil" : {
       "localizations" : {
         "en" : {
@@ -1565,6 +1724,9 @@
           }
         }
       }
+    },
+    "Sıklık" : {
+
     },
     "Sınırsız proje" : {
       "localizations" : {
@@ -1612,6 +1774,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Top left"
+          }
+        }
+      }
+    },
+    "Şuraya eklenecek" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Will be added to"
           }
         }
       }
@@ -1667,6 +1839,7 @@
       }
     },
     "Tekrar dene" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1676,17 +1849,21 @@
         }
       }
     },
-    "Flapse" : {
+    "Tekrar Dene" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Flapse"
+            "value" : "Try Again"
           }
         }
       }
     },
+    "Timelapse" : {
+
+    },
     "Timelapse hazırlanıyor…" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1695,6 +1872,9 @@
           }
         }
       }
+    },
+    "Timelapse hazırlanıyor… %%%lld" : {
+
     },
     "Timelapse için en az 2 çekim gerekli." : {
       "localizations" : {
@@ -1706,42 +1886,22 @@
         }
       }
     },
-    "Flapse ile takip ediyorum" : {
+    "Timelapse için en az 2 kare gerekli." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tracking with Flapse"
+            "value" : "A timelapse needs at least 2 frames."
           }
         }
       }
     },
-    "Flapse Pro" : {
+    "Timelapse Oluştur" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Flapse Pro"
-          }
-        }
-      }
-    },
-    "Flapse Pro aktif" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Flapse Pro is active"
-          }
-        }
-      }
-    },
-    "Flapse Pro'ya Geç" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Upgrade to Flapse Pro"
+            "value" : "Create Timelapse"
           }
         }
       }
@@ -1762,16 +1922,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Create Timelapse"
-          }
-        }
-      }
-    },
-    "Flapse'te \"%@\" projesinde birlikte çekim yapalım! Uygulamayı indirip aynı hikâyeyi birlikte biriktirelim. 📸" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Let's capture together on the \"%@\" project in Flapse! Download the app and build the same story together. 📸"
           }
         }
       }
@@ -1802,6 +1952,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "TOTAL FRAMES"
+          }
+        }
+      }
+    },
+    "Tümü" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All"
           }
         }
       }
@@ -1903,6 +2063,16 @@
         }
       }
     },
+    "Var olan kareleri timelapse yap" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turn existing photos into a timelapse"
+          }
+        }
+      }
+    },
     "Vazgeç" : {
       "localizations" : {
         "en" : {
@@ -1953,12 +2123,32 @@
         }
       }
     },
+    "Yeni proje oluştur" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Create new project"
+          }
+        }
+      }
+    },
     "Yeniden Çek" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Retake"
+          }
+        }
+      }
+    },
+    "Yeniden Oluştur" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recreate"
           }
         }
       }
@@ -1973,6 +2163,9 @@
           }
         }
       }
+    },
+    "Zaman Çizelgesi" : {
+
     }
   },
   "version" : "1.0"

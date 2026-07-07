@@ -1,6 +1,18 @@
 {
   "sourceLanguage" : "tr",
   "strings" : {
+    "CFBundleDisplayName" : {
+      "comment" : "Bundle display name",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Flapse"
+          }
+        }
+      }
+    },
     "CFBundleName" : {
       "comment" : "Bundle name",
       "extractionState" : "extracted_with_value",
@@ -8,7 +20,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Flapse"
+            "value" : "Timelapse"
           }
         }
       }
@@ -26,6 +38,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Gelişim fotoğraflarını çekmek için kameraya erişim gerekir."
+          }
+        }
+      }
+    },
+    "NSLocationWhenInUseUsageDescription" : {
+      "comment" : "Privacy - Location When In Use Usage Description",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Çekimlerinize yer bilgisi eklemek için konuma erişim gerekir."
           }
         }
       }

@@ -47,6 +47,7 @@ struct EntryViewerView: View {
             VStack {
                 topBar
                 Spacer()
+                metadataBar
                 bottomBar
             }
         }
@@ -68,21 +69,39 @@ struct EntryViewerView: View {
         HStack {
             CameraControlButton(icon: "xmark") { dismiss() }
             Spacer()
-            if let index = selectedIndex, let entry = selectedEntry {
-                VStack(spacing: 2) {
-                    Text(String(format: "No. %02d", index + 1))
-                        .font(Theme.stamp(13))
-                    Text(entry.capturedAt, format: .dateTime.day().month().year())
-                        .font(Theme.caption(11))
-                        .opacity(0.75)
-                }
-                .foregroundStyle(.white)
+            if let index = selectedIndex {
+                Text(String(format: "No. %02d", index + 1))
+                    .font(Theme.stamp(13))
+                    .foregroundStyle(.white)
             }
             Spacer()
             CameraControlButton(icon: "trash") { isConfirmingDelete = true }
         }
         .padding(.horizontal, 16)
         .padding(.top, 4)
+    }
+
+    @ViewBuilder
+    private var metadataBar: some View {
+        if let entry = selectedEntry {
+            VStack(spacing: 6) {
+                Text(entry.capturedAt, format: .dateTime.weekday(.wide).day().month().year())
+                    .font(Theme.headline(15))
+                HStack(spacing: 16) {
+                    Label(entry.capturedAt.formatted(.dateTime.hour().minute()), systemImage: "clock")
+                    if let place = entry.placeName, !place.isEmpty {
+                        Label(place, systemImage: "mappin.and.ellipse").lineLimit(1)
+                    }
+                }
+                .font(Theme.caption(13))
+                .foregroundStyle(.white.opacity(0.85))
+            }
+            .foregroundStyle(.white)
+            .padding(.horizontal, 18)
+            .padding(.vertical, 12)
+            .background(.black.opacity(0.35), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .padding(.bottom, 8)
+        }
     }
 
     private var bottomBar: some View {
