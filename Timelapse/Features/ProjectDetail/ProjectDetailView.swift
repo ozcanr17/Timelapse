@@ -17,12 +17,12 @@ struct ProjectDetailView: View {
     @State private var showPaywall = false
     @State private var showInvite = false
     @State private var showImport = false
+    @State private var heroImage: UIImage?
 
     private var canAddEntry: Bool {
         FeatureGate.canAddEntry(isPro: store.isPro, currentEntryCount: liveEntries.count)
     }
 
-    private let columns = [GridItem(.adaptive(minimum: 100), spacing: 12)]
     private var accent: Color { Theme.accent(for: project.category) }
 
     private var liveEntries: [Entry] {
@@ -32,7 +32,7 @@ struct ProjectDetailView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                header
+                heroCard
 
                 if !project.sortedEntries.isEmpty {
                     statsRow
@@ -45,44 +45,13 @@ struct ProjectDetailView: View {
                 captureCTA
 
                 if project.sortedEntries.count >= 2 {
-                    Button {
-                        isExporting = true
-                    } label: {
-                        Label("Timelapse'i Oluştur", systemImage: "film.stack")
-                            .font(Theme.headline(17))
-                            .foregroundStyle(accent)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 15)
-                            .background(accent.opacity(0.12), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                    }
-                    .buttonStyle(.plain)
+                    exportButton
                 }
 
                 if project.sortedEntries.isEmpty {
                     emptyState
                 } else {
-                    LazyVGrid(columns: columns, spacing: 12) {
-                        ForEach(Array(liveEntries.enumerated()), id: \.element.id) { index, entry in
-                            Button {
-                                viewerEntry = entry
-                            } label: {
-                                EntryThumbnail(entry: entry, dayNumber: index + 1, accent: accent)
-                            }
-                            .buttonStyle(.plain)
-                            .contextMenu {
-                                Button {
-                                    viewerEntry = entry
-                                } label: {
-                                    Label("Görüntüle", systemImage: "eye")
-                                }
-                                Button(role: .destructive) {
-                                    deleteEntry(entry)
-                                } label: {
-                                    Label("Sil", systemImage: "trash")
-                                }
-                            }
-                        }
-                    }
+                    timeline
                 }
             }
             .padding(16)
@@ -280,55 +249,114 @@ struct ProjectDetailView: View {
         }
     }
 
-    private var header: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack(alignment: .center, spacing: 14) {
-                ZStack {
-                    Circle().fill(accent.opacity(0.15)).frame(width: 56, height: 56)
-                    Image(systemName: Theme.icon(for: project.category))
-                        .font(.system(size: 24, weight: .semibold))
-                        .foregroundStyle(accent)
-                }
-
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(project.category.displayName)
-                        .font(Theme.caption(13))
-                        .foregroundStyle(theme.inkMuted)
-                    (
-                        Text("\(project.sortedEntries.count)")
-                            .font(.system(size: 28, weight: .bold, design: .default))
-                            .monospacedDigit()
-                        +
-                        Text(" çekim")
-                            .font(Theme.headline(16))
-                            .foregroundStyle(theme.inkMuted)
+    private var heroCard: some View {
+        ZStack(alignment: .bottomLeading) {
+            ZStack {
+                if let heroImage {
+                    Image(uiImage: heroImage)
+                        .resizable()
+                        .scaledToFill()
+                } else {
+                    LinearGradient(
+                        colors: [accent, accent.opacity(0.7)],
+                        startPoint: .topLeading, endPoint: .bottomTrailing
                     )
-                    .foregroundStyle(theme.ink)
                 }
-                Spacer()
+                LinearGradient(
+                    colors: [.black.opacity(0.05), .clear, .black.opacity(0.6)],
+                    startPoint: .top, endPoint: .bottom
+                )
             }
 
-            HStack(spacing: 14) {
-                Label(project.cadence.displayName, systemImage: "calendar")
-                    .foregroundStyle(theme.inkMuted)
-                if project.isCaptureDue() {
-                    Label("Bugün zamanı geldi", systemImage: "bell.fill")
-                        .foregroundStyle(accent)
+            VStack(alignment: .leading, spacing: 6) {
+                Text(project.title)
+                    .font(.system(size: 30, weight: .bold, design: .default))
+                    .foregroundStyle(.white)
+                HStack(spacing: 6) {
+                    Text("\(liveEntries.count)")
+                        .monospacedDigit().fontWeight(.semibold)
+                    Text("kare · \(project.cadence.displayName)")
                 }
-                if project.isCoupleMode {
-                    Label("Çift modu", systemImage: "person.2.fill")
-                        .foregroundStyle(theme.inkMuted)
+                .font(Theme.caption(13))
+                .foregroundStyle(.white.opacity(0.92))
+            }
+            .padding(20)
+        }
+        .frame(height: 340)
+        .frame(maxWidth: .infinity)
+        .overlay(alignment: .topLeading) {
+            Label(project.category.displayName, systemImage: Theme.icon(for: project.category))
+                .font(Theme.caption(12))
+                .foregroundStyle(.white)
+                .padding(.horizontal, 11)
+                .padding(.vertical, 6)
+                .background(.ultraThinMaterial, in: Capsule())
+                .padding(16)
+        }
+        .overlay(alignment: .topTrailing) {
+            if project.isCaptureDue() {
+                Text("Bugün")
+                    .font(Theme.caption(12))
+                    .foregroundStyle(theme.ink)
+                    .padding(.horizontal, 11)
+                    .padding(.vertical, 6)
+                    .background(.white, in: Capsule())
+                    .padding(16)
+            }
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .shadow(color: .black.opacity(0.12), radius: 12, x: 0, y: 6)
+        .accessibilityElement(children: .combine)
+        .task(id: liveEntries.last?.imageData?.count) {
+            heroImage = await ImageDownsampler.image(from: liveEntries.last?.imageData, maxPixelSize: 1000)
+        }
+    }
+
+    private var exportButton: some View {
+        Button {
+            isExporting = true
+        } label: {
+            Label("Timelapse'i Oluştur", systemImage: "film.stack")
+                .font(Theme.headline(17))
+                .foregroundStyle(accent)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 15)
+                .background(accent.opacity(0.12), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var timeline: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text("Zaman Çizelgesi")
+                .font(Theme.headline(18))
+                .foregroundStyle(theme.ink)
+                .padding(.bottom, 16)
+
+            ForEach(Array(liveEntries.enumerated()), id: \.element.id) { index, entry in
+                TimelineEntryRow(
+                    entry: entry,
+                    accent: accent,
+                    isFirst: index == 0,
+                    isLast: index == liveEntries.count - 1
+                ) {
+                    viewerEntry = entry
                 }
-                if project.isCollaborative {
-                    Label("Birlikte", systemImage: "person.3.fill")
-                        .foregroundStyle(theme.inkMuted)
+                .contextMenu {
+                    Button {
+                        viewerEntry = entry
+                    } label: {
+                        Label("Görüntüle", systemImage: "eye")
+                    }
+                    Button(role: .destructive) {
+                        deleteEntry(entry)
+                    } label: {
+                        Label("Sil", systemImage: "trash")
+                    }
                 }
             }
-            .font(Theme.caption(12))
         }
-        .padding(20)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .cardStyle()
     }
 
     private var emptyState: some View {
@@ -389,52 +417,90 @@ private struct StatTile: View {
     }
 }
 
-private struct EntryThumbnail: View {
+private struct TimelineEntryRow: View {
     let entry: Entry
-    let dayNumber: Int
     let accent: Color
+    let isFirst: Bool
+    let isLast: Bool
+    let onTap: () -> Void
 
     @Environment(\.theme) private var theme
-    @State private var thumbnail: UIImage?
+    @State private var photo: UIImage?
+
+    private let tileWidth: CGFloat = 58
 
     var body: some View {
-        VStack(spacing: 6) {
+        HStack(alignment: .top, spacing: 14) {
+            rail
+            card
+        }
+    }
+
+    private var lineColor: Color { theme.inkMuted.opacity(0.18) }
+
+    private var rail: some View {
+        VStack(spacing: 0) {
+            Rectangle()
+                .fill(lineColor)
+                .frame(width: 2, height: 10)
+                .opacity(isFirst ? 0 : 1)
+            calendarTile
+            Rectangle()
+                .fill(lineColor)
+                .frame(width: 2)
+                .frame(maxHeight: .infinity)
+                .opacity(isLast ? 0 : 1)
+        }
+        .frame(width: tileWidth)
+    }
+
+    private var calendarTile: some View {
+        VStack(spacing: 1) {
+            Text(entry.capturedAt, format: .dateTime.weekday(.abbreviated))
+                .font(Theme.caption(11))
+                .fontWeight(.semibold)
+                .foregroundStyle(accent)
+            Text(entry.capturedAt, format: .dateTime.day())
+                .font(.system(size: 24, weight: .bold, design: .default))
+                .foregroundStyle(theme.ink)
+            Text(entry.capturedAt, format: .dateTime.month(.abbreviated))
+                .font(Theme.caption(10))
+                .foregroundStyle(theme.inkMuted)
+        }
+        .frame(width: tileWidth, height: 66)
+        .background(theme.surface, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .strokeBorder(theme.ink.opacity(0.06), lineWidth: 1)
+        )
+        .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
+    }
+
+    private var card: some View {
+        Button(action: onTap) {
             ZStack {
-                if let thumbnail {
-                    Image(uiImage: thumbnail)
+                if let photo {
+                    Image(uiImage: photo)
                         .resizable()
                         .scaledToFill()
                 } else {
                     Rectangle().fill(theme.surface)
-                    Image(systemName: "camera")
-                        .foregroundStyle(theme.inkMuted)
+                    Image(systemName: "camera").foregroundStyle(theme.inkMuted)
                 }
             }
-            .frame(height: 110)
             .frame(maxWidth: .infinity)
-            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .frame(height: 160)
+            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
             .overlay(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
                     .strokeBorder(theme.ink.opacity(0.06), lineWidth: 1)
             )
-            .overlay(alignment: .topLeading) {
-                Text(String(format: "No. %02d", dayNumber))
-                    .font(Theme.stamp(9.5, weight: .medium))
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 3)
-                    .background(accent.opacity(0.88))
-                    .clipShape(Capsule())
-                    .padding(6)
-            }
             .shadow(color: .black.opacity(0.08), radius: 6, x: 0, y: 3)
-
-            Text(entry.capturedAt, format: .dateTime.day().month())
-                .font(Theme.caption(11))
-                .foregroundStyle(theme.inkMuted)
         }
+        .buttonStyle(.plain)
+        .padding(.bottom, 22)
         .task(id: entry.imageData?.count) {
-            thumbnail = await ImageDownsampler.image(from: entry.imageData, maxPixelSize: 400)
+            photo = await ImageDownsampler.image(from: entry.imageData, maxPixelSize: 700)
         }
     }
 }
