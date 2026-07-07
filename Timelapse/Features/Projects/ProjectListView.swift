@@ -268,6 +268,7 @@ private struct QuickCaptureSheet: View {
                             }
                             Image(systemName: "camera.fill").foregroundStyle(accent)
                         }
+                        .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                     .listRowBackground(theme.surface)
@@ -382,6 +383,9 @@ private struct ProjectCard: View {
 
     private var accent: Color { Theme.accent(for: project.category) }
     private var count: Int { project.sortedEntries.filter { !$0.isDeleted }.count }
+    private var streak: Int {
+        ActivitySummary.streak(capturedDates: project.sortedEntries.map(\.capturedAt))
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -392,6 +396,9 @@ private struct ProjectCard: View {
                     .frame(width: 40, height: 40)
                     .background(.black.opacity(0.28), in: Circle())
                 Spacer()
+                if streak > 0 {
+                    streakBadge
+                }
                 if project.isCaptureDue() {
                     Text("Bugün")
                         .font(Theme.caption(12))
@@ -444,6 +451,18 @@ private struct ProjectCard: View {
         .task(id: project.sortedEntries.last?.imageData?.count) {
             photo = await ImageDownsampler.image(from: project.sortedEntries.last?.imageData, maxPixelSize: 800)
         }
+    }
+
+    private var streakBadge: some View {
+        HStack(spacing: 3) {
+            Image(systemName: "flame.fill").font(.system(size: 11, weight: .semibold))
+            Text("\(streak)").font(.system(size: 13, weight: .bold)).monospacedDigit()
+        }
+        .foregroundStyle(.white)
+        .padding(.horizontal, 9)
+        .padding(.vertical, 5)
+        .background(.black.opacity(0.28), in: Capsule())
+        .overlay(Capsule().strokeBorder(.white.opacity(0.7), lineWidth: 1.5))
     }
 }
 

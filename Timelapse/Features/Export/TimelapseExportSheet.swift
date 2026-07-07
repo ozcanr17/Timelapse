@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 import AVKit
+import Photos
 
 struct TimelapseExportSheet: View {
 
@@ -23,6 +24,7 @@ struct TimelapseExportSheet: View {
     @State private var didInitAlign = false
     @State private var isStale = true
     @State private var poster: UIImage?
+    @State private var savedToPhotos = false
 
     private var frames: [TimelapseFrame] {
         project.sortedEntries.compactMap { entry in
@@ -170,6 +172,18 @@ struct TimelapseExportSheet: View {
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.timelapsePrimary)
+                Button {
+                    saveVideoToPhotos(url)
+                } label: {
+                    Label(savedToPhotos ? "Fotoğraflara kaydedildi" : "Fotoğraflara kaydet",
+                          systemImage: savedToPhotos ? "checkmark.circle.fill" : "square.and.arrow.down")
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .foregroundStyle(theme.accent)
+                        .background(theme.accent.opacity(0.12), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                }
+                .buttonStyle(.plain)
+                .disabled(savedToPhotos)
                 Button {
                     export()
                 } label: {
@@ -381,7 +395,21 @@ struct TimelapseExportSheet: View {
         }
     }
 
+    private func saveVideoToPhotos(_ url: URL) {
+        PHPhotoLibrary.shared().performChanges {
+            PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: url)
+        } completionHandler: { success, _ in
+            Task { @MainActor in
+                if success {
+                    savedToPhotos = true
+                    UINotificationFeedbackGenerator().notificationOccurred(.success)
+                }
+            }
+        }
+    }
+
     private func export() {
+        savedToPhotos = false
         var effectiveOverlay = overlay
         if !store.isPro { effectiveOverlay.showAppMark = true }
         let proAlign = store.isPro

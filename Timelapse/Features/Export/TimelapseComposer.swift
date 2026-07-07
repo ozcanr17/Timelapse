@@ -467,8 +467,53 @@ struct TimelapseComposer: TimelapseComposing {
         draw(overlay.note, at: overlay.notePosition)
         // Uygulama etiketi her zaman sağ altta; ücretsiz katmanda zorunlu, Pro'da gizlenebilir.
         if settings.includesWatermark || overlay.showAppMark {
-            draw("FLAPSE", at: TimelapseOverlayOptions.appMarkCorner, kern: 2)
+            drawAppMark(canvas: size, margin: margin, fontSize: fontSize)
         }
+    }
+
+    private static func drawAppMark(canvas: CGSize, margin: CGFloat, fontSize: CGFloat) {
+        let text = "FLAPSE" as NSString
+        let shadow = NSShadow()
+        shadow.shadowColor = UIColor.black.withAlphaComponent(0.6)
+        shadow.shadowBlurRadius = 4
+        shadow.shadowOffset = CGSize(width: 0, height: 1)
+        let attributes: [NSAttributedString.Key: Any] = [
+            .font: UIFont.monospacedSystemFont(ofSize: fontSize, weight: .semibold),
+            .foregroundColor: UIColor.white.withAlphaComponent(0.9),
+            .kern: 2,
+            .shadow: shadow
+        ]
+        let textSize = text.size(withAttributes: attributes)
+        let logoSize = fontSize * 1.6
+        let gap = fontSize * 0.4
+        let contentHeight = max(textSize.height, logoSize)
+        let totalWidth = logoSize + gap + textSize.width
+        let originX = canvas.width - margin - totalWidth
+        let originY = canvas.height - margin - contentHeight
+
+        drawLogoMark(in: CGRect(
+            x: originX,
+            y: originY + (contentHeight - logoSize) / 2,
+            width: logoSize,
+            height: logoSize
+        ))
+        text.draw(
+            at: CGPoint(x: originX + logoSize + gap, y: originY + (contentHeight - textSize.height) / 2),
+            withAttributes: attributes
+        )
+    }
+
+    private static func drawLogoMark(in rect: CGRect) {
+        guard let context = UIGraphicsGetCurrentContext() else { return }
+        context.saveGState()
+        context.setAlpha(0.5)
+        UIColor(red: 0.18, green: 0.545, blue: 0.341, alpha: 1).setFill()
+        UIBezierPath(roundedRect: rect, cornerRadius: rect.width * 0.24).fill()
+        let aperture = rect.insetBy(dx: rect.width * 0.26, dy: rect.width * 0.26)
+        context.setStrokeColor(UIColor.white.cgColor)
+        context.setLineWidth(rect.width * 0.06)
+        context.strokeEllipse(in: aperture)
+        context.restoreGState()
     }
 
     private static func pixelBuffer(

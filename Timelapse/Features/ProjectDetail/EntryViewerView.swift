@@ -13,6 +13,7 @@ struct EntryViewerView: View {
     @State private var selectedEntryID: UUID
     @State private var isConfirmingDelete = false
     @State private var retakeTarget: Entry?
+    @State private var shareImage: UIImage?
 
     init(project: Project, initialEntry: Entry) {
         self.project = project
@@ -75,10 +76,35 @@ struct EntryViewerView: View {
                     .foregroundStyle(.white)
             }
             Spacer()
-            CameraControlButton(icon: "trash") { isConfirmingDelete = true }
+            HStack(spacing: 10) {
+                if let shareImage {
+                    ShareLink(item: Image(uiImage: shareImage), preview: SharePreview("Kare", image: Image(uiImage: shareImage))) {
+                        controlIcon("square.and.arrow.up")
+                    }
+                }
+                Button { saveToPhotos() } label: { controlIcon("square.and.arrow.down") }
+                Button { isConfirmingDelete = true } label: { controlIcon("trash") }
+            }
         }
         .padding(.horizontal, 16)
         .padding(.top, 4)
+        .task(id: selectedEntryID) {
+            shareImage = await ImageDownsampler.image(from: selectedEntry?.imageData, maxPixelSize: 3000)
+        }
+    }
+
+    private func controlIcon(_ name: String) -> some View {
+        Image(systemName: name)
+            .font(.system(size: 17, weight: .semibold))
+            .foregroundStyle(.white)
+            .frame(width: 42, height: 42)
+            .background(.ultraThinMaterial, in: Circle())
+    }
+
+    private func saveToPhotos() {
+        guard let image = shareImage else { return }
+        UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil)
+        UINotificationFeedbackGenerator().notificationOccurred(.success)
     }
 
     @ViewBuilder

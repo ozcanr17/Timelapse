@@ -602,26 +602,24 @@ private struct TimelineEntryRow: View {
     private var locationTag: some View {
         if let place = entry.placeName, !place.isEmpty {
             Label(place, systemImage: "mappin.and.ellipse")
-                .font(Theme.caption(11))
-                .fontWeight(.semibold)
+                .font(.system(size: 9.5, weight: .semibold))
                 .foregroundStyle(.white)
                 .lineLimit(1)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 5)
-                .background(.black.opacity(0.38), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
-                .padding(8)
+                .padding(.horizontal, 6)
+                .padding(.vertical, 3.5)
+                .background(.black.opacity(0.38), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+                .padding(7)
         }
     }
 
     private var timeStamp: some View {
         Label(entry.capturedAt.formatted(.dateTime.hour().minute()), systemImage: "clock.fill")
-            .font(Theme.caption(11))
-            .fontWeight(.semibold)
+            .font(.system(size: 9.5, weight: .semibold))
             .foregroundStyle(.white)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 5)
-            .background(.black.opacity(0.38), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
-            .padding(8)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 3.5)
+            .background(.black.opacity(0.38), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+            .padding(7)
     }
 
     private func resolvePlaceIfNeeded() async {
