@@ -12,6 +12,9 @@ enum ProjectCategory: String, Codable, CaseIterable, Identifiable {
     case plant
     case hairAndBeard = "hair_beard"
     case pet
+    case fitness
+    case pregnancy
+    case baby
     case coupleMode = "capture_together"
     case other
 
@@ -25,6 +28,9 @@ enum ProjectCategory: String, Codable, CaseIterable, Identifiable {
         case .plant:        String(localized: "Bitki")
         case .hairAndBeard: String(localized: "Saç & Sakal")
         case .pet:          String(localized: "Evcil hayvan")
+        case .fitness:      String(localized: "Fitness")
+        case .pregnancy:    String(localized: "Hamilelik")
+        case .baby:         String(localized: "Bebek")
         case .coupleMode:   String(localized: "Çift Modu")
         case .other:        String(localized: "Diğer")
         }
@@ -102,6 +108,10 @@ final class Entry {
     var sourceAssetIdentifier: String?
     var subjectKindRaw: String?
     @Attribute(.externalStorage) var featurePrintData: Data?
+
+    var latitude: Double?
+    var longitude: Double?
+    var placeName: String?
 
     // Ait olduğu proje. Ters ilişki (inverse) Project tarafında tanımlı.
     // CloudKit kısıtı gereği optional.

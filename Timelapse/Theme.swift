@@ -129,6 +129,9 @@ enum Theme {
         case .plant:        Color(light: "4C7A52", dark: "8FC79A")
         case .hairAndBeard: Color(light: "8A6A4E", dark: "C9A97D")
         case .pet:          Color(light: "5B7FBF", dark: "94B4F2")
+        case .fitness:      Color(light: "B0722E", dark: "E0A468")
+        case .pregnancy:    Color(light: "9A5BA6", dark: "C99BD6")
+        case .baby:         Color(light: "3E8E9E", dark: "7FC3D1")
         case .coupleMode:   Color(light: "C2566B", dark: "F191A6")
         case .other:        Color(light: "6E675E", dark: "B3ABA0")
         }
@@ -141,6 +144,9 @@ enum Theme {
         case .plant:        "leaf.fill"
         case .hairAndBeard: "scissors"
         case .pet:          "pawprint.fill"
+        case .fitness:      "dumbbell.fill"
+        case .pregnancy:    "figure.stand"
+        case .baby:         "stroller.fill"
         case .coupleMode:   "person.2.fill"
         case .other:        "sparkles"
         }

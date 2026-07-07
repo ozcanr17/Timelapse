@@ -1,6 +1,51 @@
 {
   "sourceLanguage" : "tr",
   "strings" : {
+    "Tümü" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "All" } }
+      }
+    },
+    "Hamilelik" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Pregnancy" } }
+      }
+    },
+    "Bebek" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Baby" } }
+      }
+    },
+    "Ayarları seç, sonra oluştur" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Choose settings, then create" } }
+      }
+    },
+    "Timelapse Oluştur" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Create Timelapse" } }
+      }
+    },
+    "Yeniden Oluştur" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Recreate" } }
+      }
+    },
+    "Tekrar Dene" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Try Again" } }
+      }
+    },
+    "Oluşturuluyor…" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Creating…" } }
+      }
+    },
+    "Timelapse için en az 2 kare gerekli." : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "A timelapse needs at least 2 frames." } }
+      }
+    },
     "Fotoğraflardan Oluştur" : {
       "localizations" : {
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Create from Photos" } }

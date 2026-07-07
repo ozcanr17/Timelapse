@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 import UIKit
+import CoreLocation
 
 struct ProjectDetailView: View {
 
@@ -10,14 +11,32 @@ struct ProjectDetailView: View {
     @Environment(StoreService.self) private var store
     @Environment(\.theme) private var theme
 
-    @State private var isCapturing = false
-    @State private var isExporting = false
-    @State private var viewerEntry: Entry?
     @State private var shareCardURL: URL?
-    @State private var showPaywall = false
-    @State private var showInvite = false
-    @State private var showImport = false
     @State private var heroImage: UIImage?
+    @State private var activeSheet: DetailSheet?
+    @State private var activeCover: DetailCover?
+    @State private var monthFilter: MonthKey?
+
+    private struct MonthKey: Hashable {
+        let year: Int
+        let month: Int
+    }
+
+    private enum DetailSheet: Identifiable {
+        case export, paywall, invite, importPhotos
+        var id: Int { hashValue }
+    }
+
+    private enum DetailCover: Identifiable {
+        case capture
+        case viewer(Entry)
+        var id: String {
+            switch self {
+            case .capture: "capture"
+            case .viewer(let entry): entry.id.uuidString
+            }
+        }
+    }
 
     private var canAddEntry: Bool {
         FeatureGate.canAddEntry(isPro: store.isPro, currentEntryCount: liveEntries.count)
@@ -93,23 +112,25 @@ struct ProjectDetailView: View {
                 .accessibilityIdentifier("inviteButton")
             }
         }
-        .fullScreenCover(isPresented: $isCapturing) {
-            CameraCaptureView(project: project)
+        .sheet(item: $activeSheet) { sheet in
+            switch sheet {
+            case .export:
+                TimelapseExportSheet(project: project)
+            case .paywall:
+                PaywallView(store: store)
+            case .invite:
+                ActivityView(activityItems: [inviteText])
+            case .importPhotos:
+                PhotoImportSheet(mode: .existing(project), repository: ProjectRepository(context: modelContext))
+            }
         }
-        .fullScreenCover(item: $viewerEntry) { entry in
-            EntryViewerView(project: project, initialEntry: entry)
-        }
-        .sheet(isPresented: $isExporting) {
-            TimelapseExportSheet(project: project)
-        }
-        .sheet(isPresented: $showPaywall) {
-            PaywallView(store: store)
-        }
-        .sheet(isPresented: $showInvite) {
-            ActivityView(activityItems: [inviteText])
-        }
-        .sheet(isPresented: $showImport) {
-            PhotoImportSheet(mode: .existing(project), repository: ProjectRepository(context: modelContext))
+        .fullScreenCover(item: $activeCover) { cover in
+            switch cover {
+            case .capture:
+                CameraCaptureView(project: project)
+            case .viewer(let entry):
+                EntryViewerView(project: project, initialEntry: entry)
+            }
         }
         .task(id: liveEntries.count) {
             shareCardURL = renderShareCard()
@@ -121,7 +142,7 @@ struct ProjectDetailView: View {
     private var captureCTA: some View {
         let due = project.isCaptureDue()
         return Button {
-            if canAddEntry { isCapturing = true } else { showPaywall = true }
+            if canAddEntry { activeCover = .capture } else { activeSheet = .paywall }
         } label: {
             HStack(spacing: 14) {
                 ZStack {
@@ -159,19 +180,19 @@ struct ProjectDetailView: View {
     /// Birlikte Çekim: arkadaşları davet edip aynı projeye birlikte katkı yapmak için
     /// sistem paylaşım sayfasını açar (Pro). Ücretsiz kullanıcı paywall görür.
     private func importTapped() {
-        if store.isPro { showImport = true } else { showPaywall = true }
+        if store.isPro { activeSheet = .importPhotos } else { activeSheet = .paywall }
     }
 
     private func inviteTapped() {
         guard store.isPro else {
-            showPaywall = true
+            activeSheet = .paywall
             return
         }
         if !project.isCollaborative {
             project.isCollaborative = true
             try? modelContext.save()
         }
-        showInvite = true
+        activeSheet = .invite
     }
 
     private var freeQuotaBadge: some View {
@@ -197,7 +218,7 @@ struct ProjectDetailView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(theme.surface, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
         .contentShape(Rectangle())
-        .onTapGesture { if atLimit { showPaywall = true } }
+        .onTapGesture { if atLimit { activeSheet = .paywall } }
     }
 
     private func renderShareCard() -> URL? {
@@ -314,7 +335,7 @@ struct ProjectDetailView: View {
 
     private var exportButton: some View {
         Button {
-            isExporting = true
+            activeSheet = .export
         } label: {
             Label("Timelapse'i Oluştur", systemImage: "film.stack")
                 .font(Theme.headline(17))
@@ -324,6 +345,7 @@ struct ProjectDetailView: View {
                 .background(accent.opacity(0.12), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
         }
         .buttonStyle(.plain)
+        .accessibilityIdentifier("exportButton")
     }
 
     private var timeline: some View {
@@ -331,20 +353,22 @@ struct ProjectDetailView: View {
             Text("Zaman Çizelgesi")
                 .font(Theme.headline(18))
                 .foregroundStyle(theme.ink)
-                .padding(.bottom, 16)
+                .padding(.bottom, 12)
 
-            ForEach(Array(liveEntries.enumerated()), id: \.element.id) { index, entry in
+            monthFilterBar
+                .padding(.bottom, 18)
+
+            ForEach(Array(displayedEntries.enumerated()), id: \.element.id) { index, entry in
                 TimelineEntryRow(
                     entry: entry,
                     accent: accent,
-                    isFirst: index == 0,
-                    isLast: index == liveEntries.count - 1
+                    isLast: index == displayedEntries.count - 1
                 ) {
-                    viewerEntry = entry
+                    activeCover = .viewer(entry)
                 }
                 .contextMenu {
                     Button {
-                        viewerEntry = entry
+                        activeCover = .viewer(entry)
                     } label: {
                         Label("Görüntüle", systemImage: "eye")
                     }
@@ -357,6 +381,46 @@ struct ProjectDetailView: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var monthFilterBar: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                FilterChip(title: String(localized: "Tümü"), isSelected: monthFilter == nil, accent: accent) {
+                    monthFilter = nil
+                }
+                ForEach(availableMonths, id: \.self) { key in
+                    FilterChip(title: monthLabel(key), isSelected: monthFilter == key, accent: accent) {
+                        monthFilter = key
+                    }
+                }
+            }
+            .padding(.horizontal, 2)
+        }
+    }
+
+    private var displayedEntries: [Entry] {
+        let newestFirst = liveEntries.sorted { $0.capturedAt > $1.capturedAt }
+        guard let monthFilter else { return newestFirst }
+        return newestFirst.filter { monthKey(for: $0.capturedAt) == monthFilter }
+    }
+
+    private var availableMonths: [MonthKey] {
+        let keys = Set(liveEntries.map { monthKey(for: $0.capturedAt) })
+        return keys.sorted { ($0.year, $0.month) > ($1.year, $1.month) }
+    }
+
+    private func monthKey(for date: Date) -> MonthKey {
+        let components = Calendar.current.dateComponents([.year, .month], from: date)
+        return MonthKey(year: components.year ?? 0, month: components.month ?? 0)
+    }
+
+    private func monthLabel(_ key: MonthKey) -> String {
+        var components = DateComponents()
+        components.year = key.year
+        components.month = key.month
+        guard let date = Calendar.current.date(from: components) else { return "" }
+        return date.formatted(.dateTime.month(.abbreviated).year())
     }
 
     private var emptyState: some View {
@@ -417,17 +481,42 @@ private struct StatTile: View {
     }
 }
 
+private struct FilterChip: View {
+    let title: String
+    let isSelected: Bool
+    let accent: Color
+    let action: () -> Void
+
+    @Environment(\.theme) private var theme
+
+    var body: some View {
+        Button(action: action) {
+            Text(title)
+                .font(Theme.caption(13))
+                .fontWeight(.semibold)
+                .foregroundStyle(isSelected ? .white : theme.ink)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 8)
+                .background(isSelected ? accent : theme.surface, in: Capsule())
+        }
+        .buttonStyle(.plain)
+    }
+}
+
 private struct TimelineEntryRow: View {
     let entry: Entry
     let accent: Color
-    let isFirst: Bool
     let isLast: Bool
     let onTap: () -> Void
 
     @Environment(\.theme) private var theme
+    @Environment(\.modelContext) private var modelContext
     @State private var photo: UIImage?
 
     private let tileWidth: CGFloat = 58
+    private let tileHeight: CGFloat = 66
+    private let cardHeight: CGFloat = 160
+    private let rowGap: CGFloat = 22
 
     var body: some View {
         HStack(alignment: .top, spacing: 14) {
@@ -440,16 +529,12 @@ private struct TimelineEntryRow: View {
 
     private var rail: some View {
         VStack(spacing: 0) {
-            Rectangle()
-                .fill(lineColor)
-                .frame(width: 2, height: 10)
-                .opacity(isFirst ? 0 : 1)
             calendarTile
-            Rectangle()
-                .fill(lineColor)
-                .frame(width: 2)
-                .frame(maxHeight: .infinity)
-                .opacity(isLast ? 0 : 1)
+            if !isLast {
+                Rectangle()
+                    .fill(lineColor)
+                    .frame(width: 2, height: cardHeight + rowGap - tileHeight)
+            }
         }
         .frame(width: tileWidth)
     }
@@ -467,7 +552,7 @@ private struct TimelineEntryRow: View {
                 .font(Theme.caption(10))
                 .foregroundStyle(theme.inkMuted)
         }
-        .frame(width: tileWidth, height: 66)
+        .frame(width: tileWidth, height: tileHeight)
         .background(theme.surface, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
@@ -478,18 +563,37 @@ private struct TimelineEntryRow: View {
 
     private var card: some View {
         Button(action: onTap) {
-            ZStack {
-                if let photo {
-                    Image(uiImage: photo)
-                        .resizable()
-                        .scaledToFill()
-                } else {
-                    Rectangle().fill(theme.surface)
-                    Image(systemName: "camera").foregroundStyle(theme.inkMuted)
+            ZStack(alignment: .bottomLeading) {
+                ZStack {
+                    if let photo {
+                        Image(uiImage: photo)
+                            .resizable()
+                            .scaledToFill()
+                    } else {
+                        Rectangle().fill(theme.surface)
+                        Image(systemName: "camera").foregroundStyle(theme.inkMuted)
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                .frame(height: cardHeight)
+                .clipped()
+
+                if let place = entry.placeName, !place.isEmpty {
+                    LinearGradient(colors: [.clear, .black.opacity(0.6)], startPoint: .center, endPoint: .bottom)
+                    VStack(alignment: .leading, spacing: 3) {
+                        Label(place, systemImage: "mappin.and.ellipse")
+                            .font(Theme.caption(13))
+                            .fontWeight(.semibold)
+                            .lineLimit(1)
+                        Text(entry.capturedAt, format: .dateTime.hour().minute())
+                            .font(Theme.caption(11))
+                            .opacity(0.9)
+                    }
+                    .foregroundStyle(.white)
+                    .padding(12)
                 }
             }
-            .frame(maxWidth: .infinity)
-            .frame(height: 160)
+            .frame(height: cardHeight)
             .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
@@ -498,10 +602,19 @@ private struct TimelineEntryRow: View {
             .shadow(color: .black.opacity(0.08), radius: 6, x: 0, y: 3)
         }
         .buttonStyle(.plain)
-        .padding(.bottom, 22)
+        .padding(.bottom, rowGap)
         .task(id: entry.imageData?.count) {
             photo = await ImageDownsampler.image(from: entry.imageData, maxPixelSize: 700)
+            await resolvePlaceIfNeeded()
         }
+    }
+
+    private func resolvePlaceIfNeeded() async {
+        guard entry.placeName == nil, let latitude = entry.latitude, let longitude = entry.longitude else { return }
+        let name = await LocationService.reverseGeocode(CLLocation(latitude: latitude, longitude: longitude))
+        guard let name else { return }
+        entry.placeName = name
+        try? modelContext.save()
     }
 }
 

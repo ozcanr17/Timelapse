@@ -29,6 +29,7 @@ final class CameraCaptureViewModel {
     private let project: Project?
     private let retakeEntry: Entry?
     private let classifier: SubjectClassifying
+    private let location: LocationProviding
     private let onCaptured: ((Data) -> Void)?
 
     init(
@@ -37,6 +38,7 @@ final class CameraCaptureViewModel {
         project: Project? = nil,
         retakeEntry: Entry? = nil,
         classifier: SubjectClassifying = SubjectClassifier(),
+        location: LocationProviding? = nil,
         onCaptured: ((Data) -> Void)? = nil
     ) {
         self.camera = camera
@@ -44,6 +46,7 @@ final class CameraCaptureViewModel {
         self.project = project
         self.retakeEntry = retakeEntry
         self.classifier = classifier
+        self.location = location ?? LocationService()
         self.onCaptured = onCaptured
         self.referenceAnchor = Self.initialAnchor(for: project)
         self.position = Self.initialPosition(for: project?.category ?? .other)
@@ -114,6 +117,7 @@ final class CameraCaptureViewModel {
                     featurePrintData: signature.isEmpty ? nil : FeatureVector.data(from: signature.vector)
                 )
                 try repository.addEntry(entry, to: project)
+                captureLocation(for: entry)
             } else {
                 state = .ready
                 return false
@@ -123,6 +127,16 @@ final class CameraCaptureViewModel {
         } catch {
             state = .failed(message(for: error))
             return false
+        }
+    }
+
+    private func captureLocation(for entry: Entry) {
+        Task {
+            guard let resolved = await location.currentLocation() else { return }
+            entry.latitude = resolved.latitude
+            entry.longitude = resolved.longitude
+            entry.placeName = resolved.placeName
+            try? repository.saveIfNeeded()
         }
     }
 

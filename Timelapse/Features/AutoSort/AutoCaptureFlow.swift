@@ -14,6 +14,7 @@ struct AutoCaptureFlow: View {
     @State private var signature: SubjectSignature = .empty
 
     private let classifier: SubjectClassifying = SubjectClassifier()
+    @State private var locationService = LocationService()
 
     enum Phase: Equatable {
         case capturing
@@ -122,6 +123,14 @@ struct AutoCaptureFlow: View {
             featurePrintData: signature.isEmpty ? nil : FeatureVector.data(from: signature.vector)
         )
         try? repository.addEntry(entry, to: project)
+        Task {
+            if let resolved = await locationService.currentLocation() {
+                entry.latitude = resolved.latitude
+                entry.longitude = resolved.longitude
+                entry.placeName = resolved.placeName
+                try? repository.saveIfNeeded()
+            }
+        }
         withAnimation { phase = .assigned(project.title) }
         Task {
             try? await Task.sleep(for: .seconds(1.3))

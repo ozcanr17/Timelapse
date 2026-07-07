@@ -130,6 +130,8 @@ struct TimelapseExportSettings: Equatable {
     var manualAnchor: ManualAlignment? = nil
     /// Kareler arası geçiş.
     var transition: TimelapseTransition = .cut
+    /// Akıllı Hizalama'nın hangi özneyi kilitleyeceği (yüz / gövde / karın / grup).
+    var alignmentSubject: AlignmentSubject = .auto
 
     static func current(
         isPro: Bool,
@@ -137,7 +139,8 @@ struct TimelapseExportSettings: Equatable {
         overlay: TimelapseOverlayOptions = TimelapseOverlayOptions(),
         smartAlignment: Bool = false,
         manualAnchor: ManualAlignment? = nil,
-        transition: TimelapseTransition = .cut
+        transition: TimelapseTransition = .cut,
+        alignmentSubject: AlignmentSubject = .auto
     ) -> TimelapseExportSettings {
         if FeatureGate.isUnlocked(.highResExport, isPro: isPro) {
             TimelapseExportSettings(
@@ -147,7 +150,8 @@ struct TimelapseExportSettings: Equatable {
                 overlay: overlay,
                 smartAlignment: smartAlignment,
                 manualAnchor: manualAnchor,
-                transition: transition
+                transition: transition,
+                alignmentSubject: alignmentSubject
             )
         } else {
             TimelapseExportSettings(
@@ -157,7 +161,8 @@ struct TimelapseExportSettings: Equatable {
                 overlay: overlay,
                 smartAlignment: smartAlignment,
                 manualAnchor: manualAnchor,
-                transition: transition
+                transition: transition,
+                alignmentSubject: alignmentSubject
             )
         }
     }
@@ -231,7 +236,7 @@ struct TimelapseComposer: TimelapseComposing {
 
         let useSmart = settings.smartAlignment && settings.manualAnchor == nil
         let anchors: [FrameAnchor?] = useSmart
-            ? frames.map { FrameAligner.anchor(in: $0.imageData) }
+            ? frames.map { FrameAligner.anchor(in: $0.imageData, subject: settings.alignmentSubject) }
             : Array(repeating: nil, count: frames.count)
         let reference = anchors.compactMap { $0 }.first
 

@@ -2,6 +2,7 @@ import Foundation
 import Photos
 import UIKit
 import ImageIO
+import CoreLocation
 
 struct PhotoImportSource {
     let assetIdentifier: String?
@@ -34,16 +35,18 @@ final class PhotoLibraryImporter: PhotoLibraryImporting {
     ) async -> [Entry] {
         guard !sources.isEmpty else { return [] }
 
-        let assetDates = libraryDates(for: sources.compactMap(\.assetIdentifier))
+        let meta = libraryMeta(for: sources.compactMap(\.assetIdentifier))
 
-        var loaded: [(id: String, index: Int, data: Data, date: Date?)] = []
+        var loaded: [(id: String, index: Int, data: Data, date: Date?, location: CLLocation?)] = []
         loaded.reserveCapacity(sources.count)
 
         for (offset, source) in sources.enumerated() {
             guard let data = await source.load() else { continue }
             let identifier = source.assetIdentifier ?? UUID().uuidString
-            let date = source.assetIdentifier.flatMap { assetDates[$0] } ?? Self.exifDate(from: data)
-            loaded.append((identifier, source.selectionIndex, data, date))
+            let assetMeta = source.assetIdentifier.flatMap { meta[$0] }
+            let date = assetMeta?.date ?? Self.exifDate(from: data)
+            let location = assetMeta?.location ?? Self.exifLocation(from: data)
+            loaded.append((identifier, source.selectionIndex, data, date, location))
             progress(Double(offset + 1) / Double(sources.count) * 0.5)
         }
 
@@ -51,33 +54,50 @@ final class PhotoLibraryImporter: PhotoLibraryImporting {
             PhotoImportItem(assetIdentifier: $0.id, creationDate: $0.date, selectionIndex: $0.index)
         }
         let resolved = PhotoImportPlan.resolvedOrder(items)
-        let dataByIdentifier = Dictionary(loaded.map { ($0.id, $0.data) }, uniquingKeysWith: { first, _ in first })
+        let byIdentifier = Dictionary(loaded.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
 
         var entries: [Entry] = []
         entries.reserveCapacity(resolved.count)
         for (offset, item) in resolved.enumerated() {
-            guard let data = dataByIdentifier[item.assetIdentifier] else { continue }
-            guard let downsampled = await downsample(data, maxPixelSize: maxPixelSize) else { continue }
-            entries.append(
-                Entry(capturedAt: item.date, imageData: downsampled, sourceAssetIdentifier: item.assetIdentifier)
-            )
+            guard let source = byIdentifier[item.assetIdentifier] else { continue }
+            guard let downsampled = await downsample(source.data, maxPixelSize: maxPixelSize) else { continue }
+            let entry = Entry(capturedAt: item.date, imageData: downsampled, sourceAssetIdentifier: item.assetIdentifier)
+            if let location = source.location {
+                entry.latitude = location.coordinate.latitude
+                entry.longitude = location.coordinate.longitude
+            }
+            entries.append(entry)
             progress(0.5 + Double(offset + 1) / Double(resolved.count) * 0.5)
         }
         return entries
     }
 
-    private func libraryDates(for identifiers: [String]) -> [String: Date] {
+    private func libraryMeta(for identifiers: [String]) -> [String: (date: Date?, location: CLLocation?)] {
         guard !identifiers.isEmpty else { return [:] }
         let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
         guard status == .authorized || status == .limited else { return [:] }
         let assets = PHAsset.fetchAssets(withLocalIdentifiers: identifiers, options: nil)
-        var map: [String: Date] = [:]
+        var map: [String: (date: Date?, location: CLLocation?)] = [:]
         assets.enumerateObjects { asset, _, _ in
-            if let date = asset.creationDate {
-                map[asset.localIdentifier] = date
-            }
+            map[asset.localIdentifier] = (asset.creationDate, asset.location)
         }
         return map
+    }
+
+    static func exifLocation(from data: Data) -> CLLocation? {
+        guard
+            let source = CGImageSourceCreateWithData(data as CFData, nil),
+            let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
+            let gps = properties[kCGImagePropertyGPSDictionary] as? [CFString: Any],
+            let latitude = gps[kCGImagePropertyGPSLatitude] as? Double,
+            let longitude = gps[kCGImagePropertyGPSLongitude] as? Double
+        else { return nil }
+        let latRef = gps[kCGImagePropertyGPSLatitudeRef] as? String ?? "N"
+        let lonRef = gps[kCGImagePropertyGPSLongitudeRef] as? String ?? "E"
+        return CLLocation(
+            latitude: latRef == "S" ? -latitude : latitude,
+            longitude: lonRef == "W" ? -longitude : longitude
+        )
     }
 
     private func downsample(_ data: Data, maxPixelSize: CGFloat) async -> Data? {

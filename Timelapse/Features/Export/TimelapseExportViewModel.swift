@@ -28,7 +28,8 @@ final class TimelapseExportViewModel {
         overlay: TimelapseOverlayOptions = TimelapseOverlayOptions(),
         smartAlignment: Bool = false,
         manualAnchor: ManualAlignment? = nil,
-        transition: TimelapseTransition = .cut
+        transition: TimelapseTransition = .cut,
+        alignmentSubject: AlignmentSubject = .auto
     ) {
         renderTask?.cancel()
         guard frames.count >= 2 else {
@@ -37,7 +38,8 @@ final class TimelapseExportViewModel {
         }
         let settings = TimelapseExportSettings.current(
             isPro: isPro, speed: speed, overlay: overlay,
-            smartAlignment: smartAlignment, manualAnchor: manualAnchor, transition: transition
+            smartAlignment: smartAlignment, manualAnchor: manualAnchor, transition: transition,
+            alignmentSubject: alignmentSubject
         )
         let composer = composer
         phase = .rendering

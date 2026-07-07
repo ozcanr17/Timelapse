@@ -21,6 +21,8 @@ struct TimelapseExportSheet: View {
     @State private var transition: TimelapseTransition = .cut
     @State private var showManualAlign = false
     @State private var didInitAlign = false
+    @State private var isStale = true
+    @State private var poster: UIImage?
 
     private var frames: [TimelapseFrame] {
         project.sortedEntries.compactMap { entry in
@@ -46,7 +48,6 @@ struct TimelapseExportSheet: View {
                     didInitAlign = true
                     if store.isPro && smartAlignmentEnabled { alignMode = .smart }
                 }
-                export()
             }
             .onDisappear { viewModel.cancel() }
             .sheet(isPresented: $showPaywall) {
@@ -55,84 +56,29 @@ struct TimelapseExportSheet: View {
             .sheet(isPresented: $showManualAlign) {
                 if let data = frames.first?.imageData {
                     ManualAlignView(imageData: data, manual: $manual) {
-                        export()
+                        isStale = true
                     }
                 }
             }
         }
     }
 
-    private var isLoading: Bool {
-        switch viewModel.phase {
-        case .idle, .rendering: return true
-        default: return false
-        }
-    }
+    private var isRendering: Bool { viewModel.phase == .rendering }
 
     private var content: some View {
-        ZStack {
-            // Arka planı boş bırakmak yerine bulunduğumuz sayfayı bulanıklaştırıp
-            // gösteriyoruz; üstünde dönen objektif animasyonu belirir.
-            contentBehind
-                .blur(radius: isLoading ? 18 : 0)
-                .allowsHitTesting(!isLoading)
-
-            if isLoading {
-                loadingOverlay
-                    .transition(.opacity)
-            }
-        }
-        .animation(.easeInOut(duration: 0.35), value: isLoading)
-        .onChange(of: viewModel.phase) {
-            if case .finished(let url) = viewModel.phase { lastRenderedURL = url }
-        }
-    }
-
-    @ViewBuilder
-    private var contentBehind: some View {
-        switch viewModel.phase {
-        case .finished(let url):
-            finishedView(url)
-        case .failed(let message):
-            failedView(message)
-        case .idle, .rendering:
-            if let lastRenderedURL {
-                finishedView(lastRenderedURL)
-            } else {
-                Color.clear
-            }
-        }
-    }
-
-    private var loadingOverlay: some View {
-        VStack(spacing: 16) {
-            SpinningLogo(size: 96)
-            Text("Timelapse hazırlanıyor…")
-                .font(Theme.headline(16))
-                .foregroundStyle(theme.ink)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-
-    private func finishedView(_ url: URL) -> some View {
         ScrollView {
             VStack(spacing: 18) {
-                ExportedVideoPlayer(url: url)
-                    .id(url)
-                    .aspectRatio(3.0 / 4.0, contentMode: .fit)
-                    .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
-                    .frame(maxHeight: 380)
+                previewArea
 
-                speedControl
-                transitionControl
-                alignmentControl
-                overlayControls
-
-                ShareLink(item: url) {
-                    Label("Videoyu Paylaş", systemImage: "square.and.arrow.up")
-                        .frame(maxWidth: .infinity)
+                VStack(spacing: 18) {
+                    speedControl
+                    transitionControl
+                    alignmentControl
+                    overlayControls
                 }
-                .buttonStyle(.timelapsePrimary)
+                .disabled(isRendering)
+
+                actionArea
 
                 if !store.isPro {
                     Button {
@@ -146,7 +92,113 @@ struct TimelapseExportSheet: View {
             }
             .padding(20)
         }
-        .onChange(of: overlay) { export() }
+        .onChange(of: overlay) { isStale = true }
+        .onChange(of: viewModel.phase) {
+            if case .finished(let url) = viewModel.phase {
+                lastRenderedURL = url
+                isStale = false
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var previewArea: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
+                .fill(theme.surface)
+
+            switch viewModel.phase {
+            case .rendering:
+                VStack(spacing: 14) {
+                    SpinningLogo(size: 88)
+                    Text("Timelapse hazırlanıyor… %\(Int(viewModel.progress * 100))")
+                        .font(Theme.caption(13))
+                        .foregroundStyle(theme.inkMuted)
+                }
+            case .finished(let url):
+                ExportedVideoPlayer(url: url)
+                    .id(url)
+                    .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
+            case .failed(let message):
+                failedView(message)
+            case .idle:
+                posterPreview
+            }
+        }
+        .aspectRatio(3.0 / 4.0, contentMode: .fit)
+        .frame(maxHeight: 380)
+        .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
+    }
+
+    private var posterPreview: some View {
+        ZStack {
+            if let poster {
+                Image(uiImage: poster).resizable().scaledToFill()
+            }
+            LinearGradient(colors: [.black.opacity(0.05), .black.opacity(0.45)], startPoint: .top, endPoint: .bottom)
+            VStack(spacing: 8) {
+                Image(systemName: "film.stack")
+                    .font(.system(size: 30, weight: .semibold))
+                    .foregroundStyle(.white)
+                Text("Ayarları seç, sonra oluştur")
+                    .font(Theme.caption(13))
+                    .foregroundStyle(.white.opacity(0.92))
+            }
+        }
+        .task(id: frames.last?.imageData.count) {
+            poster = await ImageDownsampler.image(from: frames.last?.imageData, maxPixelSize: 800)
+        }
+    }
+
+    @ViewBuilder
+    private var actionArea: some View {
+        if isRendering {
+            Button {} label: {
+                HStack(spacing: 10) {
+                    ProgressView().tint(.white)
+                    Text("Oluşturuluyor…")
+                }
+                .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.timelapsePrimary)
+            .disabled(true)
+        } else if case .finished(let url) = viewModel.phase, !isStale {
+            VStack(spacing: 10) {
+                ShareLink(item: url) {
+                    Label("Videoyu Paylaş", systemImage: "square.and.arrow.up")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.timelapsePrimary)
+                Button {
+                    export()
+                } label: {
+                    Label("Yeniden Oluştur", systemImage: "arrow.clockwise")
+                        .font(Theme.caption(13))
+                        .foregroundStyle(theme.inkMuted)
+                }
+            }
+        } else {
+            VStack(spacing: 6) {
+                Button {
+                    export()
+                } label: {
+                    Label(createTitle, systemImage: "film.stack")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.timelapsePrimary)
+                .disabled(frames.count < 2)
+                if frames.count < 2 {
+                    Text("Timelapse için en az 2 kare gerekli.")
+                        .font(Theme.caption(12))
+                        .foregroundStyle(theme.inkMuted)
+                }
+            }
+        }
+    }
+
+    private var createTitle: LocalizedStringKey {
+        if case .failed = viewModel.phase { return "Tekrar Dene" }
+        return lastRenderedURL == nil ? "Timelapse Oluştur" : "Yeniden Oluştur"
     }
 
     private var speedControl: some View {
@@ -165,7 +217,7 @@ struct TimelapseExportSheet: View {
             .pickerStyle(.segmented)
             .disabled(viewModel.phase == .rendering)
             .onChange(of: speed) {
-                export()
+                isStale = true
             }
         }
     }
@@ -185,7 +237,7 @@ struct TimelapseExportSheet: View {
             }
             .pickerStyle(.segmented)
             .disabled(viewModel.phase == .rendering)
-            .onChange(of: transition) { export() }
+            .onChange(of: transition) { isStale = true }
         }
     }
 
@@ -215,7 +267,7 @@ struct TimelapseExportSheet: View {
                     showPaywall = true
                     return
                 }
-                if mode == .manual { showManualAlign = true } else { export() }
+                if mode == .manual { showManualAlign = true } else { isStale = true }
             }
             if alignMode == .manual {
                 Button {
@@ -307,21 +359,25 @@ struct TimelapseExportSheet: View {
     }
 
     private func failedView(_ message: String) -> some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 12) {
             Image(systemName: "exclamationmark.triangle")
                 .font(.largeTitle)
                 .foregroundStyle(theme.accent)
             Text(message)
-                .font(Theme.body(15))
+                .font(Theme.body(14))
                 .foregroundStyle(theme.ink)
                 .multilineTextAlignment(.center)
-            Button("Tekrar dene") {
-                export()
-            }
-            .buttonStyle(.timelapsePrimary)
-            .frame(width: 200)
         }
         .padding(24)
+    }
+
+    private var alignmentSubject: AlignmentSubject {
+        if project.isCoupleMode { return .group }
+        switch project.category {
+        case .fitness:   return .body
+        case .pregnancy: return .belly
+        default:         return .auto
+        }
     }
 
     private func export() {
@@ -335,7 +391,8 @@ struct TimelapseExportSheet: View {
             overlay: effectiveOverlay,
             smartAlignment: proAlign && alignMode == .smart,
             manualAnchor: (proAlign && alignMode == .manual) ? manual : nil,
-            transition: transition
+            transition: transition,
+            alignmentSubject: alignmentSubject
         )
     }
 }

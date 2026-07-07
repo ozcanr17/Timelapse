@@ -33,6 +33,14 @@ final class CameraCaptureViewModelTests: XCTestCase {
         }
     }
 
+    private struct FakeClassifier: SubjectClassifying {
+        func signature(for imageData: Data) async -> SubjectSignature { .empty }
+    }
+
+    private struct FakeLocation: LocationProviding {
+        func currentLocation() async -> ResolvedLocation? { nil }
+    }
+
     private final class FakeRepository: ProjectRepositoryProtocol {
         private(set) var addedEntries: [Entry] = []
         private(set) var replacedEntryIDs: [UUID] = []
@@ -62,7 +70,9 @@ final class CameraCaptureViewModelTests: XCTestCase {
         CameraCaptureViewModel(
             camera: camera,
             repository: repository,
-            project: project ?? Project(title: "Sakal", category: .hairAndBeard, cadence: .daily)
+            project: project ?? Project(title: "Sakal", category: .hairAndBeard, cadence: .daily),
+            classifier: FakeClassifier(),
+            location: FakeLocation()
         )
     }
 
