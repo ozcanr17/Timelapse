@@ -301,13 +301,7 @@ private struct ActivityHeroCard: View {
         liveProjects.flatMap { ($0.entries ?? []).map(\.capturedAt) }
     }
 
-    private var counts: [Int] {
-        ActivitySummary.dailyCounts(capturedDates: capturedDates)
-    }
-
-    private var weekTotal: Int {
-        counts.reduce(0, +)
-    }
+    private var totalCaptures: Int { capturedDates.count }
 
     private var dueCount: Int {
         liveProjects.filter { $0.isCaptureDue() }.count
@@ -315,26 +309,25 @@ private struct ActivityHeroCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("BU HAFTA")
-                        .font(Theme.caption(11))
-                        .foregroundStyle(theme.inkMuted)
-                        .tracking(1.2)
-                    (
-                        Text("\(weekTotal)")
-                            .font(.system(size: 32, weight: .bold, design: .default))
-                            .monospacedDigit()
-                            .foregroundStyle(theme.ink)
-                        +
-                        Text(" çekim")
-                            .font(Theme.headline(15))
-                            .foregroundStyle(theme.inkMuted)
-                    )
-                }
+            HStack(alignment: .firstTextBaseline) {
+                Text("AKTİVİTE")
+                    .font(Theme.caption(11))
+                    .foregroundStyle(theme.inkMuted)
+                    .tracking(1.2)
                 Spacer()
-                WeeklyBars(counts: counts)
+                (
+                    Text("\(totalCaptures)")
+                        .font(.system(size: 20, weight: .bold, design: .default))
+                        .monospacedDigit()
+                        .foregroundStyle(theme.ink)
+                    +
+                    Text(" kare")
+                        .font(Theme.caption(13))
+                        .foregroundStyle(theme.inkMuted)
+                )
             }
+
+            ContributionGrid(capturedDates: capturedDates, accent: theme.accent)
 
             if dueCount > 0 {
                 Label("Bugün \(dueCount) projede çekim zamanı", systemImage: "bell.fill")
@@ -355,21 +348,62 @@ private struct ActivityHeroCard: View {
     }
 }
 
-private struct WeeklyBars: View {
-    let counts: [Int]
+private struct ContributionGrid: View {
+    let capturedDates: [Date]
+    let accent: Color
 
     @Environment(\.theme) private var theme
 
+    private let weeks = 15
+    private let cell: CGFloat = 11
+    private let gap: CGFloat = 3
+
+    private var countsByDay: [Date: Int] {
+        let calendar = Calendar.current
+        var counts: [Date: Int] = [:]
+        for date in capturedDates {
+            counts[calendar.startOfDay(for: date), default: 0] += 1
+        }
+        return counts
+    }
+
     var body: some View {
-        let maxCount = max(counts.max() ?? 1, 1)
-        HStack(alignment: .bottom, spacing: 5) {
-            ForEach(Array(counts.enumerated()), id: \.offset) { _, count in
-                RoundedRectangle(cornerRadius: 3, style: .continuous)
-                    .fill(count > 0 ? AnyShapeStyle(theme.accent) : AnyShapeStyle(theme.inkMuted.opacity(0.18)))
-                    .frame(width: 10, height: max(8, 52 * CGFloat(count) / CGFloat(maxCount)))
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        let weekdayIndex = (calendar.component(.weekday, from: today) - calendar.firstWeekday + 7) % 7
+        let counts = countsByDay
+        HStack(spacing: gap) {
+            ForEach(0..<weeks, id: \.self) { column in
+                VStack(spacing: gap) {
+                    ForEach(0..<7, id: \.self) { row in
+                        let offset = (weeks - 1 - column) * 7 + (weekdayIndex - row)
+                        square(offset: offset, today: today, calendar: calendar, counts: counts)
+                    }
+                }
             }
         }
-        .frame(height: 56, alignment: .bottom)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    @ViewBuilder
+    private func square(offset: Int, today: Date, calendar: Calendar, counts: [Date: Int]) -> some View {
+        if offset < 0 {
+            Color.clear.frame(width: cell, height: cell)
+        } else {
+            let date = calendar.date(byAdding: .day, value: -offset, to: today) ?? today
+            RoundedRectangle(cornerRadius: 2.5, style: .continuous)
+                .fill(fill(for: counts[date] ?? 0))
+                .frame(width: cell, height: cell)
+        }
+    }
+
+    private func fill(for count: Int) -> Color {
+        switch count {
+        case 0:  theme.inkMuted.opacity(0.12)
+        case 1:  accent.opacity(0.4)
+        case 2:  accent.opacity(0.7)
+        default: accent
+        }
     }
 }
 

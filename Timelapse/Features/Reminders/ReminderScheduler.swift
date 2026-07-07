@@ -1,6 +1,7 @@
 import Foundation
 import SwiftData
 import UserNotifications
+import UIKit
 
 @MainActor
 final class ReminderScheduler {
@@ -32,6 +33,10 @@ final class ReminderScheduler {
             content.title = String(localized: "Çekim zamanı")
             content.body = String(localized: "\(project.title) için bugünkü kareni ekle.")
             content.sound = .default
+            if let imageData = project.sortedEntries.last(where: { !$0.isDeleted })?.imageData,
+               let attachment = Self.makeAttachment(imageData: imageData, id: project.id) {
+                content.attachments = [attachment]
+            }
 
             let components = Calendar.current.dateComponents(
                 [.year, .month, .day, .hour, .minute],
@@ -43,6 +48,22 @@ final class ReminderScheduler {
                 trigger: UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
             )
             center.add(request)
+        }
+    }
+
+    private static func makeAttachment(imageData: Data, id: UUID) -> UNNotificationAttachment? {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("reminder-thumbs", isDirectory: true)
+        try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let url = directory.appendingPathComponent("\(id.uuidString).jpg")
+        guard
+            let image = ImageDownsampler.image(from: imageData, maxPixelSize: 900),
+            let jpeg = image.jpegData(compressionQuality: 0.85)
+        else { return nil }
+        do {
+            try jpeg.write(to: url, options: .atomic)
+            return try UNNotificationAttachment(identifier: id.uuidString, url: url, options: nil)
+        } catch {
+            return nil
         }
     }
 }
