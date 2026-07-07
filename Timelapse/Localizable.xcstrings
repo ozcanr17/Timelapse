@@ -316,7 +316,14 @@
       }
     },
     "Bitti" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Done"
+          }
+        }
+      }
     },
     "Bu çekim kalıcı olarak silinsin mi?" : {
       "localizations" : {
@@ -624,7 +631,14 @@
       }
     },
     "Fitness" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fitness"
+          }
+        }
+      }
     },
     "Fiyort" : {
       "localizations" : {
@@ -850,7 +864,14 @@
       }
     },
     "Grafit" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Graphite"
+          }
+        }
+      }
     },
     "Gün aşırı" : {
       "localizations" : {
@@ -883,7 +904,14 @@
       }
     },
     "Günde bir kare çek; zamanla değişimin\nkendiliğinden bir timelapse'e dönüşsün." : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Take one frame a day; over time your progress\nturns into a timelapse on its own."
+          }
+        }
+      }
     },
     "GÜNDÜR" : {
       "localizations" : {
@@ -1038,7 +1066,14 @@
       }
     },
     "İçe aktarılıyor… %%%lld" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Importing… %%%lld"
+          }
+        }
+      }
     },
     "İçe aktarma başarısız: %@" : {
       "localizations" : {
@@ -1213,7 +1248,14 @@
       }
     },
     "kare · %@" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "frames · %@"
+          }
+        }
+      }
     },
     "Kare Çek" : {
       "localizations" : {
@@ -1287,7 +1329,14 @@
       }
     },
     "Kategori" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Category"
+          }
+        }
+      }
     },
     "KATEGORİ" : {
       "localizations" : {
@@ -1726,7 +1775,14 @@
       }
     },
     "Sıklık" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Frequency"
+          }
+        }
+      }
     },
     "Sınırsız proje" : {
       "localizations" : {
@@ -1860,7 +1916,14 @@
       }
     },
     "Timelapse" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Timelapse"
+          }
+        }
+      }
     },
     "Timelapse hazırlanıyor…" : {
       "extractionState" : "stale",
@@ -1874,7 +1937,14 @@
       }
     },
     "Timelapse hazırlanıyor… %%%lld" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preparing timelapse… %%%lld"
+          }
+        }
+      }
     },
     "Timelapse için en az 2 çekim gerekli." : {
       "localizations" : {
@@ -2165,7 +2235,14 @@
       }
     },
     "Zaman Çizelgesi" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Timeline"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"
