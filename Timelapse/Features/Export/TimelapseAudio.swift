@@ -39,14 +39,47 @@ enum AudioBeatAnalyzer {
 
     static func beats(in url: URL) async throws -> [Double] {
         try await Task.detached(priority: .userInitiated) {
-            try analyze(url)
+            try analyze(url).beats
         }.value
     }
 
-    private static func analyze(_ url: URL) throws -> [Double] {
+    /// Vuruşlara ek olarak parçanın "drop"unu (sessiz/alçak bölümden sonra gelen en
+    /// büyük enerji sıçraması — nakarat girişi) bulur.
+    static func structure(in url: URL) async throws -> (beats: [Double], dropTime: Double?) {
+        try await Task.detached(priority: .userInitiated) {
+            let result = try analyze(url)
+            return (result.beats, dropTime(energies: result.energies, hopDuration: result.hopDuration))
+        }.value
+    }
+
+    private static func dropTime(energies: [Double], hopDuration: Double) -> Double? {
+        let window = max(4, Int(1.0 / hopDuration))
+        guard energies.count > window * 4 else { return nil }
+        var rms: [Double] = []
+        var stride_i = 0
+        while stride_i + window <= energies.count {
+            let mean = energies[stride_i..<(stride_i + window)].reduce(0, +) / Double(window)
+            rms.append(mean)
+            stride_i += window / 2
+        }
+        guard rms.count > 4 else { return nil }
+        let sorted = rms.sorted()
+        let median = sorted[sorted.count / 2]
+        var best: (index: Int, jump: Double)?
+        for i in 1..<rms.count {
+            let jump = rms[i] - rms[i - 1]
+            if rms[i - 1] <= median, jump > (best?.jump ?? 0) {
+                best = (i, jump)
+            }
+        }
+        guard let best, best.jump > median * 0.5 else { return nil }
+        return Double(best.index) * Double(window / 2) * hopDuration
+    }
+
+    private static func analyze(_ url: URL) throws -> (beats: [Double], energies: [Double], hopDuration: Double) {
         let asset = AVURLAsset(url: url)
         let reader = try AVAssetReader(asset: asset)
-        guard let track = asset.tracks(withMediaType: .audio).first else { return [] }
+        guard let track = asset.tracks(withMediaType: .audio).first else { return ([], [], 0.023) }
 
         let sampleRate = 22050.0
         let settings: [String: Any] = [
@@ -87,7 +120,8 @@ enum AudioBeatAnalyzer {
             }
         }
 
-        guard energies.count > 8 else { return [] }
+        let hopDurationEarly = Double(hop) / sampleRate
+        guard energies.count > 8 else { return ([], energies, hopDurationEarly) }
 
 
         var flux: [Double] = [0]
@@ -110,7 +144,7 @@ enum AudioBeatAnalyzer {
                 lastBeat = time
             }
         }
-        if beats.count >= 4 { return beats }
+        if beats.count >= 4 { return (beats, energies, hopDuration) }
 
         // Belirgin vuruş bulunamadıysa (ör. yumuşak/pad ağırlıklı parça) enerji akısının
         // özilintisinden (autocorrelation) tempo kestirilir ve düzenli bir ızgara üretilir.
@@ -118,7 +152,7 @@ enum AudioBeatAnalyzer {
         let maxLagSeconds = 1.2
         let minLag = Int(minLagSeconds / hopDuration)
         let maxLag = min(flux.count / 2, Int(maxLagSeconds / hopDuration))
-        guard maxLag > minLag else { return beats }
+        guard maxLag > minLag else { return (beats, energies, hopDuration) }
         var bestLag = minLag
         var bestScore = -Double.infinity
         for lag in minLag...maxLag {
@@ -128,7 +162,8 @@ enum AudioBeatAnalyzer {
         }
         let interval = Double(bestLag) * hopDuration
         let total = Double(flux.count) * hopDuration
-        return stride(from: interval, through: total, by: interval).map { $0 }
+        let grid = stride(from: interval, through: total, by: interval).map { $0 }
+        return (grid, energies, hopDuration)
     }
 }
 

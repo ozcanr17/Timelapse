@@ -10,6 +10,7 @@ struct ContentView: View {
 
     @Environment(\.modelContext) private var modelContext
     @State private var isShowingSplash = true
+    @State private var milestoneMessage: String?
 
     private var appTheme: AppTheme {
         AppTheme(rawValue: themeID) ?? .filmNegative
@@ -30,6 +31,22 @@ struct ContentView: View {
                     .transition(.opacity)
                     .zIndex(1)
             }
+
+            if let milestoneMessage {
+                VStack {
+                    Text(milestoneMessage)
+                        .font(.system(size: 17, weight: .bold, design: .rounded))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 22)
+                        .padding(.vertical, 12)
+                        .background(.orange.gradient, in: Capsule())
+                        .shadow(color: .black.opacity(0.25), radius: 10, y: 4)
+                        .padding(.top, 8)
+                    Spacer()
+                }
+                .transition(.move(edge: .top).combined(with: .opacity))
+                .zIndex(2)
+            }
         }
         .fullScreenCover(isPresented: needsWelcome) {
             WelcomeView { hasSeenWelcome = true }
@@ -49,6 +66,14 @@ struct ContentView: View {
             WidgetStateWriter.update(projects: (try? modelContext.fetch(FetchDescriptor<Project>())) ?? [])
             try? await Task.sleep(for: .seconds(1.3))
             withAnimation(.easeOut(duration: 0.4)) { isShowingSplash = false }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .flapseMilestone)) { notification in
+            guard let message = notification.object as? String else { return }
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) { milestoneMessage = message }
+            Task {
+                try? await Task.sleep(for: .seconds(2.4))
+                withAnimation(.easeOut(duration: 0.3)) { milestoneMessage = nil }
+            }
         }
         .onReceive(NotificationCenter.default.publisher(for: .flapseDidAcceptShare)) { notification in
             guard let metadata = notification.object as? CKShare.Metadata else { return }

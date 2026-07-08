@@ -2,6 +2,20 @@ import Foundation
 
 enum ActivitySummary {
 
+    static let frameMilestones: Set<Int> = [10, 25, 50, 100, 200, 365, 500]
+    static let streakMilestones: Set<Int> = [7, 14, 30, 50, 100, 365]
+
+    /// Yeni bir kare eklendikten SONRA ulaşılan kilometre taşı mesajı (yoksa nil).
+    static func milestone(count: Int, streak: Int) -> String? {
+        if streakMilestones.contains(streak) {
+            return String(localized: "\(streak) gün seri! 🔥", bundle: .appLanguage)
+        }
+        if frameMilestones.contains(count) {
+            return String(localized: "\(count). kare! 🎉", bundle: .appLanguage)
+        }
+        return nil
+    }
+
     static func dailyCounts(
         capturedDates: [Date],
         days: Int = 7,

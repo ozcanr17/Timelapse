@@ -124,6 +124,26 @@ final class TimelapseComposerTests: XCTestCase {
         XCTAssertEqual(corner.b, b, accuracy: 0.12)
     }
 
+    func test_flowMorph_araKareUretir() throws {
+        func square(at x: CGFloat) -> CGImage {
+            let format = UIGraphicsImageRendererFormat(); format.scale = 1
+            return UIGraphicsImageRenderer(size: CGSize(width: 240, height: 320), format: format).image { _ in
+                UIColor.black.setFill(); UIRectFill(CGRect(x: 0, y: 0, width: 240, height: 320))
+                UIColor.white.setFill(); UIRectFill(CGRect(x: x, y: 130, width: 60, height: 60))
+            }.cgImage!
+        }
+        let frames = FlowMorpher.morphFrames(
+            from: square(at: 40), to: square(at: 140),
+            steps: 3, canvas: CGSize(width: 240, height: 320)
+        )
+        let produced = try XCTUnwrap(frames)
+        XCTAssertEqual(produced.count, 3)
+
+        let mid = produced[1]
+        let midPixel = try XCTUnwrap(pixel(in: mid, x: 120, y: 160))
+        XCTAssertGreaterThan(midPixel.r, 0.15, "Orta karede kare ara konumda değil — morph çalışmıyor")
+    }
+
     private func pixel(in image: CGImage, x: Int, y: Int) -> (r: CGFloat, g: CGFloat, b: CGFloat)? {
         guard let data = image.dataProvider?.data as Data? else { return nil }
         let bytesPerRow = image.bytesPerRow

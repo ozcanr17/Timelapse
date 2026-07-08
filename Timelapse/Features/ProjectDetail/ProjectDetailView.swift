@@ -19,6 +19,7 @@ struct ProjectDetailView: View {
     @State private var monthFilter: MonthKey?
     @State private var preparedShare: CKShare?
     @State private var isPreparingShare = false
+    @State private var isChoosingShareCard = false
 
     private struct MonthKey: Hashable {
         let year: Int
@@ -94,8 +95,7 @@ struct ProjectDetailView: View {
             if !liveEntries.isEmpty {
                 ToolbarItem(placement: .primaryAction) {
                     Button {
-                        if shareCardURL == nil { shareCardURL = renderShareCard() }
-                        if shareCardURL != nil { activeSheet = .shareCard }
+                        isChoosingShareCard = true
                     } label: {
                         toolbarIcon("square.and.arrow.up", yOffset: -1.5)
                     }
@@ -136,6 +136,21 @@ struct ProjectDetailView: View {
                 .accessibilityIdentifier("inviteButton")
                 .accessibilityLabel(Text("Birlikte çekim daveti"))
             }
+        }
+        .confirmationDialog("", isPresented: $isChoosingShareCard) {
+            Button("Seri Kartı") {
+                shareCardURL = renderShareCard()
+                if shareCardURL != nil { activeSheet = .shareCard }
+            }
+            if liveEntries.count >= 2 {
+                Button("Önce & Sonra Kartı") {
+                    Task {
+                        shareCardURL = await renderCompareCard()
+                        if shareCardURL != nil { activeSheet = .shareCard }
+                    }
+                }
+            }
+            Button("Vazgeç", role: .cancel) {}
         }
         .sheet(item: $activeSheet) { sheet in
             switch sheet {
@@ -345,6 +360,30 @@ struct ProjectDetailView: View {
         guard let uiImage = renderer.uiImage, let data = uiImage.pngData() else { return nil }
         let url = FileManager.default.temporaryDirectory
             .appendingPathComponent("timelapse-share-\(project.id.uuidString)")
+            .appendingPathExtension("png")
+        try? data.write(to: url)
+        return url
+    }
+
+    private func renderCompareCard() async -> URL? {
+        let sorted = liveEntries.sorted { $0.capturedAt < $1.capturedAt }
+        guard let first = sorted.first, let last = sorted.last, first.id != last.id else { return nil }
+        guard
+            let firstImage = await ImageDownsampler.cachedImage(key: "cmp-\(first.id)", maxPixelSize: 900, load: { first.imageData }),
+            let lastImage = await ImageDownsampler.cachedImage(key: "cmp-\(last.id)", maxPixelSize: 900, load: { last.imageData })
+        else { return nil }
+        let renderer = ImageRenderer(content: CompareShareCard(
+            title: project.title,
+            firstImage: firstImage,
+            lastImage: lastImage,
+            firstDate: first.capturedAt,
+            lastDate: last.capturedAt,
+            theme: theme
+        ))
+        renderer.scale = 1
+        guard let uiImage = renderer.uiImage, let data = uiImage.pngData() else { return nil }
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent("flapse-compare-\(project.id.uuidString)")
             .appendingPathExtension("png")
         try? data.write(to: url)
         return url

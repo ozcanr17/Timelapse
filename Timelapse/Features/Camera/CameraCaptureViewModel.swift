@@ -1,4 +1,5 @@
 import Foundation
+import SwiftData
 import AVFoundation
 
 /// Kamera ekranının mantığı. Donanımı (CameraServiceProtocol) ve kalıcılığı
@@ -118,6 +119,13 @@ final class CameraCaptureViewModel {
                 )
                 try repository.addEntry(entry, to: project)
                 captureLocation(for: entry)
+                let live = project.sortedEntries.filter { !$0.isDeleted }
+                if let message = ActivitySummary.milestone(
+                    count: live.count,
+                    streak: ActivitySummary.streak(capturedDates: live.map(\.capturedAt))
+                ) {
+                    NotificationCenter.default.post(name: .flapseMilestone, object: message)
+                }
             } else {
                 state = .ready
                 return false

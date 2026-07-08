@@ -148,6 +148,7 @@ struct TimelapseFrame: Equatable {
 enum TimelapseTransition: String, CaseIterable, Identifiable {
     case cut        // efekt yok (sert kesme)
     case smooth     // kısa çapraz geçiş (crossfade)
+    case morph      // optik akışla akışkan dönüşüm (AI)
 
     var id: String { rawValue }
 
@@ -155,6 +156,7 @@ enum TimelapseTransition: String, CaseIterable, Identifiable {
         switch self {
         case .cut:    "Efekt yok"
         case .smooth: "Yumuşak"
+        case .morph:  "Akışkan"
         }
     }
 }
@@ -363,21 +365,17 @@ struct TimelapseComposer: TimelapseComposing {
             presentationIndex += 1
         }
 
-        var referenceLuma: CGFloat?
-
         func keyframe(_ index: Int) throws -> CGImage {
             guard let image = UIImage(data: frames[index].imageData) else {
                 throw TimelapseComposerError.frameDecodingFailed
             }
-            if referenceLuma == nil { referenceLuma = averageLuma(of: image) }
             guard let composed = composeFrame(
                 image,
                 date: frames[index].capturedAt,
                 anchor: anchors[index],
                 reference: reference,
                 offset: offsets[index],
-                settings: settings,
-                referenceLuma: referenceLuma
+                settings: settings
             ) else { throw TimelapseComposerError.frameDecodingFailed }
             return composed
         }
@@ -395,9 +393,11 @@ struct TimelapseComposer: TimelapseComposing {
             try abortIfCancelled()
             let next = try index + 1 < frames.count ? autoreleasepool { try keyframe(index + 1) } : nil
 
-            let transitionFrames = settings.transition == .smooth
-                ? min(holds[index] - 1, baseTransition)
-                : 0
+            let wantsTransition = settings.transition != .cut
+            let transitionBudget = settings.transition == .morph
+                ? max(2, Int((0.30 * Double(outputFPS)).rounded()))
+                : baseTransition
+            let transitionFrames = wantsTransition ? min(holds[index] - 1, transitionBudget) : 0
             let solidFrames = holds[index] - transitionFrames
 
             for _ in 0..<solidFrames {
@@ -405,17 +405,25 @@ struct TimelapseComposer: TimelapseComposing {
             }
 
             if transitionFrames > 0, let next {
-                for step in 1...transitionFrames {
-                    try autoreleasepool {
-                        let progress = CGFloat(step) / CGFloat(transitionFrames)
-                        if let blended = blend(current, next, progress: progress, size: settings.renderSize) {
-                            try append(blended)
-                        }
+                var morphed: [CGImage]?
+                if settings.transition == .morph {
+                    morphed = autoreleasepool {
+                        FlowMorpher.morphFrames(from: current, to: next, steps: transitionFrames, canvas: settings.renderSize)
                     }
                 }
-            } else if transitionFrames > 0 {
-                for _ in 0..<transitionFrames {
-                    try autoreleasepool { try append(current) }
+                if let morphed, morphed.count == transitionFrames {
+                    for frame in morphed {
+                        try autoreleasepool { try append(frame) }
+                    }
+                } else {
+                    for step in 1...transitionFrames {
+                        try autoreleasepool {
+                            let progress = CGFloat(step) / CGFloat(transitionFrames)
+                            if let blended = blend(current, next, progress: progress, size: settings.renderSize) {
+                                try append(blended)
+                            }
+                        }
+                    }
                 }
             }
 
@@ -469,8 +477,7 @@ struct TimelapseComposer: TimelapseComposing {
         anchor: FrameAnchor?,
         reference: FrameAnchor?,
         offset: CGSize?,
-        settings: TimelapseExportSettings,
-        referenceLuma: CGFloat? = nil
+        settings: TimelapseExportSettings
     ) -> CGImage? {
         let size = settings.renderSize
         let format = UIGraphicsImageRendererFormat()
@@ -480,13 +487,7 @@ struct TimelapseComposer: TimelapseComposing {
             UIColor.black.setFill()
             UIRectFill(CGRect(origin: .zero, size: size))
 
-            if let backdrop = blurredBackdrop(image) {
-                context.cgContext.interpolationQuality = .high
-                let fill = aspectFillRect(for: backdrop, canvas: size)
-                backdrop.draw(in: fill.insetBy(dx: -fill.width * 0.08, dy: -fill.height * 0.08))
-                UIColor.black.withAlphaComponent(0.22).setFill()
-                UIRectFillUsingBlendMode(CGRect(origin: .zero, size: size), .normal)
-            }
+            drawGenerativeFill(image, canvas: size, context: context.cgContext)
 
             let zoom = settings.zoom
             if zoom != 1 {
@@ -518,48 +519,46 @@ struct TimelapseComposer: TimelapseComposing {
                 context.cgContext.restoreGState()
             }
 
-            if let referenceLuma {
-                applyExposureMatch(canvas: size, image: image, referenceLuma: referenceLuma)
-            }
-
             drawOverlays(size: size, date: date, settings: settings)
         }
         return rendered.cgImage
     }
 
-    /// Günler arasındaki pozlama farkı titremesin diye her kare, ilk karenin ortalama
-    /// parlaklığına yaklaştırılır: karanlık kareler çarpımsal olarak aydınlatılamasa da
-    /// hafif toplamsal parlatma, parlak kareler ise çarpımsal karartma uygulanır.
-    private static func averageLuma(of image: UIImage) -> CGFloat? {
-        guard let tiny = blurredBackdrop(image, tinyLongSide: 4)?.cgImage,
-              let data = tiny.dataProvider?.data as Data? else { return nil }
-        let bpp = tiny.bitsPerPixel / 8
-        guard bpp >= 3 else { return nil }
-        var total: CGFloat = 0
-        var count = 0
-        var offset = 0
-        while offset + 2 < data.count {
-            let r = CGFloat(data[offset]) / 255
-            let g = CGFloat(data[offset + 1]) / 255
-            let b = CGFloat(data[offset + 2]) / 255
-            total += 0.299 * r + 0.587 * g + 0.114 * b
-            count += 1
-            offset += bpp
-        }
-        return count > 0 ? total / CGFloat(count) : nil
-    }
+    /// İçerik-duyarlı kenar uzatma: fotoğraf bantlı bölgelere aynalanarak taşırılır ve
+    /// bu uzantı yumuşatılır. Fotoğraf kendi sahnesinin devamıymış gibi görünen bir zemin
+    /// kazanır (bulanık kutu yerine).
+    private static func drawGenerativeFill(_ image: UIImage, canvas: CGSize, context: CGContext) {
+        let fitScale = min(canvas.width / max(image.size.width, 1), canvas.height / max(image.size.height, 1))
+        let fitSize = CGSize(width: image.size.width * fitScale, height: image.size.height * fitScale)
+        let fitOrigin = CGPoint(x: (canvas.width - fitSize.width) / 2, y: (canvas.height - fitSize.height) / 2)
+        let fitRect = CGRect(origin: fitOrigin, size: fitSize)
 
-    private static func applyExposureMatch(canvas: CGSize, image: UIImage, referenceLuma: CGFloat) {
-        guard let luma = averageLuma(of: image), luma > 0.02 else { return }
-        let gain = min(1.35, max(0.75, referenceLuma / luma))
-        let rect = CGRect(origin: .zero, size: canvas)
-        if gain < 0.99 {
-            UIColor(white: gain, alpha: 1).setFill()
-            UIRectFillUsingBlendMode(rect, .multiply)
-        } else if gain > 1.01 {
-            UIColor(white: min(gain - 1, 0.22), alpha: 1).setFill()
-            UIRectFillUsingBlendMode(rect, .plusLighter)
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        format.opaque = true
+        let mirrored = UIGraphicsImageRenderer(size: canvas, format: format).image { ctx in
+            let cg = ctx.cgContext
+            for row in -1...1 {
+                for column in -1...1 {
+                    cg.saveGState()
+                    let tx = fitRect.midX + CGFloat(column) * fitSize.width
+                    let ty = fitRect.midY + CGFloat(row) * fitSize.height
+                    cg.translateBy(x: tx, y: ty)
+                    cg.scaleBy(x: column.isMultiple(of: 2) ? 1 : -1, y: row.isMultiple(of: 2) ? 1 : -1)
+                    image.draw(in: CGRect(x: -fitSize.width / 2, y: -fitSize.height / 2, width: fitSize.width, height: fitSize.height))
+                    cg.restoreGState()
+                }
+            }
         }
+
+        context.interpolationQuality = .high
+        if let softened = blurredBackdrop(mirrored, tinyLongSide: 64) {
+            softened.draw(in: CGRect(origin: .zero, size: canvas))
+        } else {
+            mirrored.draw(in: CGRect(origin: .zero, size: canvas))
+        }
+        UIColor.black.withAlphaComponent(0.16).setFill()
+        UIRectFillUsingBlendMode(CGRect(origin: .zero, size: canvas), .normal)
     }
 
     /// Siyah bantları önlemek için fotoğrafın aşırı küçültülmüş hâli zemin olarak serilir;

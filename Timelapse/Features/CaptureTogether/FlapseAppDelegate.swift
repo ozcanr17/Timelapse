@@ -39,4 +39,5 @@ final class FlapseSceneDelegate: NSObject, UIWindowSceneDelegate {
 
 extension Notification.Name {
     static let flapseDidAcceptShare = Notification.Name("flapseDidAcceptShare")
+    static let flapseMilestone = Notification.Name("flapseMilestone")
 }

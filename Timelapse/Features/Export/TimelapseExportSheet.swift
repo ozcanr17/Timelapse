@@ -20,6 +20,8 @@ struct TimelapseExportSheet: View {
     @State private var bundledBeats: [Double]?
     @State private var beatSync = false
     @State private var isPickingAudio = false
+    @State private var aiCaption: String?
+    @State private var isWritingCaption = false
     @State private var aspect: TimelapseAspect = .threeFour
     @State private var overlay = TimelapseOverlayOptions()
     @State private var noteDraft = ""
@@ -32,6 +34,11 @@ struct TimelapseExportSheet: View {
     @State private var isStale = true
     @State private var poster: UIImage?
     @State private var savedToPhotos = false
+
+    private var captionDayCount: Int {
+        guard let first = frames.first?.capturedAt, let last = frames.last?.capturedAt else { return frames.count }
+        return max(1, (Calendar.current.dateComponents([.day], from: first, to: last).day ?? 0) + 1)
+    }
 
     private var frames: [TimelapseFrame] {
         project.sortedEntries.compactMap { entry in
@@ -219,6 +226,44 @@ struct TimelapseExportSheet: View {
                 }
                 .buttonStyle(.plain)
                 .disabled(savedToPhotos)
+                if CaptionWriter.isAvailable {
+                    if let aiCaption {
+                        VStack(spacing: 6) {
+                            Text(aiCaption)
+                                .font(Theme.body(14))
+                                .foregroundStyle(theme.ink)
+                                .multilineTextAlignment(.center)
+                            Button {
+                                UIPasteboard.general.string = aiCaption
+                            } label: {
+                                Label("Kopyala", systemImage: "doc.on.doc")
+                                    .font(Theme.caption(13))
+                                    .foregroundStyle(theme.accent)
+                            }
+                        }
+                        .padding(12)
+                        .frame(maxWidth: .infinity)
+                        .background(theme.surface, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    } else {
+                        Button {
+                            isWritingCaption = true
+                            Task {
+                                aiCaption = await CaptionWriter.caption(
+                                    title: project.title,
+                                    frames: frames.count,
+                                    days: captionDayCount
+                                )
+                                isWritingCaption = false
+                            }
+                        } label: {
+                            Label(isWritingCaption ? String(localized: "Metin hazırlanıyor…", bundle: .appLanguage) : String(localized: "AI paylaşım metni", bundle: .appLanguage),
+                                  systemImage: "sparkles")
+                                .font(Theme.caption(13))
+                                .foregroundStyle(theme.accent)
+                        }
+                        .disabled(isWritingCaption)
+                    }
+                }
                 Button {
                     export()
                 } label: {
@@ -390,7 +435,13 @@ struct TimelapseExportSheet: View {
             }
             .pickerStyle(.segmented)
             .disabled(viewModel.phase == .rendering)
-            .onChange(of: transition) { isStale = true }
+            .onChange(of: transition) {
+                if transition == .morph, !store.isPro {
+                    transition = .smooth
+                    showPaywall = true
+                }
+                isStale = true
+            }
         }
     }
 

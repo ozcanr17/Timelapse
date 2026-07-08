@@ -126,8 +126,8 @@ struct PhotoGridWidgetView: View {
 
     var body: some View {
         GeometryReader { geo in
-            let columns = 7
-            let rows = 5
+            let columns = 6
+            let rows = 6
             let gap: CGFloat = 3
             let cell = min(
                 (geo.size.width - gap * CGFloat(columns - 1)) / CGFloat(columns),
@@ -137,7 +137,7 @@ struct PhotoGridWidgetView: View {
                 ForEach(0..<rows, id: \.self) { row in
                     HStack(spacing: gap) {
                         ForEach(0..<columns, id: \.self) { column in
-                            let offset = 34 - (row * columns + column)
+                            let offset = 35 - (row * columns + column)
                             cellView(offset: offset, size: cell)
                         }
                     }
@@ -152,7 +152,7 @@ struct PhotoGridWidgetView: View {
 
     @ViewBuilder
     private func cellView(offset: Int, size: CGFloat) -> some View {
-        if offset >= 0, let image = entry.images[offset] {
+        if offset >= 0, offset < 35, let image = entry.images[offset] {
             Image(uiImage: image)
                 .resizable()
                 .scaledToFill()
@@ -173,7 +173,7 @@ struct FlapseGridWidget: Widget {
         }
         .configurationDisplayName("Aktivite")
         .description("Son 5 haftanın kareleri.")
-        .supportedFamilies([.systemMedium])
+        .supportedFamilies([.systemSmall])
     }
 }
 
@@ -301,7 +301,7 @@ struct FlapseProjectsWidget: Widget {
         }
         .configurationDisplayName("Projeler")
         .description("Projelerinin son kareleri.")
-        .supportedFamilies([.systemLarge])
+        .supportedFamilies([.systemSmall])
     }
 }
 
