@@ -234,10 +234,10 @@ struct TimelapseComposer: TimelapseComposing {
     ) async throws -> URL {
         guard frames.count >= 2 else { throw TimelapseComposerError.notEnoughFrames }
         let token = CancellationToken()
-        let logo = await Self.renderedLogo()
+        let outroAssets = await Self.outroAssets()
         return try await withTaskCancellationHandler {
             try await Task.detached(priority: .userInitiated) {
-                try Self.render(frames: frames, settings: settings, logo: logo,
+                try Self.render(frames: frames, settings: settings, outroAssets: outroAssets,
                                 isCancelled: { token.isCancelled }, onProgress: onProgress)
             }.value
         } onCancel: {
@@ -245,19 +245,32 @@ struct TimelapseComposer: TimelapseComposing {
         }
     }
 
-    /// Gerçek uygulama logosunu (SwiftUI LogoMark) video kapanış kartı için bir kez çizer.
+    struct OutroAssets: @unchecked Sendable {
+        let logo: CGImage?
+        let canvas: UIColor
+        let ink: UIColor
+    }
+
+    /// Kapanış kartı, uygulama açılışıyla birebir aynı görünsün: gerçek LogoMark ve
+    /// kullanıcının temasındaki zemin/metin renkleri bir kez hazırlanır.
     @MainActor
-    private static func renderedLogo() -> CGImage? {
+    private static func outroAssets() -> OutroAssets {
         let renderer = ImageRenderer(content: LogoMark(size: 512))
         renderer.scale = 1
         renderer.isOpaque = false
-        return renderer.cgImage
+        let theme = AppTheme(rawValue: UserDefaults.standard.string(forKey: AppTheme.storageKey) ?? "") ?? .filmNegative
+        let traits = UITraitCollection.current
+        return OutroAssets(
+            logo: renderer.cgImage,
+            canvas: UIColor(theme.palette.canvas).resolvedColor(with: traits),
+            ink: UIColor(theme.palette.ink).resolvedColor(with: traits)
+        )
     }
 
     private static func render(
         frames: [TimelapseFrame],
         settings: TimelapseExportSettings,
-        logo: CGImage?,
+        outroAssets: OutroAssets,
         isCancelled: @Sendable () -> Bool,
         onProgress: @Sendable (Double) -> Void
     ) throws -> URL {
@@ -376,20 +389,21 @@ struct TimelapseComposer: TimelapseComposing {
             if let next { current = next }
         }
 
-        let outroFade = Int(Double(outputFPS) * 0.6)
-        let outroHold = Int(Double(outputFPS) * 1.1)
+        let outroFrames = Int(Double(outputFPS) * 3.0)
         let lastComposed = UIImage(cgImage: current)
-        for step in 1...outroFade {
+        var finalOutro: CGImage?
+        for step in 0..<outroFrames {
+            try abortIfCancelled()
+            let t = CGFloat(step) / CGFloat(outroFrames - 1)
+            if t >= 0.65, let cached = finalOutro {
+                try autoreleasepool { try append(cached) }
+                continue
+            }
             try autoreleasepool {
-                let progress = CGFloat(step) / CGFloat(outroFade)
-                if let frame = outroFrame(base: lastComposed, progress: progress, logo: logo, size: settings.renderSize) {
+                if let frame = outroFrame(base: lastComposed, t: t, assets: outroAssets, size: settings.renderSize) {
+                    if t >= 0.65 { finalOutro = frame }
                     try append(frame)
                 }
-            }
-        }
-        if let final = outroFrame(base: lastComposed, progress: 1, logo: logo, size: settings.renderSize) {
-            for _ in 0..<outroHold {
-                try autoreleasepool { try append(final) }
             }
         }
 
@@ -524,10 +538,21 @@ struct TimelapseComposer: TimelapseComposing {
     }
 
     /// İki tam kareyi yumuşak çapraz geçişle harmanlar (crossfade).
-    /// Video kapanışı: son kare giderek bulanıklaşıp zemine dönüşürken logo, uygulama
-    /// açılışındaki gibi dönerek ve büyüyerek belirir; FLAPSE yazısı küçük bir imzadır.
-    private static func outroFrame(base: UIImage, progress: CGFloat, logo: CGImage?, size: CGSize) -> CGImage? {
-        let p = max(0, min(1, progress))
+    /// Video kapanışı: son kare tema zeminine yumuşakça karışır, ardından logo uygulama
+    /// açılışındaki gibi dönerek ve yaylanarak belirir; "Flapse" yazısı altına gelir.
+    /// Toplam süre ~3 sn; logo ekranın en fazla dörtte biri kadar yer kaplar.
+    private static func outroFrame(base: UIImage, t: CGFloat, assets: OutroAssets, size: CGSize) -> CGImage? {
+        let fadeP = min(1, max(0, t / 0.2))
+        let animP = min(1, max(0, (t - 0.16) / 0.34))
+        let textP = min(1, max(0, (t - 0.4) / 0.18))
+
+        func easeOut(_ x: CGFloat) -> CGFloat { 1 - pow(1 - x, 3) }
+        func easeOutBack(_ x: CGFloat) -> CGFloat {
+            let c1: CGFloat = 1.70158
+            let c3 = c1 + 1
+            return 1 + c3 * pow(x - 1, 3) + c1 * pow(x - 1, 2)
+        }
+
         let format = UIGraphicsImageRendererFormat()
         format.scale = 1
         format.opaque = true
@@ -535,55 +560,54 @@ struct TimelapseComposer: TimelapseComposing {
         let image = renderer.image { context in
             let ctx = context.cgContext
 
-            if p < 0.05 {
-                base.draw(in: CGRect(origin: .zero, size: size))
-            } else if let blurred = blurredBackdrop(base, tinyLongSide: max(4, 44 - 40 * p)) {
-                ctx.interpolationQuality = .high
-                blurred.draw(in: CGRect(origin: .zero, size: size))
-            } else {
-                base.draw(in: CGRect(origin: .zero, size: size))
+            assets.canvas.setFill()
+            UIRectFill(CGRect(origin: .zero, size: size))
+            if fadeP < 1 {
+                base.draw(in: CGRect(origin: .zero, size: size), blendMode: .normal, alpha: 1 - fadeP)
             }
-            UIColor.black.withAlphaComponent(0.38 * p).setFill()
-            UIRectFillUsingBlendMode(CGRect(origin: .zero, size: size), .normal)
 
-            let logoSize = size.width * 0.30
-            let text = "FLAPSE" as NSString
-            let fontSize = size.width * 0.042
+            guard animP > 0 else { return }
+
+            let shortSide = min(size.width, size.height)
+            let logoSize = shortSide * 0.20
+            let text = "Flapse" as NSString
+            let fontSize = logoSize * 0.22
             let attributes: [NSAttributedString.Key: Any] = [
-                .font: UIFont.monospacedSystemFont(ofSize: fontSize, weight: .semibold),
-                .foregroundColor: UIColor.white.withAlphaComponent(0.92 * p),
-                .kern: fontSize * 0.3
+                .font: UIFont.systemFont(ofSize: fontSize, weight: .semibold),
+                .foregroundColor: assets.ink.withAlphaComponent(textP)
             ]
             let textSize = text.size(withAttributes: attributes)
-            let spacing = logoSize * 0.24
+            let spacing = logoSize * 0.2
             let contentHeight = logoSize + spacing + textSize.height
             let logoCenter = CGPoint(
                 x: size.width / 2,
                 y: (size.height - contentHeight) / 2 + logoSize / 2
             )
 
-            let rotation = CGFloat(-120 * (1 - p)) * .pi / 180
-            let scale = 0.6 + 0.4 * p
+            let rotation = CGFloat(-120) * (1 - easeOut(animP)) * .pi / 180
+            let scale = 0.6 + 0.4 * easeOutBack(animP)
             ctx.saveGState()
             ctx.translateBy(x: logoCenter.x, y: logoCenter.y)
             ctx.rotate(by: rotation)
             ctx.scaleBy(x: scale, y: scale)
-            ctx.setAlpha(p)
+            ctx.setAlpha(min(1, animP * 1.6))
             let logoRect = CGRect(x: -logoSize / 2, y: -logoSize / 2, width: logoSize, height: logoSize)
-            if let logo {
+            if let logo = assets.logo {
                 UIImage(cgImage: logo).draw(in: logoRect)
             } else {
                 drawLogoMark(in: logoRect, alpha: 1)
             }
             ctx.restoreGState()
 
-            text.draw(
-                at: CGPoint(
-                    x: (size.width - textSize.width) / 2,
-                    y: logoCenter.y + logoSize / 2 + spacing
-                ),
-                withAttributes: attributes
-            )
+            if textP > 0 {
+                text.draw(
+                    at: CGPoint(
+                        x: (size.width - textSize.width) / 2,
+                        y: logoCenter.y + logoSize / 2 + spacing
+                    ),
+                    withAttributes: attributes
+                )
+            }
         }
         return image.cgImage
     }

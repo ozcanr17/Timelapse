@@ -1,5 +1,6 @@
 import XCTest
 import AVFoundation
+import SwiftUI
 import UIKit
 @testable import Timelapse
 
@@ -33,7 +34,7 @@ final class TimelapseComposerTests: XCTestCase {
 
         XCTAssertTrue(FileManager.default.fileExists(atPath: url.path))
         let duration = try await AVURLAsset(url: url).load(.duration)
-        XCTAssertEqual(duration.seconds, 2.7, accuracy: 0.4)
+        XCTAssertEqual(duration.seconds, 4.0, accuracy: 0.4)
     }
 
     func test_yumusakGecis_yuksekCozunurlukte_videoUretir() async throws {
@@ -50,7 +51,7 @@ final class TimelapseComposerTests: XCTestCase {
 
         XCTAssertTrue(FileManager.default.fileExists(atPath: url.path))
         let duration = try await AVURLAsset(url: url).load(.duration)
-        XCTAssertEqual(duration.seconds, 2.7, accuracy: 0.4)
+        XCTAssertEqual(duration.seconds, 4.0, accuracy: 0.4)
     }
 
     func test_ikidenAzKare_hataVerir() async {
@@ -114,8 +115,13 @@ final class TimelapseComposerTests: XCTestCase {
         let cgImage = try await generator.image(at: time).image
 
         let corner = try XCTUnwrap(pixel(in: cgImage, x: 4, y: 4))
-        let brightness = max(corner.r, corner.g, corner.b)
-        XCTAssertGreaterThan(brightness, 0.08, "Outro köşesi simsiyah — bulanık zemin yok")
+        let theme = AppTheme(rawValue: UserDefaults.standard.string(forKey: AppTheme.storageKey) ?? "") ?? .filmNegative
+        let canvas = UIColor(theme.palette.canvas).resolvedColor(with: .current)
+        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+        canvas.getRed(&r, green: &g, blue: &b, alpha: &a)
+        XCTAssertEqual(corner.r, r, accuracy: 0.12, "Outro zemini tema renginde değil")
+        XCTAssertEqual(corner.g, g, accuracy: 0.12)
+        XCTAssertEqual(corner.b, b, accuracy: 0.12)
     }
 
     private func pixel(in image: CGImage, x: Int, y: Int) -> (r: CGFloat, g: CGFloat, b: CGFloat)? {
