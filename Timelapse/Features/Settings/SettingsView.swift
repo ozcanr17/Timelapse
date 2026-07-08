@@ -195,6 +195,13 @@ struct SettingsView: View {
                         }
                     }
                     .tint(theme.accent)
+                    Button {
+                        AuthService.grantAdminForCurrentICloudAccount()
+                        store.setAdminUnlocked(true)
+                    } label: {
+                        Label("Bu iCloud hesabına admin ver", systemImage: "crown")
+                            .foregroundStyle(theme.ink)
+                    }
                 } header: {
                     Text("Geliştirici")
                 } footer: {

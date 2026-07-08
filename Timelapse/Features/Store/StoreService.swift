@@ -93,7 +93,10 @@ final class StoreService: StoreServiceProtocol {
     }
 
     func purchase(_ package: StorePackage) async throws -> Bool {
-        guard let product = storeProducts.first(where: { $0.id == package.id }) else { return false }
+        if storeProducts.isEmpty { await loadProducts() }
+        guard let product = storeProducts.first(where: { $0.id == package.id }) else {
+            throw StoreError.productUnavailable
+        }
 
         let result = try await product.purchase()
         switch result {

@@ -47,6 +47,12 @@ final class AuthService {
             || UserDefaults.standard.bool(forKey: Key.adminGrant)
     }
 
+    /// Geliştirici derlemesinden bu iCloud hesabına kalıcı admin yetkisi verir; yetki
+    /// iCloud üzerinden tüm cihazlara ve mağaza sürümlerine taşınır.
+    static func grantAdminForCurrentICloudAccount() {
+        persistAdminGrant()
+    }
+
     private static func persistAdminGrant() {
         UserDefaults.standard.set(true, forKey: Key.adminGrant)
         NSUbiquitousKeyValueStore.default.set(true, forKey: Key.adminGrant)

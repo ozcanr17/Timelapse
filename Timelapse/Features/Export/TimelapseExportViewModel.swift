@@ -25,7 +25,9 @@ final class TimelapseExportViewModel {
         frames: [TimelapseFrame],
         isPro: Bool,
         speed: TimelapseSpeed = .normal,
+        speedMultiplier: Double? = nil,
         aspect: TimelapseAspect = .threeFour,
+        zoom: Double = 1,
         overlay: TimelapseOverlayOptions = TimelapseOverlayOptions(),
         smartAlignment: Bool = false,
         manualAnchor: ManualAlignment? = nil,
@@ -38,7 +40,7 @@ final class TimelapseExportViewModel {
             return
         }
         let settings = TimelapseExportSettings.current(
-            isPro: isPro, speed: speed, aspect: aspect, overlay: overlay,
+            isPro: isPro, speed: speed, speedMultiplier: speedMultiplier, aspect: aspect, zoom: zoom, overlay: overlay,
             smartAlignment: smartAlignment, manualAnchor: manualAnchor, transition: transition,
             alignmentSubject: alignmentSubject
         )

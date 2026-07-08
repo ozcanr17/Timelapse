@@ -13,7 +13,8 @@ struct TimelapseExportSheet: View {
     @AppStorage(PremiumFeature.smartAlignment.preferenceKey!) private var smartAlignmentEnabled = false
     @State private var viewModel = TimelapseExportViewModel()
     @State private var showPaywall = false
-    @State private var speed: TimelapseSpeed = .normal
+    @State private var speedX: Double = 1.0
+    @State private var zoomX: Double = 1.0
     @State private var aspect: TimelapseAspect = .threeFour
     @State private var overlay = TimelapseOverlayOptions()
     @State private var noteDraft = ""
@@ -75,6 +76,7 @@ struct TimelapseExportSheet: View {
 
                 VStack(spacing: 18) {
                     speedControl
+                    zoomControl
                     aspectControl
                     transitionControl
                     alignmentControl
@@ -226,17 +228,36 @@ struct TimelapseExportSheet: View {
                     .font(Theme.caption(13))
                     .foregroundStyle(theme.inkMuted)
                 Spacer()
+                Text("\(speedX.formatted(.number.precision(.fractionLength(0...2))))×")
+                    .font(Theme.caption(13)).monospacedDigit()
+                    .foregroundStyle(theme.ink)
             }
-            Picker("Hız", selection: $speed) {
-                ForEach(TimelapseSpeed.allCases) { option in
-                    Text(option.displayName).tag(option)
+            Slider(value: $speedX, in: 0.25...3, step: 0.25)
+                .tint(theme.accent)
+                .disabled(viewModel.phase == .rendering)
+                .onChange(of: speedX) {
+                    isStale = true
                 }
+        }
+    }
+
+    private var zoomControl: some View {
+        VStack(spacing: 8) {
+            HStack {
+                Label("Yakınlaştırma", systemImage: "plus.magnifyingglass")
+                    .font(Theme.caption(13))
+                    .foregroundStyle(theme.inkMuted)
+                Spacer()
+                Text("\(zoomX.formatted(.number.precision(.fractionLength(0...2))))×")
+                    .font(Theme.caption(13)).monospacedDigit()
+                    .foregroundStyle(theme.ink)
             }
-            .pickerStyle(.segmented)
-            .disabled(viewModel.phase == .rendering)
-            .onChange(of: speed) {
-                isStale = true
-            }
+            Slider(value: $zoomX, in: 0.5...2, step: 0.05)
+                .tint(theme.accent)
+                .disabled(viewModel.phase == .rendering)
+                .onChange(of: zoomX) {
+                    isStale = true
+                }
         }
     }
 
@@ -438,8 +459,9 @@ struct TimelapseExportSheet: View {
         viewModel.export(
             frames: frames,
             isPro: store.isPro,
-            speed: speed,
+            speedMultiplier: speedX,
             aspect: aspect,
+            zoom: zoomX,
             overlay: effectiveOverlay,
             smartAlignment: proAlign && alignMode == .smart,
             manualAnchor: (proAlign && alignMode == .manual) ? manual : nil,

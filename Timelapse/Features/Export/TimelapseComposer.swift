@@ -179,11 +179,15 @@ struct TimelapseExportSettings: Equatable {
     var transition: TimelapseTransition = .cut
     /// Akıllı Hizalama'nın hangi özneyi kilitleyeceği (yüz / gövde / karın / grup).
     var alignmentSubject: AlignmentSubject = .auto
+    /// Kare ölçeği: 1 = doğal doldurma; <1 uzaklaşır (kenar boşluğu siyah), >1 yakınlaşır.
+    var zoom: CGFloat = 1
 
     static func current(
         isPro: Bool,
         speed: TimelapseSpeed = .normal,
+        speedMultiplier: Double? = nil,
         aspect: TimelapseAspect = .threeFour,
+        zoom: Double = 1,
         overlay: TimelapseOverlayOptions = TimelapseOverlayOptions(),
         smartAlignment: Bool = false,
         manualAnchor: ManualAlignment? = nil,
@@ -191,15 +195,17 @@ struct TimelapseExportSettings: Equatable {
         alignmentSubject: AlignmentSubject = .auto
     ) -> TimelapseExportSettings {
         let unlocked = FeatureGate.isUnlocked(.highResExport, isPro: isPro)
+        let fps = speedMultiplier.map { Int32(min(12, max(1, ($0 * 4).rounded()))) } ?? speed.framesPerSecond
         return TimelapseExportSettings(
             renderSize: aspect.renderSize(isPro: unlocked),
-            framesPerSecond: speed.framesPerSecond,
+            framesPerSecond: fps,
             includesWatermark: !unlocked,
             overlay: overlay,
             smartAlignment: smartAlignment,
             manualAnchor: manualAnchor,
             transition: transition,
-            alignmentSubject: alignmentSubject
+            alignmentSubject: alignmentSubject,
+            zoom: CGFloat(min(2, max(0.5, zoom)))
         )
     }
 }
@@ -423,6 +429,14 @@ struct TimelapseComposer: TimelapseComposing {
             UIColor.black.setFill()
             UIRectFill(CGRect(origin: .zero, size: size))
 
+            let zoom = settings.zoom
+            if zoom != 1 {
+                context.cgContext.saveGState()
+                context.cgContext.translateBy(x: size.width / 2, y: size.height / 2)
+                context.cgContext.scaleBy(x: zoom, y: zoom)
+                context.cgContext.translateBy(x: -size.width / 2, y: -size.height / 2)
+            }
+
             if let manual = settings.manualAnchor {
                 image.draw(in: manualRect(for: image, manual: manual, canvas: size))
             } else if settings.smartAlignment, let anchor, let reference {
@@ -431,6 +445,10 @@ struct TimelapseComposer: TimelapseComposing {
                 image.draw(in: aspectFillRect(for: image, canvas: size, offset: offset))
             } else {
                 image.draw(in: aspectFillRect(for: image, canvas: size))
+            }
+
+            if zoom != 1 {
+                context.cgContext.restoreGState()
             }
 
             drawOverlays(size: size, date: date, settings: settings)

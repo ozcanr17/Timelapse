@@ -1334,6 +1334,7 @@
       }
     },
     "Admin — Pro etkin": {
+      "extractionState": "stale",
       "localizations": {
         "ar": {
           "stringUnit": {
@@ -1404,6 +1405,7 @@
       }
     },
     "Admin olarak giriş yapıldı — Pro açıldı. 👑": {
+      "extractionState": "stale",
       "localizations": {
         "ar": {
           "stringUnit": {
@@ -1826,6 +1828,7 @@
       }
     },
     "Apple ile giriş şu an kullanılamıyor (ücretli Apple Developer hesabı gerekir). Test için sürüm numarasına 7 kez dokunup geliştirici arka kapısını kullan.": {
+      "extractionState": "stale",
       "localizations": {
         "ar": {
           "stringUnit": {
@@ -7369,7 +7372,78 @@
         }
       }
     },
+    "Giriş tamamlanamadı. Tekrar dene.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر إكمال تسجيل الدخول. حاول مجددًا."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anmeldung fehlgeschlagen. Versuch es erneut."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign-in couldn't be completed. Try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo iniciar sesión. Inténtalo de nuevo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La connexion a échoué. Réessaie."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "साइन इन पूरा नहीं हो सका। फिर कोशिश करें।"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サインインを完了できませんでした。もう一度お試しください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "로그인을 완료할 수 없습니다. 다시 시도하세요."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não foi possível iniciar sessão. Tente novamente."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось войти. Попробуйте ещё раз."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "登录未完成，请重试。"
+          }
+        }
+      }
+    },
     "Giriş yapıldı. Bu hesap admin değil; Pro açılmadı.": {
+      "extractionState": "stale",
       "localizations": {
         "ar": {
           "stringUnit": {
@@ -9468,6 +9542,76 @@
           "stringUnit": {
             "state": "translated",
             "value": "iCloud 备份"
+          }
+        }
+      }
+    },
+    "iCloud yedekleme açıldı. Projelerinin eşitlenmesi için uygulamayı kapatıp yeniden aç.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم تفعيل نسخ iCloud الاحتياطي. أغلق التطبيق وافتحه من جديد لمزامنة مشاريعك."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud-Backup ist aktiv. Beende die App und öffne sie erneut, um deine Projekte zu synchronisieren."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud backup is on. Quit and reopen the app to sync your projects."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La copia de iCloud está activada. Cierra y vuelve a abrir la app para sincronizar tus proyectos."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La sauvegarde iCloud est activée. Quitte et rouvre l'app pour synchroniser tes projets."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud बैकअप चालू है। प्रोजेक्ट सिंक करने के लिए ऐप बंद करके दोबारा खोलें।"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud バックアップが有効になりました。アプリを終了して開き直すと同期されます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud 백업이 켜졌습니다. 앱을 종료 후 다시 열면 프로젝트가 동기화됩니다."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O backup do iCloud está ativado. Feche e reabra o app para sincronizar seus projetos."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Резервное копирование iCloud включено. Закройте и снова откройте приложение для синхронизации."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud 备份已开启。请退出并重新打开应用以同步项目。"
           }
         }
       }
@@ -12981,6 +13125,76 @@
         }
       }
     },
+    "Oran": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "النسبة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Format"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aspect"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proporción"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Format"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "अनुपात"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "比率"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "비율"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proporção"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Формат"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "比例"
+          }
+        }
+      }
+    },
     "Ortak Proje": {
       "localizations": {
         "ar": {
@@ -14033,6 +14247,76 @@
         }
       }
     },
+    "Proje oluşturmak için giriş yap": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سجّل الدخول لإنشاء المشاريع"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Melde dich an, um Projekte zu erstellen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in to create projects"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inicia sesión para crear proyectos"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connecte-toi pour créer des projets"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "प्रोजेक्ट बनाने के लिए साइन इन करें"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "プロジェクト作成にはサインインが必要です"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "프로젝트를 만들려면 로그인하세요"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inicie sessão para criar projetos"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Войдите, чтобы создавать проекты"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "登录后即可创建项目"
+          }
+        }
+      }
+    },
     "Proje ve içindeki tüm çekimler kalıcı olarak silinsin mi?": {
       "localizations": {
         "ar": {
@@ -14169,6 +14453,76 @@
           "stringUnit": {
             "state": "translated",
             "value": "项目"
+          }
+        }
+      }
+    },
+    "Projelerin hesabınla eşleşir; iCloud yedekleme açıkken başka bir cihazda da geri gelir.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ترتبط مشاريعك بحسابك؛ ومع نسخ iCloud الاحتياطي تعود على أي جهاز."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deine Projekte sind mit deinem Konto verknüpft; mit iCloud-Backup kommen sie auf jedem Gerät zurück."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your projects link to your account; with iCloud backup on, they come back on any device."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tus proyectos se vinculan a tu cuenta; con la copia de iCloud, vuelven en cualquier dispositivo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tes projets sont liés à ton compte ; avec la sauvegarde iCloud, ils reviennent sur tout appareil."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "आपके प्रोजेक्ट आपके खाते से जुड़ते हैं; iCloud बैकअप चालू होने पर किसी भी डिवाइस पर वापस आते हैं।"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "プロジェクトはアカウントに紐づきます。iCloud バックアップが有効なら、どの端末でも復元されます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "프로젝트는 계정에 연결됩니다. iCloud 백업이 켜져 있으면 어느 기기에서든 복원됩니다."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seus projetos ficam ligados à sua conta; com o backup do iCloud, voltam em qualquer aparelho."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Проекты привязаны к вашей учётной записи; с резервной копией iCloud они вернутся на любом устройстве."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "项目与你的账户关联；开启 iCloud 备份后，可在任何设备上找回。"
           }
         }
       }
@@ -18807,352 +19161,152 @@
         }
       }
     },
-    "Oran": {
+    "Yakınlaştırma": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Aspect"
+            "value": "Zoom"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Format"
+            "value": "Zoom"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Proporción"
+            "value": "Zoom"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Format"
+            "value": "Zoom"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Proporção"
+            "value": "Zoom"
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "अनुपात"
+            "value": "ज़ूम"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "比例"
+            "value": "缩放"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "比率"
+            "value": "ズーム"
           }
         },
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "النسبة"
+            "value": "تكبير"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Формат"
+            "value": "Масштаб"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "비율"
+            "value": "확대/축소"
           }
         }
       }
     },
-    "Proje oluşturmak için giriş yap": {
+    "Mağaza şu an kullanılamıyor. İnternet bağlantını kontrol edip tekrar dene.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sign in to create projects"
+            "value": "The store is unavailable right now. Check your connection and try again."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Melde dich an, um Projekte zu erstellen"
+            "value": "Der Store ist gerade nicht verfügbar. Prüfe deine Verbindung und versuch es erneut."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Inicia sesión para crear proyectos"
+            "value": "La tienda no está disponible ahora. Comprueba tu conexión e inténtalo de nuevo."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Connecte-toi pour créer des projets"
+            "value": "La boutique est indisponible pour le moment. Vérifie ta connexion et réessaie."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Inicie sessão para criar projetos"
+            "value": "A loja está indisponível no momento. Verifique sua conexão e tente novamente."
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "प्रोजेक्ट बनाने के लिए साइन इन करें"
+            "value": "स्टोर अभी उपलब्ध नहीं है। कनेक्शन जांचकर फिर कोशिश करें।"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "登录后即可创建项目"
+            "value": "商店暂时不可用。请检查网络后重试。"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "プロジェクト作成にはサインインが必要です"
+            "value": "ストアは現在利用できません。接続を確認して再試行してください。"
           }
         },
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "سجّل الدخول لإنشاء المشاريع"
+            "value": "المتجر غير متاح حاليًا. تحقق من اتصالك وحاول مجددًا."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Войдите, чтобы создавать проекты"
+            "value": "Магазин сейчас недоступен. Проверьте подключение и повторите попытку."
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "프로젝트를 만들려면 로그인하세요"
+            "value": "스토어를 지금 사용할 수 없습니다. 연결을 확인하고 다시 시도하세요."
           }
         }
       }
     },
-    "Projelerin hesabınla eşleşir; iCloud yedekleme açıkken başka bir cihazda da geri gelir.": {
+    "Bu iCloud hesabına admin ver": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Your projects link to your account; with iCloud backup on, they come back on any device."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Deine Projekte sind mit deinem Konto verknüpft; mit iCloud-Backup kommen sie auf jedem Gerät zurück."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tus proyectos se vinculan a tu cuenta; con la copia de iCloud, vuelven en cualquier dispositivo."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tes projets sont liés à ton compte ; avec la sauvegarde iCloud, ils reviennent sur tout appareil."
-          }
-        },
-        "pt": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Seus projetos ficam ligados à sua conta; com o backup do iCloud, voltam em qualquer aparelho."
-          }
-        },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "आपके प्रोजेक्ट आपके खाते से जुड़ते हैं; iCloud बैकअप चालू होने पर किसी भी डिवाइस पर वापस आते हैं।"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "项目与你的账户关联；开启 iCloud 备份后，可在任何设备上找回。"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "プロジェクトはアカウントに紐づきます。iCloud バックアップが有効なら、どの端末でも復元されます。"
-          }
-        },
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ترتبط مشاريعك بحسابك؛ ومع نسخ iCloud الاحتياطي تعود على أي جهاز."
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Проекты привязаны к вашей учётной записи; с резервной копией iCloud они вернутся на любом устройстве."
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "프로젝트는 계정에 연결됩니다. iCloud 백업이 켜져 있으면 어느 기기에서든 복원됩니다."
-          }
-        }
-      }
-    },
-    "Giriş tamamlanamadı. Tekrar dene.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sign-in couldn't be completed. Try again."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Anmeldung fehlgeschlagen. Versuch es erneut."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No se pudo iniciar sesión. Inténtalo de nuevo."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "La connexion a échoué. Réessaie."
-          }
-        },
-        "pt": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Não foi possível iniciar sessão. Tente novamente."
-          }
-        },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "साइन इन पूरा नहीं हो सका। फिर कोशिश करें।"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "登录未完成，请重试。"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "サインインを完了できませんでした。もう一度お試しください。"
-          }
-        },
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تعذّر إكمال تسجيل الدخول. حاول مجددًا."
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Не удалось войти. Попробуйте ещё раз."
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "로그인을 완료할 수 없습니다. 다시 시도하세요."
-          }
-        }
-      }
-    },
-    "iCloud yedekleme açıldı. Projelerinin eşitlenmesi için uygulamayı kapatıp yeniden aç.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "iCloud backup is on. Quit and reopen the app to sync your projects."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "iCloud-Backup ist aktiv. Beende die App und öffne sie erneut, um deine Projekte zu synchronisieren."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "La copia de iCloud está activada. Cierra y vuelve a abrir la app para sincronizar tus proyectos."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "La sauvegarde iCloud est activée. Quitte et rouvre l'app pour synchroniser tes projets."
-          }
-        },
-        "pt": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "O backup do iCloud está ativado. Feche e reabra o app para sincronizar seus projetos."
-          }
-        },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "iCloud बैकअप चालू है। प्रोजेक्ट सिंक करने के लिए ऐप बंद करके दोबारा खोलें।"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "iCloud 备份已开启。请退出并重新打开应用以同步项目。"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "iCloud バックアップが有効になりました。アプリを終了して開き直すと同期されます。"
-          }
-        },
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تم تفعيل نسخ iCloud الاحتياطي. أغلق التطبيق وافتحه من جديد لمزامنة مشاريعك."
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Резервное копирование iCloud включено. Закройте и снова откройте приложение для синхронизации."
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "iCloud 백업이 켜졌습니다. 앱을 종료 후 다시 열면 프로젝트가 동기화됩니다."
+            "value": "Grant admin to this iCloud account"
           }
         }
       }

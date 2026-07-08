@@ -19,4 +19,5 @@ struct StorePackage: Identifiable, Equatable {
 
 enum StoreError: Error {
     case failedVerification
+    case productUnavailable
 }
