@@ -54,6 +54,12 @@ struct ProjectDetailView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
+                Text(project.title)
+                    .font(.system(size: 28, weight: .bold, design: .default))
+                    .foregroundStyle(theme.ink)
+                    .lineLimit(2)
+                    .padding(.top, 2)
+
                 heroCard
 
                 if !project.sortedEntries.isEmpty {
@@ -85,12 +91,6 @@ struct ProjectDetailView: View {
         .background(theme.canvas.ignoresSafeArea())
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                Text(project.title)
-                    .font(Theme.headline(17))
-                    .foregroundStyle(theme.ink)
-                    .lineLimit(1)
-            }
             if let shareCardURL {
                 ToolbarItem(placement: .primaryAction) {
                     ShareLink(

@@ -58,7 +58,7 @@ struct TimelapseExportSheet: View {
             }
             .sheet(isPresented: $showManualAlign) {
                 if let data = frames.first?.imageData {
-                    ManualAlignView(imageData: data, manual: $manual) {
+                    ManualAlignView(imageData: data, ratio: aspect.ratio, manual: $manual) {
                         isStale = true
                     }
                 }
@@ -129,9 +129,10 @@ struct TimelapseExportSheet: View {
                 posterPreview
             }
         }
-        .aspectRatio(3.0 / 4.0, contentMode: .fit)
+        .aspectRatio(aspect.ratio, contentMode: .fit)
         .frame(maxHeight: 380)
         .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
+        .animation(.easeInOut(duration: 0.25), value: aspect)
     }
 
     private var posterPreview: some View {
@@ -465,6 +466,7 @@ private enum AlignMode: String, CaseIterable, Identifiable {
 /// ne görüyorsa videoda o olur. Bu seçim tüm karelere uygulanır.
 private struct ManualAlignView: View {
     let imageData: Data
+    var ratio: CGFloat = 3.0 / 4.0
     @Binding var manual: ManualAlignment
     let onDone: () -> Void
 
@@ -512,7 +514,7 @@ private struct ManualAlignView: View {
                     )
                     .clipped()
                 }
-                .aspectRatio(3.0 / 4.0, contentMode: .fit)
+                .aspectRatio(ratio, contentMode: .fit)
                 .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)

@@ -19086,6 +19086,76 @@
           }
         }
       }
+    },
+    "iCloud yedekleme açıldı. Projelerinin eşitlenmesi için uygulamayı kapatıp yeniden aç.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud backup is on. Quit and reopen the app to sync your projects."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud-Backup ist aktiv. Beende die App und öffne sie erneut, um deine Projekte zu synchronisieren."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La copia de iCloud está activada. Cierra y vuelve a abrir la app para sincronizar tus proyectos."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La sauvegarde iCloud est activée. Quitte et rouvre l'app pour synchroniser tes projets."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O backup do iCloud está ativado. Feche e reabra o app para sincronizar seus projetos."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud बैकअप चालू है। प्रोजेक्ट सिंक करने के लिए ऐप बंद करके दोबारा खोलें।"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud 备份已开启。请退出并重新打开应用以同步项目。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud バックアップが有効になりました。アプリを終了して開き直すと同期されます。"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم تفعيل نسخ iCloud الاحتياطي. أغلق التطبيق وافتحه من جديد لمزامنة مشاريعك."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Резервное копирование iCloud включено. Закройте и снова откройте приложение для синхронизации."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud 백업이 켜졌습니다. 앱을 종료 후 다시 열면 프로젝트가 동기화됩니다."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

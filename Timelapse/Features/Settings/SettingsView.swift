@@ -261,11 +261,7 @@ struct SettingsView: View {
                             .font(Theme.caption(12))
                             .foregroundStyle(theme.inkMuted)
                     }
-                    if auth.isAdmin {
-                        Text("Admin — Pro etkin")
-                            .font(Theme.caption(12))
-                            .foregroundStyle(theme.accent)
-                    }
+
                 }
             } icon: {
                 Image(systemName: "apple.logo")
@@ -294,17 +290,17 @@ struct SettingsView: View {
     private func handleSignIn(_ result: Result<ASAuthorization, Error>) {
         switch result {
         case .success(let authorization):
+            adminSignInMessage = nil
             if auth.handle(authorization) {
                 store.setAdminUnlocked(true)
-                if let key = PremiumFeature.cloudBackup.preferenceKey {
-                    UserDefaults.standard.set(true, forKey: key)
-                }
-                adminSignInMessage = String(localized: "Admin olarak giriş yapıldı — Pro açıldı. 👑", bundle: .appLanguage)
-            } else {
-                adminSignInMessage = String(localized: "Giriş yapıldı. Bu hesap admin değil; Pro açılmadı.", bundle: .appLanguage)
+            }
+            if store.isPro, let key = PremiumFeature.cloudBackup.preferenceKey,
+               !UserDefaults.standard.bool(forKey: key) {
+                UserDefaults.standard.set(true, forKey: key)
+                adminSignInMessage = String(localized: "iCloud yedekleme açıldı. Projelerinin eşitlenmesi için uygulamayı kapatıp yeniden aç.", bundle: .appLanguage)
             }
         case .failure:
-            adminSignInMessage = String(localized: "Apple ile giriş şu an kullanılamıyor (ücretli Apple Developer hesabı gerekir). Test için sürüm numarasına 7 kez dokunup geliştirici arka kapısını kullan.", bundle: .appLanguage)
+            adminSignInMessage = String(localized: "Giriş tamamlanamadı. Tekrar dene.", bundle: .appLanguage)
         }
     }
 

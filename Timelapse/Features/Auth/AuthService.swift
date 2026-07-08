@@ -21,6 +21,11 @@ final class AuthService {
         static let userID = "auth.appleUserID"
         static let email = "auth.email"
         static let name = "auth.name"
+        static let adminGrant = "auth.adminGranted"
+    }
+
+    init() {
+        NSUbiquitousKeyValueStore.default.synchronize()
     }
 
     private(set) var userID: String? = UserDefaults.standard.string(forKey: Key.userID)
@@ -29,8 +34,24 @@ final class AuthService {
 
     var isSignedIn: Bool { userID != nil }
 
-    /// Saklanan e-posta admin listesinde mi?
-    var isAdmin: Bool { Self.isAdminEmail(email) }
+    /// Saklanan e-posta admin listesinde mi — ya da bu hesaba daha önce (herhangi bir
+    /// cihazda) admin yetkisi verilmiş mi? Apple, e-postayı yalnızca İLK yetkilendirmede
+    /// ilettiği için yetki bir kez tanındığında iCloud anahtar-değer deposuna yazılır ve
+    /// aynı iCloud hesabındaki tüm cihazlarda geçerli kalır.
+    var isAdmin: Bool {
+        Self.isAdminEmail(email) || Self.storedAdminGrant
+    }
+
+    static var storedAdminGrant: Bool {
+        NSUbiquitousKeyValueStore.default.bool(forKey: Key.adminGrant)
+            || UserDefaults.standard.bool(forKey: Key.adminGrant)
+    }
+
+    private static func persistAdminGrant() {
+        UserDefaults.standard.set(true, forKey: Key.adminGrant)
+        NSUbiquitousKeyValueStore.default.set(true, forKey: Key.adminGrant)
+        NSUbiquitousKeyValueStore.default.synchronize()
+    }
 
     /// Bir e-posta admin mi? Karşılaştırma, düz metin yerine SHA-256 özeti üzerinden yapılır.
     static func isAdminEmail(_ email: String?) -> Bool {
@@ -64,6 +85,9 @@ final class AuthService {
                 displayName = name
                 UserDefaults.standard.set(name, forKey: Key.name)
             }
+        }
+        if isAdmin {
+            Self.persistAdminGrant()
         }
         return isAdmin
     }
