@@ -154,6 +154,16 @@ final class Project {
     // açılır. CloudKit için varsayılan değeri var.
     var isCollaborative: Bool = false
 
+    var cloudShareRecordName: String?
+    var collaboratorNamesRaw: String?
+
+    var collaboratorNames: [String] {
+        (collaboratorNamesRaw ?? "")
+            .split(separator: "\n")
+            .map(String.init)
+            .filter { !$0.isEmpty }
+    }
+
     // Bir proje silinince çekimleri de silinsin: .cascade.
     // CloudKit kısıtı gereği to-many ilişki optional olmak zorunda.
     @Relationship(deleteRule: .cascade, inverse: \Entry.project)

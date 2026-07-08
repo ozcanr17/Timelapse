@@ -4,6 +4,8 @@ import SwiftData
 @main
 struct TimelapseApp: App {
 
+    @UIApplicationDelegateAdaptor(FlapseAppDelegate.self) private var appDelegate
+
     let container = AppModelContainer.makeProduction()
 
     @State private var store = StoreService()

@@ -2,6 +2,7 @@ import SwiftUI
 import SwiftData
 import UIKit
 import CoreLocation
+import CloudKit
 
 struct ProjectDetailView: View {
 
@@ -16,6 +17,8 @@ struct ProjectDetailView: View {
     @State private var activeSheet: DetailSheet?
     @State private var activeCover: DetailCover?
     @State private var monthFilter: MonthKey?
+    @State private var preparedShare: CKShare?
+    @State private var isPreparingShare = false
 
     private struct MonthKey: Hashable {
         let year: Int
@@ -23,7 +26,7 @@ struct ProjectDetailView: View {
     }
 
     private enum DetailSheet: Identifiable {
-        case export, paywall, invite, importPhotos
+        case export, paywall, invite, importPhotos, cloudShare
         var id: Int { hashValue }
     }
 
@@ -55,6 +58,10 @@ struct ProjectDetailView: View {
 
                 if !project.sortedEntries.isEmpty {
                     statsRow
+                }
+
+                if !project.collaboratorNames.isEmpty {
+                    collaboratorsRow
                 }
 
                 if !store.isPro {
@@ -122,6 +129,13 @@ struct ProjectDetailView: View {
                 ActivityView(activityItems: [inviteText])
             case .importPhotos:
                 PhotoImportSheet(mode: .existing(project), repository: ProjectRepository(context: modelContext))
+            case .cloudShare:
+                if let preparedShare {
+                    CloudSharingView(share: preparedShare, container: SharedProjectService.shared.container) { updated in
+                        applyShare(updated)
+                    }
+                    .ignoresSafeArea()
+                }
             }
         }
         .background {
@@ -176,6 +190,23 @@ struct ProjectDetailView: View {
         .accessibilityIdentifier("captureButton")
     }
 
+    private var collaboratorsRow: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "person.2.fill")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(accent)
+            Text(project.collaboratorNames.joined(separator: ", "))
+                .font(Theme.caption(13))
+                .foregroundStyle(theme.ink)
+                .lineLimit(1)
+            Spacer()
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(theme.surface, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+
     private var inviteText: String {
         String(localized: "Flapse'te \"\(project.title)\" projesinde birlikte çekim yapalım! Uygulamayı indirip aynı hikâyeyi birlikte biriktirelim. 📸")
     }
@@ -191,11 +222,48 @@ struct ProjectDetailView: View {
             activeSheet = .paywall
             return
         }
-        if !project.isCollaborative {
-            project.isCollaborative = true
-            try? modelContext.save()
+        Task { await prepareShare() }
+    }
+
+    /// iCloud varsa gerçek CloudKit paylaşımı oluşturur ve sistem paylaşım ekranını açar;
+    /// iCloud yoksa metin davetine düşer.
+    private func prepareShare() async {
+        guard !isPreparingShare else { return }
+        isPreparingShare = true
+        defer { isPreparingShare = false }
+
+        guard await SharedProjectService.shared.accountAvailable() else {
+            activeSheet = .invite
+            return
         }
-        activeSheet = .invite
+
+        do {
+            let entries = liveEntries.compactMap { entry -> (data: Data, capturedAt: Date)? in
+                entry.imageData.map { (data: $0, capturedAt: entry.capturedAt) }
+            }
+            let share = try await SharedProjectService.shared.createShare(
+                title: project.title,
+                categoryRaw: project.category.rawValue,
+                cadenceRaw: project.cadence.rawValue,
+                entries: entries
+            )
+            project.isCollaborative = true
+            project.cloudShareRecordName = share.recordID.recordName
+            try? modelContext.save()
+            preparedShare = share
+            activeSheet = .cloudShare
+        } catch {
+            activeSheet = .invite
+        }
+    }
+
+    private func applyShare(_ share: CKShare) {
+        let names = SharedProjectService.participantNames(of: share)
+        if !names.isEmpty {
+            project.collaboratorNamesRaw = names.joined(separator: "\n")
+        }
+        project.cloudShareRecordName = share.recordID.recordName
+        try? modelContext.save()
     }
 
     private var freeQuotaBadge: some View {
