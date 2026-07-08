@@ -19,6 +19,7 @@ struct AutoCaptureFlow: View {
     enum Phase: Equatable {
         case capturing
         case classifying
+        case confirming(UUID)
         case choosing(UUID?)
         case assigned(String)
     }
@@ -30,6 +31,10 @@ struct AutoCaptureFlow: View {
             switch phase {
             case .classifying:
                 classifyingOverlay
+            case .confirming(let id):
+                if let project = projects.first(where: { $0.id == id }) {
+                    confirmationOverlay(project)
+                }
             case .assigned(let title):
                 assignedOverlay(title)
             default:
@@ -56,6 +61,45 @@ struct AutoCaptureFlow: View {
                 ProgressView().tint(.white).controlSize(.large)
                 Text("Kare tanınıyor…").font(Theme.headline(16)).foregroundStyle(.white)
             }
+        }
+        .transition(.opacity)
+    }
+
+    private func confirmationOverlay(_ project: Project) -> some View {
+        ZStack {
+            Color.black.opacity(0.7).ignoresSafeArea()
+            VStack(spacing: 18) {
+                Image(systemName: Theme.icon(for: project.category))
+                    .font(.system(size: 40, weight: .semibold))
+                    .foregroundStyle(.white)
+                Text("\"\(project.title)\" projesine eklensin mi?")
+                    .font(Theme.headline(19)).foregroundStyle(.white)
+                    .multilineTextAlignment(.center)
+                VStack(spacing: 10) {
+                    Button {
+                        assign(to: project)
+                    } label: {
+                        Text("Evet, ekle")
+                            .font(Theme.headline(16))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .background(.white, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                            .foregroundStyle(.black)
+                    }
+                    Button {
+                        withAnimation { phase = .choosing(project.id) }
+                    } label: {
+                        Text("Başka proje seç")
+                            .font(Theme.headline(15))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 13)
+                            .background(.white.opacity(0.18), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                            .foregroundStyle(.white)
+                    }
+                }
+            }
+            .padding(28)
+            .frame(maxWidth: 340)
         }
         .transition(.opacity)
     }
@@ -101,14 +145,12 @@ struct AutoCaptureFlow: View {
             signature = computed
             let sets = projects.compactMap(signatureSet(for:))
             switch ProjectMatcher.decide(for: computed, among: sets) {
-            case .autoAssign(let id):
-                if let project = projects.first(where: { $0.id == id }) {
-                    assign(to: project)
+            case .autoAssign(let id), .suggest(let id):
+                if projects.contains(where: { $0.id == id }) {
+                    withAnimation { phase = .confirming(id) }
                 } else {
                     withAnimation { phase = .choosing(nil) }
                 }
-            case .suggest(let id):
-                withAnimation { phase = .choosing(id) }
             case .chooseManually:
                 withAnimation { phase = .choosing(nil) }
             }

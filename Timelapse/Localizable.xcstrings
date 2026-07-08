@@ -2485,6 +2485,156 @@
           }
         }
       }
+    },
+    "Birlikte Çekim": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Capture Together"
+          }
+        }
+      }
+    },
+    "Arkadaşını davet et; aynı projeye ikiniz de kare ekleyin, önceki kareleri birlikte görün": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invite a friend; you both add frames to the same project and see all previous frames together"
+          }
+        }
+      }
+    },
+    "Davet linkiyle aynı projeye birlikte çekin": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Capture together on the same project via an invite link"
+          }
+        }
+      }
+    },
+    "\"%@\" projesine eklensin mi?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add to \"%@\"?"
+          }
+        }
+      }
+    },
+    "Evet, ekle": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yes, add it"
+          }
+        }
+      }
+    },
+    "Başka proje seç": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose another project"
+          }
+        }
+      }
+    },
+    "Ortak Proje": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shared Project"
+          }
+        }
+      }
+    },
+    "DEĞİŞİMİ KARE KARE BİRİKTİR": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "COLLECT CHANGE, FRAME BY FRAME"
+          }
+        }
+      }
+    },
+    "Hayalet hizalama": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ghost alignment"
+          }
+        }
+      }
+    },
+    "Önceki karen kameranın üzerinde silik görünür; her fotoğraf aynı açıdan çekilir": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your previous frame shows faintly over the camera, so every photo lines up the same way"
+          }
+        }
+      }
+    },
+    "Ritmini koru": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep your rhythm"
+          }
+        }
+      }
+    },
+    "Günlük, gün aşırı ya da haftalık — zamanı gelince hatırlatırız": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daily, every other day, or weekly — we remind you when it's time"
+          }
+        }
+      }
+    },
+    "Tek dokunuşla timelapse": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One-tap timelapse"
+          }
+        }
+      }
+    },
+    "Karelerin akıcı bir videoya dönüşsün; anında paylaş": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn your frames into a smooth video and share it instantly"
+          }
+        }
+      }
+    },
+    "Fotoğrafların cihazında kalır; sen istemeden hiçbir yere gönderilmez.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your photos stay on your device; nothing is uploaded unless you choose to."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

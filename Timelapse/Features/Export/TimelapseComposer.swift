@@ -294,6 +294,23 @@ struct TimelapseComposer: TimelapseComposing {
         }
 
         var current = try keyframe(0)
+
+        if let intro = introCard(size: settings.renderSize) {
+            let introHold = Int(Double(outputFPS) * 1.1)
+            let introFade = Int(Double(outputFPS) * 0.6)
+            for _ in 0..<introHold {
+                try autoreleasepool { try append(intro) }
+            }
+            for step in 1...introFade {
+                try autoreleasepool {
+                    let progress = CGFloat(step) / CGFloat(introFade + 1)
+                    if let blended = blend(intro, current, progress: progress, size: settings.renderSize) {
+                        try append(blended)
+                    }
+                }
+            }
+        }
+
         for index in frames.indices {
             try abortIfCancelled()
             let next = try index + 1 < frames.count ? autoreleasepool { try keyframe(index + 1) } : nil
@@ -400,6 +417,41 @@ struct TimelapseComposer: TimelapseComposing {
     }
 
     /// İki tam kareyi yumuşak çapraz geçişle harmanlar (crossfade).
+    /// Video girişi: siyah zemin üzerinde logo + uygulama adı; ilk kareye çapraz geçişle bağlanır.
+    private static func introCard(size: CGSize) -> CGImage? {
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        let renderer = UIGraphicsImageRenderer(size: size, format: format)
+        let image = renderer.image { _ in
+            UIColor.black.setFill()
+            UIBezierPath(rect: CGRect(origin: .zero, size: size)).fill()
+
+            let logoSize = size.width * 0.24
+            let text = "FLAPSE" as NSString
+            let fontSize = size.width * 0.065
+            let attributes: [NSAttributedString.Key: Any] = [
+                .font: UIFont.monospacedSystemFont(ofSize: fontSize, weight: .semibold),
+                .foregroundColor: UIColor.white,
+                .kern: fontSize * 0.24
+            ]
+            let textSize = text.size(withAttributes: attributes)
+            let spacing = logoSize * 0.36
+            let contentHeight = logoSize + spacing + textSize.height
+            let logoRect = CGRect(
+                x: (size.width - logoSize) / 2,
+                y: (size.height - contentHeight) / 2,
+                width: logoSize,
+                height: logoSize
+            )
+            drawLogoMark(in: logoRect, alpha: 1)
+            text.draw(
+                at: CGPoint(x: (size.width - textSize.width) / 2, y: logoRect.maxY + spacing),
+                withAttributes: attributes
+            )
+        }
+        return image.cgImage
+    }
+
     private static func blend(_ first: CGImage, _ second: CGImage, progress: CGFloat, size: CGSize) -> CGImage? {
         let format = UIGraphicsImageRendererFormat()
         format.scale = 1
@@ -484,29 +536,16 @@ struct TimelapseComposer: TimelapseComposing {
             .shadow: shadow
         ]
         let textSize = text.size(withAttributes: attributes)
-        let logoSize = fontSize * 1.6
-        let gap = fontSize * 0.4
-        let contentHeight = max(textSize.height, logoSize)
-        let totalWidth = logoSize + gap + textSize.width
-        let originX = canvas.width - margin - totalWidth
-        let originY = canvas.height - margin - contentHeight
-
-        drawLogoMark(in: CGRect(
-            x: originX,
-            y: originY + (contentHeight - logoSize) / 2,
-            width: logoSize,
-            height: logoSize
-        ))
         text.draw(
-            at: CGPoint(x: originX + logoSize + gap, y: originY + (contentHeight - textSize.height) / 2),
+            at: CGPoint(x: canvas.width - margin - textSize.width, y: canvas.height - margin - textSize.height),
             withAttributes: attributes
         )
     }
 
-    private static func drawLogoMark(in rect: CGRect) {
+    private static func drawLogoMark(in rect: CGRect, alpha: CGFloat = 0.5) {
         guard let context = UIGraphicsGetCurrentContext() else { return }
         context.saveGState()
-        context.setAlpha(0.5)
+        context.setAlpha(alpha)
         UIColor(red: 0.18, green: 0.545, blue: 0.341, alpha: 1).setFill()
         UIBezierPath(roundedRect: rect, cornerRadius: rect.width * 0.24).fill()
         let aperture = rect.insetBy(dx: rect.width * 0.26, dy: rect.width * 0.26)

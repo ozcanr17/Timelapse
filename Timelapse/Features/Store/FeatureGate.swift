@@ -25,7 +25,7 @@ enum PremiumFeature {
         case .unlimitedProjects: String(localized: "Sınırsız proje")
         case .smartAlignment:    String(localized: "Akıllı hizalama")
         case .cloudBackup:       String(localized: "iCloud yedekleme")
-        case .coupleMode:        String(localized: "Çift modu")
+        case .coupleMode:        String(localized: "Birlikte Çekim")
         case .highResExport:     String(localized: "4K, filigransız export")
         }
     }
@@ -35,7 +35,7 @@ enum PremiumFeature {
         case .unlimitedProjects: String(localized: "İstediğin kadar hikaye takip et")
         case .smartAlignment:    String(localized: "Otomatik kare eşleştirme")
         case .cloudBackup:       String(localized: "Fotoğrafların hep güvende")
-        case .coupleMode:        String(localized: "Birlikte kaydedin")
+        case .coupleMode:        String(localized: "Davet linkiyle aynı projeye birlikte çekin")
         case .highResExport:     String(localized: "Paylaşıma hazır video")
         }
     }

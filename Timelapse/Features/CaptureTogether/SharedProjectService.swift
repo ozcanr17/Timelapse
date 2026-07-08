@@ -96,6 +96,49 @@ final class SharedProjectService {
         _ = try await container.accept(metadata)
     }
 
+    struct SharedProjectSnapshot {
+        let shareRecordName: String
+        let title: String
+        let categoryRaw: String
+        let cadenceRaw: String
+        let entries: [(data: Data, capturedAt: Date)]
+    }
+
+    /// Davet kabul edildikten sonra paylaşılan bölgedeki tüm kayıtları indirir; davetli
+    /// böylece projenin ÖNCEKİ karelerine de erişir.
+    func fetchSharedProject(_ metadata: CKShare.Metadata) async throws -> SharedProjectSnapshot? {
+        let zoneID = metadata.share.recordID.zoneID
+        var records: [CKRecord] = []
+        var token: CKServerChangeToken?
+        while true {
+            let changes = try await sharedDB.recordZoneChanges(inZoneWith: zoneID, since: token)
+            records.append(contentsOf: changes.modificationResultsByID.compactMap { try? $0.value.get().record })
+            token = changes.changeToken
+            if !changes.moreComing { break }
+        }
+
+        guard let root = records.first(where: { $0.recordType == RecordType.project }) else { return nil }
+        let entries = records
+            .filter { $0.recordType == RecordType.entry }
+            .compactMap { record -> (data: Data, capturedAt: Date)? in
+                guard
+                    let asset = record["image"] as? CKAsset,
+                    let url = asset.fileURL,
+                    let data = try? Data(contentsOf: url)
+                else { return nil }
+                return (data: data, capturedAt: record["capturedAt"] as? Date ?? Date())
+            }
+            .sorted { $0.capturedAt < $1.capturedAt }
+
+        return SharedProjectSnapshot(
+            shareRecordName: metadata.share.recordID.recordName,
+            title: root["title"] as? String ?? String(localized: "Ortak Proje"),
+            categoryRaw: root["category"] as? String ?? ProjectCategory.other.rawValue,
+            cadenceRaw: root["cadence"] as? String ?? CaptureCadence.daily.rawValue,
+            entries: entries
+        )
+    }
+
     /// Paylaşıma katılan kişilerin (sahip dahil) adları — kabul ettikten ve adlarını
     /// paylaştıktan sonra görünür.
     static func participantNames(of share: CKShare) -> [String] {

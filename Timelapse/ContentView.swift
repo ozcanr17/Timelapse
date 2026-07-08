@@ -1,11 +1,13 @@
 import SwiftUI
 import SwiftData
+import CloudKit
 
 struct ContentView: View {
 
     @AppStorage("hasSeenWelcome") private var hasSeenWelcome = false
     @AppStorage(AppTheme.storageKey) private var themeID = AppTheme.filmNegative.rawValue
 
+    @Environment(\.modelContext) private var modelContext
     @State private var isShowingSplash = true
 
     private var appTheme: AppTheme {
@@ -35,6 +37,34 @@ struct ContentView: View {
             try? await Task.sleep(for: .seconds(1.3))
             withAnimation(.easeOut(duration: 0.4)) { isShowingSplash = false }
         }
+        .onReceive(NotificationCenter.default.publisher(for: .flapseDidAcceptShare)) { notification in
+            guard let metadata = notification.object as? CKShare.Metadata else { return }
+            Task { await importSharedProject(metadata) }
+        }
+    }
+
+    /// Davet kabul edilince paylaşılan projeyi (önceki kareleriyle birlikte) yerel
+    /// kütüphaneye indirir. Aynı paylaşım daha önce indirildiyse yinelenmez.
+    private func importSharedProject(_ metadata: CKShare.Metadata) async {
+        guard let snapshot = try? await SharedProjectService.shared.fetchSharedProject(metadata) else { return }
+
+        let shareName = snapshot.shareRecordName
+        let descriptor = FetchDescriptor<Project>(
+            predicate: #Predicate { $0.cloudShareRecordName == shareName }
+        )
+        if let existing = try? modelContext.fetch(descriptor), !existing.isEmpty { return }
+
+        let repository = ProjectRepository(context: modelContext)
+        guard let project = try? repository.createProject(
+            title: snapshot.title,
+            category: ProjectCategory(rawValue: snapshot.categoryRaw) ?? .other,
+            cadence: CaptureCadence(rawValue: snapshot.cadenceRaw) ?? .daily
+        ) else { return }
+        project.isCollaborative = true
+        project.cloudShareRecordName = snapshot.shareRecordName
+
+        let entries = snapshot.entries.map { Entry(capturedAt: $0.capturedAt, imageData: $0.data) }
+        try? repository.addEntries(entries, to: project)
     }
 
     private var needsWelcome: Binding<Bool> {

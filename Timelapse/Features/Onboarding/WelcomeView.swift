@@ -15,56 +15,74 @@ struct WelcomeView: View {
                 .ignoresSafeArea()
                 .allowsHitTesting(false)
 
-            VStack(spacing: 0) {
-                Spacer()
+            ScrollView {
+                VStack(spacing: 0) {
+                    LogoMark(size: 112)
+                        .rotationEffect(.degrees(isAnimating ? 0 : -120))
+                        .scaleEffect(isAnimating ? 1 : 0.6)
+                        .opacity(isAnimating ? 1 : 0)
+                        .animation(.spring(response: 0.9, dampingFraction: 0.7), value: isAnimating)
+                        .padding(.top, 48)
 
-                LogoMark(size: 116)
-                    .rotationEffect(.degrees(isAnimating ? 0 : -120))
-                    .scaleEffect(isAnimating ? 1 : 0.6)
-                    .opacity(isAnimating ? 1 : 0)
-                    .animation(.spring(response: 0.9, dampingFraction: 0.7), value: isAnimating)
+                    Text("Flapse")
+                        .font(Theme.headline(34))
+                        .foregroundStyle(theme.ink)
+                        .padding(.top, 22)
 
-                Text("Flapse")
-                    .font(Theme.headline(34))
-                    .foregroundStyle(theme.ink)
-                    .padding(.top, 24)
+                    Text("DEĞİŞİMİ KARE KARE BİRİKTİR")
+                        .font(Theme.caption(12))
+                        .foregroundStyle(theme.inkMuted)
+                        .tracking(2)
+                        .padding(.top, 6)
 
-                Text("DEĞİŞİMİ TEK KAREDE BİRİKTİR")
-                    .font(Theme.caption(12))
-                    .foregroundStyle(theme.inkMuted)
-                    .tracking(2)
-                    .padding(.top, 6)
-
-                VStack(alignment: .leading, spacing: 18) {
-                    WelcomeFeatureRow(
-                        icon: "wand.and.stars",
-                        title: "Akıllı hizalama",
-                        subtitle: "Pro'da özneyi otomatik hizala; kareler pürüzsüz aksın"
-                    )
-                    WelcomeFeatureRow(
-                        icon: "calendar.badge.clock",
-                        title: "Kadans takibi",
-                        subtitle: "Her gün, gün aşırı ya da haftalık — zamanı gelince hatırla"
-                    )
-                    WelcomeFeatureRow(
-                        icon: "film.stack",
-                        title: "Timelapse videosu",
-                        subtitle: "Karelerini tek dokunuşla videoya dönüştür ve paylaş"
-                    )
-                }
-                .padding(24)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .cardStyle()
-                .padding(.horizontal, 24)
-                .padding(.top, 36)
-
-                Spacer()
-
-                Button("Başla") { onFinish() }
-                    .buttonStyle(.timelapsePrimary)
+                    VStack(alignment: .leading, spacing: 18) {
+                        WelcomeFeatureRow(
+                            icon: "camera.viewfinder",
+                            title: "Hayalet hizalama",
+                            subtitle: "Önceki karen kameranın üzerinde silik görünür; her fotoğraf aynı açıdan çekilir"
+                        )
+                        WelcomeFeatureRow(
+                            icon: "calendar.badge.clock",
+                            title: "Ritmini koru",
+                            subtitle: "Günlük, gün aşırı ya da haftalık — zamanı gelince hatırlatırız"
+                        )
+                        WelcomeFeatureRow(
+                            icon: "film.stack",
+                            title: "Tek dokunuşla timelapse",
+                            subtitle: "Karelerin akıcı bir videoya dönüşsün; anında paylaş"
+                        )
+                    }
+                    .padding(24)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .cardStyle()
                     .padding(.horizontal, 24)
-                    .padding(.bottom, 16)
+                    .padding(.top, 36)
+
+                    Text("Fotoğrafların cihazında kalır; sen istemeden hiçbir yere gönderilmez.")
+                        .font(Theme.caption(12))
+                        .foregroundStyle(theme.inkMuted)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 40)
+                        .padding(.top, 20)
+                        .padding(.bottom, 24)
+                }
+                .opacity(isAnimating ? 1 : 0)
+                .animation(.easeOut(duration: 0.6).delay(0.15), value: isAnimating)
             }
+            .scrollBounceBehavior(.basedOnSize)
+        }
+        .safeAreaInset(edge: .bottom) {
+            Button("Başla") { onFinish() }
+                .buttonStyle(.timelapsePrimary)
+                .padding(.horizontal, 24)
+                .padding(.top, 8)
+                .padding(.bottom, 16)
+                .background(
+                    LinearGradient(colors: [theme.canvas.opacity(0), theme.canvas],
+                                   startPoint: .top, endPoint: .bottom)
+                    .ignoresSafeArea(edges: .bottom)
+                    .allowsHitTesting(false)
+                )
         }
         .onAppear { isAnimating = true }
     }

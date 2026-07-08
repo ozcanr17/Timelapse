@@ -33,7 +33,7 @@ final class TimelapseComposerTests: XCTestCase {
 
         XCTAssertTrue(FileManager.default.fileExists(atPath: url.path))
         let duration = try await AVURLAsset(url: url).load(.duration)
-        XCTAssertEqual(duration.seconds, 1.0, accuracy: 0.3)
+        XCTAssertEqual(duration.seconds, 2.7, accuracy: 0.4)
     }
 
     func test_yumusakGecis_yuksekCozunurlukte_videoUretir() async throws {
@@ -50,7 +50,7 @@ final class TimelapseComposerTests: XCTestCase {
 
         XCTAssertTrue(FileManager.default.fileExists(atPath: url.path))
         let duration = try await AVURLAsset(url: url).load(.duration)
-        XCTAssertEqual(duration.seconds, 1.0, accuracy: 0.3)
+        XCTAssertEqual(duration.seconds, 2.7, accuracy: 0.4)
     }
 
     func test_ikidenAzKare_hataVerir() async {

@@ -72,7 +72,7 @@ struct PaywallView: View {
             ProFeatureRow(icon: "infinity", title: "Sınırsız proje", subtitle: "İstediğin kadar hikaye takip et")
             ProFeatureRow(icon: "wand.and.stars", title: "Akıllı hizalama", subtitle: "Otomatik kare eşleştirme")
             ProFeatureRow(icon: "icloud.fill", title: "iCloud yedekleme", subtitle: "Fotoğrafların hep güvende")
-            ProFeatureRow(icon: "person.2.fill", title: "Çift modu", subtitle: "Birlikte kaydedin")
+            ProFeatureRow(icon: "person.2.fill", title: "Birlikte Çekim", subtitle: "Arkadaşını davet et; aynı projeye ikiniz de kare ekleyin, önceki kareleri birlikte görün")
             ProFeatureRow(icon: "photo.on.rectangle.angled", title: "Sınırsız fotoğraf aktarımı", subtitle: "14 kare sınırı olmadan içe aktar")
             ProFeatureRow(icon: "wand.and.rays", title: "Otomatik proje ayırma", subtitle: "Kare doğru projeye kendiliğinden gitsin")
             ProFeatureRow(icon: "film", title: "4K, filigransız export", subtitle: "Paylaşıma hazır video")
