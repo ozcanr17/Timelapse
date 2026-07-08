@@ -295,22 +295,6 @@ struct TimelapseComposer: TimelapseComposing {
 
         var current = try keyframe(0)
 
-        if let intro = introCard(size: settings.renderSize) {
-            let introHold = Int(Double(outputFPS) * 1.1)
-            let introFade = Int(Double(outputFPS) * 0.6)
-            for _ in 0..<introHold {
-                try autoreleasepool { try append(intro) }
-            }
-            for step in 1...introFade {
-                try autoreleasepool {
-                    let progress = CGFloat(step) / CGFloat(introFade + 1)
-                    if let blended = blend(intro, current, progress: progress, size: settings.renderSize) {
-                        try append(blended)
-                    }
-                }
-            }
-        }
-
         for index in frames.indices {
             try abortIfCancelled()
             let next = try index + 1 < frames.count ? autoreleasepool { try keyframe(index + 1) } : nil
@@ -336,6 +320,22 @@ struct TimelapseComposer: TimelapseComposing {
 
             onProgress(Double(index + 1) / Double(frames.count))
             if let next { current = next }
+        }
+
+        if let outro = outroCard(size: settings.renderSize) {
+            let outroFade = Int(Double(outputFPS) * 0.6)
+            let outroHold = Int(Double(outputFPS) * 1.1)
+            for step in 1...outroFade {
+                try autoreleasepool {
+                    let progress = CGFloat(step) / CGFloat(outroFade + 1)
+                    if let blended = blend(current, outro, progress: progress, size: settings.renderSize) {
+                        try append(blended)
+                    }
+                }
+            }
+            for _ in 0..<outroHold {
+                try autoreleasepool { try append(outro) }
+            }
         }
 
         input.markAsFinished()
@@ -417,8 +417,8 @@ struct TimelapseComposer: TimelapseComposing {
     }
 
     /// İki tam kareyi yumuşak çapraz geçişle harmanlar (crossfade).
-    /// Video girişi: siyah zemin üzerinde logo + uygulama adı; ilk kareye çapraz geçişle bağlanır.
-    private static func introCard(size: CGSize) -> CGImage? {
+    /// Video kapanışı: son kareden çapraz geçişle siyah zemin üzerinde logo + uygulama adına bağlanır.
+    private static func outroCard(size: CGSize) -> CGImage? {
         let format = UIGraphicsImageRendererFormat()
         format.scale = 1
         let renderer = UIGraphicsImageRenderer(size: size, format: format)

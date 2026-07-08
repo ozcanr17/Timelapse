@@ -36,7 +36,7 @@ struct ProjectListView: View {
     }
 
     private var liveProjects: [Project] {
-        projects.filter { !$0.isDeleted }
+        projects.filter { !$0.isDeleted && $0.deletedAt == nil }
     }
 
     private var unlockedProjectID: UUID? {
@@ -59,7 +59,7 @@ struct ProjectListView: View {
         ZStack {
             theme.canvas.ignoresSafeArea()
 
-            if projects.isEmpty {
+            if liveProjects.isEmpty {
                 EmptyProjectsView(onCreate: addProjectTapped)
             } else {
                 List {
@@ -69,7 +69,7 @@ struct ProjectListView: View {
                         .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 10, trailing: 16))
 
                     ForEach(projects) { project in
-                        if !project.isDeleted {
+                        if !project.isDeleted && project.deletedAt == nil {
                             ProjectCard(project: project)
                                 .overlay {
                                     if isLocked(project) {
@@ -212,12 +212,8 @@ struct ProjectListView: View {
         pendingDeletion = []
         withAnimation {
             for project in toDelete where !project.isDeleted {
-                try? repository.deleteProject(project)
+                try? repository.softDeleteProject(project)
             }
-        }
-        Task {
-            try? await Task.sleep(for: .seconds(0.6))
-            try? repository.saveIfNeeded()
         }
     }
 
@@ -341,7 +337,7 @@ private struct ActivityHeroCard: View {
     @Environment(\.theme) private var theme
 
     private var liveProjects: [Project] {
-        projects.filter { !$0.isDeleted }
+        projects.filter { !$0.isDeleted && $0.deletedAt == nil }
     }
 
     private var liveEntries: [Entry] {

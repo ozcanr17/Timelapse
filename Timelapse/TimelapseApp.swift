@@ -6,6 +6,10 @@ struct TimelapseApp: App {
 
     @UIApplicationDelegateAdaptor(FlapseAppDelegate.self) private var appDelegate
 
+    init() {
+        LanguageOverrideBundle.activate()
+    }
+
     let container = ProcessInfo.processInfo.arguments.contains("--uitests")
         ? AppModelContainer.makeInMemory()
         : AppModelContainer.makeProduction()

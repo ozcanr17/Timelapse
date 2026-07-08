@@ -6,12 +6,17 @@ struct ContentView: View {
 
     @AppStorage("hasSeenWelcome") private var hasSeenWelcome = false
     @AppStorage(AppTheme.storageKey) private var themeID = AppTheme.filmNegative.rawValue
+    @AppStorage(AppLanguage.storageKey) private var languageID = AppLanguage.system.rawValue
 
     @Environment(\.modelContext) private var modelContext
     @State private var isShowingSplash = true
 
     private var appTheme: AppTheme {
         AppTheme(rawValue: themeID) ?? .filmNegative
+    }
+
+    private var appLanguage: AppLanguage {
+        AppLanguage(rawValue: languageID) ?? .system
     }
 
     var body: some View {
@@ -33,7 +38,14 @@ struct ContentView: View {
         .environment(\.theme, appTheme.palette)
         .preferredColorScheme(appTheme.preferredColorScheme)
         .animation(.easeInOut(duration: 0.25), value: themeID)
+        .environment(\.locale, appLanguage.localeIdentifier.map(Locale.init(identifier:)) ?? .autoupdatingCurrent)
+        .environment(\.layoutDirection, appLanguage.isRightToLeft ? .rightToLeft : (appLanguage == .system ? (Locale.characterDirection(forLanguage: Locale.preferredLanguages.first ?? "en") == .rightToLeft ? .rightToLeft : .leftToRight) : .leftToRight))
+        .id(languageID)
+        .onChange(of: languageID) {
+            LanguageOverrideBundle.apply(appLanguage)
+        }
         .task {
+            try? ProjectRepository(context: modelContext).purgeExpiredProjects(retentionDays: 30, now: Date())
             try? await Task.sleep(for: .seconds(1.3))
             withAnimation(.easeOut(duration: 0.4)) { isShowingSplash = false }
         }

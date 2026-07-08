@@ -77,6 +77,29 @@ final class ProjectRepository: ProjectRepositoryProtocol {
         context.delete(project)
     }
 
+    /// Projeyi çöp kutusuna taşır: veri silinmez, yalnızca silinme anı işaretlenir.
+    func softDeleteProject(_ project: Project) throws {
+        project.deletedAt = Date()
+        try context.save()
+    }
+
+    func restoreProject(_ project: Project) throws {
+        project.deletedAt = nil
+        try context.save()
+    }
+
+    /// Saklama süresi dolan (varsayılan 30 gün) projeleri kalıcı olarak siler.
+    func purgeExpiredProjects(retentionDays: Int = 30, now: Date = Date()) throws {
+        guard let cutoff = Calendar.current.date(byAdding: .day, value: -retentionDays, to: now) else { return }
+        let descriptor = FetchDescriptor<Project>(
+            predicate: #Predicate { $0.deletedAt != nil && $0.deletedAt! < cutoff }
+        )
+        for project in try context.fetch(descriptor) {
+            try deleteProject(project)
+        }
+        try saveIfNeeded()
+    }
+
     /// Bekleyen değişiklik varsa diske/Cloud'a yazar. Gereksiz kayıttan kaçınmak için
     /// önce değişiklik var mı diye bakıyoruz.
     func saveIfNeeded() throws {

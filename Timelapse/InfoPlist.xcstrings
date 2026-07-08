@@ -39,6 +39,66 @@
             "state": "translated",
             "value": "Gelişim fotoğraflarını çekmek için kameraya erişim gerekir."
           }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Kamerazugriff wird benötigt, um deine Fortschrittsfotos aufzunehmen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se necesita acceso a la cámara para tomar tus fotos de progreso."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L'accès à la caméra est nécessaire pour prendre tes photos de progression."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O acesso à câmera é necessário para tirar suas fotos de progresso."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "आपकी प्रगति की फ़ोटो लेने के लिए कैमरा एक्सेस चाहिए।"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "需要访问相机来拍摄你的进度照片。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "進捗写真を撮影するためにカメラへのアクセスが必要です。"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يلزم الوصول إلى الكاميرا لالتقاط صور تقدّمك."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Доступ к камере нужен, чтобы снимать фото вашего прогресса."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "진행 사진을 찍으려면 카메라 접근이 필요합니다."
+          }
         }
       }
     },
@@ -57,6 +117,66 @@
             "state": "translated",
             "value": "Your location is used to tag your captures with the place they were taken."
           }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dein Standort wird verwendet, um Aufnahmen mit dem Ort zu versehen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu ubicación se usa para etiquetar tus capturas con el lugar donde se tomaron."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ta position sert à associer tes prises au lieu où elles ont été faites."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sua localização é usada para marcar suas capturas com o local onde foram tiradas."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "आपकी लोकेशन का उपयोग फ़ोटो में जगह जोड़ने के लिए होता है।"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "你的位置用于为照片标注拍摄地点。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "撮影場所を写真に記録するために位置情報を使用します。"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يُستخدم موقعك لوسم صورك بالمكان الذي التُقطت فيه."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ваше местоположение используется, чтобы отмечать место съёмки на кадрах."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "사진에 촬영 장소를 기록하기 위해 위치 정보를 사용합니다."
+          }
         }
       }
     },
@@ -74,6 +194,66 @@
           "stringUnit": {
             "state": "translated",
             "value": "Access is needed to save your frames and timelapse videos to your photo library."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Zugriff wird benötigt, um Bilder und Zeitraffer-Videos in deiner Fotomediathek zu sichern."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se necesita acceso para guardar tus fotos y vídeos timelapse en tu biblioteca."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L'accès est nécessaire pour enregistrer tes photos et vidéos timelapse dans ta photothèque."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O acesso é necessário para salvar suas fotos e vídeos timelapse na sua biblioteca."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "फ़ोटो और टाइमलैप्स वीडियो आपकी लाइब्रेरी में सहेजने के लिए एक्सेस चाहिए।"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "需要访问权限以将照片和延时视频存储到你的照片图库。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "写真やタイムラプス動画をフォトライブラリに保存するためにアクセスが必要です。"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يلزم الوصول لحفظ صورك وفيديوهات التايم لابس في مكتبة الصور."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Доступ нужен, чтобы сохранять кадры и таймлапс-видео в вашу медиатеку."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "사진과 타임랩스 영상을 사진 보관함에 저장하려면 접근 권한이 필요합니다."
           }
         }
       }

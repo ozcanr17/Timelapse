@@ -157,6 +157,10 @@ final class Project {
     var cloudShareRecordName: String?
     var collaboratorNamesRaw: String?
 
+    // "Son Silinenler": silinme anı. Dolu ise proje çöp kutusundadır; 30 gün sonra
+    // kalıcı silinir. CloudKit ile eşitlenir, iCloud açıkken orada da saklanır.
+    var deletedAt: Date?
+
     var collaboratorNames: [String] {
         (collaboratorNamesRaw ?? "")
             .split(separator: "\n")

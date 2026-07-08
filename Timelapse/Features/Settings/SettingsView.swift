@@ -12,6 +12,7 @@ struct SettingsView: View {
     @Query private var projects: [Project]
 
     @AppStorage(AppTheme.storageKey) private var themeID = AppTheme.filmNegative.rawValue
+    @AppStorage(AppLanguage.storageKey) private var languageID = AppLanguage.system.rawValue
     @AppStorage(ReminderScheduler.enabledKey) private var remindersEnabled = false
     @AppStorage(ReminderScheduler.hourKey) private var reminderHour = 19
     @AppStorage(PremiumFeature.smartAlignment.preferenceKey!) private var smartAlignmentEnabled = false
@@ -141,16 +142,28 @@ struct SettingsView: View {
             }
 
             Section("Uygulama") {
-                Button {
-                    if let url = URL(string: UIApplication.openSettingsURLString) {
-                        openURL(url)
+                Picker(selection: languageBinding) {
+                    ForEach(AppLanguage.allCases) { language in
+                        Text(language.nativeName).tag(language.rawValue)
                     }
                 } label: {
-                    LabeledContent("Uygulama dili") {
-                        Text(currentLanguageName).font(Theme.caption(13))
+                    Label {
+                        Text("Uygulama dili").foregroundStyle(theme.ink)
+                    } icon: {
+                        Image(systemName: "globe").foregroundStyle(theme.accent)
                     }
                 }
-                .foregroundStyle(theme.ink)
+                .pickerStyle(.menu)
+                .tint(theme.inkMuted)
+                NavigationLink {
+                    RecentlyDeletedView()
+                } label: {
+                    Label {
+                        Text("Son Silinenler").foregroundStyle(theme.ink)
+                    } icon: {
+                        Image(systemName: "trash").foregroundStyle(theme.accent)
+                    }
+                }
                 Button("Karşılama ekranını göster") {
                     showWelcome = true
                 }
@@ -323,9 +336,14 @@ struct SettingsView: View {
         Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0"
     }
 
-    private var currentLanguageName: String {
-        let code = Locale.current.language.languageCode?.identifier ?? "tr"
-        return code == "tr" ? "Türkçe" : "English"
+    private var languageBinding: Binding<String> {
+        Binding(
+            get: { languageID },
+            set: { newValue in
+                LanguageOverrideBundle.apply(AppLanguage(rawValue: newValue) ?? .system)
+                languageID = newValue
+            }
+        )
     }
 }
 
