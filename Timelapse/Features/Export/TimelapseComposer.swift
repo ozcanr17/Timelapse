@@ -182,6 +182,10 @@ struct TimelapseExportSettings: Equatable {
     var alignmentSubject: AlignmentSubject = .auto
     /// Kare ölçeği: 1 = doğal doldurma; <1 uzaklaşır (kenar boşluğu siyah), >1 yakınlaşır.
     var zoom: CGFloat = 1
+    /// Videoya eklenecek müzik dosyası (yoksa sessiz).
+    var soundtrackURL: URL? = nil
+    /// Ritim senkronu: doluysa her kare bir sonraki vuruşa kadar gösterilir.
+    var beatTimes: [Double]? = nil
 
     static func current(
         isPro: Bool,
@@ -193,7 +197,9 @@ struct TimelapseExportSettings: Equatable {
         smartAlignment: Bool = false,
         manualAnchor: ManualAlignment? = nil,
         transition: TimelapseTransition = .cut,
-        alignmentSubject: AlignmentSubject = .auto
+        alignmentSubject: AlignmentSubject = .auto,
+        soundtrackURL: URL? = nil,
+        beatTimes: [Double]? = nil
     ) -> TimelapseExportSettings {
         let unlocked = FeatureGate.isUnlocked(.highResExport, isPro: isPro)
         let fps = speedMultiplier.map { Int32(min(12, max(1, ($0 * 4).rounded()))) } ?? speed.framesPerSecond
@@ -206,7 +212,9 @@ struct TimelapseExportSettings: Equatable {
             manualAnchor: manualAnchor,
             transition: transition,
             alignmentSubject: alignmentSubject,
-            zoom: CGFloat(min(2, max(0.5, zoom)))
+            zoom: CGFloat(min(2, max(0.5, zoom))),
+            soundtrackURL: soundtrackURL,
+            beatTimes: beatTimes
         )
     }
 }
@@ -235,7 +243,7 @@ struct TimelapseComposer: TimelapseComposing {
         guard frames.count >= 2 else { throw TimelapseComposerError.notEnoughFrames }
         let token = CancellationToken()
         let outroAssets = await Self.outroAssets()
-        return try await withTaskCancellationHandler {
+        let silent = try await withTaskCancellationHandler {
             try await Task.detached(priority: .userInitiated) {
                 try Self.render(frames: frames, settings: settings, outroAssets: outroAssets,
                                 isCancelled: { token.isCancelled }, onProgress: onProgress)
@@ -243,6 +251,8 @@ struct TimelapseComposer: TimelapseComposing {
         } onCancel: {
             token.cancel()
         }
+        guard let audio = settings.soundtrackURL else { return silent }
+        return try await SoundtrackMuxer.mux(videoURL: silent, audioURL: audio)
     }
 
     struct OutroAssets: @unchecked Sendable {
@@ -322,10 +332,17 @@ struct TimelapseComposer: TimelapseComposing {
         // her zaman kısa kalır (hızlı hızlarda otomatik daha da kısalır).
         let outputFPS: Int32 = 30
         let holdFrames = max(1, Int((Double(outputFPS) / Double(settings.framesPerSecond)).rounded()))
-        let transitionFrames = settings.transition == .smooth
-            ? min(holdFrames - 1, max(1, Int((0.14 * Double(outputFPS)).rounded())))
-            : 0
-        let solidFrames = holdFrames - transitionFrames
+        let baseTransition = max(1, Int((0.14 * Double(outputFPS)).rounded()))
+
+        var holds = Array(repeating: holdFrames, count: frames.count)
+        if let beats = settings.beatTimes, beats.count >= 2 {
+            var gaps: [Double] = []
+            for i in 1..<beats.count { gaps.append(beats[i] - beats[i - 1]) }
+            for i in frames.indices {
+                let gap = gaps[i % gaps.count]
+                holds[i] = min(Int(Double(outputFPS) * 2), max(3, Int((gap * Double(outputFPS)).rounded())))
+            }
+        }
         var presentationIndex: Int64 = 0
 
         func append(_ cgImage: CGImage) throws {
@@ -366,6 +383,11 @@ struct TimelapseComposer: TimelapseComposing {
             try abortIfCancelled()
             let next = try index + 1 < frames.count ? autoreleasepool { try keyframe(index + 1) } : nil
 
+            let transitionFrames = settings.transition == .smooth
+                ? min(holds[index] - 1, baseTransition)
+                : 0
+            let solidFrames = holds[index] - transitionFrames
+
             for _ in 0..<solidFrames {
                 try autoreleasepool { try append(current) }
             }
@@ -379,7 +401,7 @@ struct TimelapseComposer: TimelapseComposing {
                         }
                     }
                 }
-            } else {
+            } else if transitionFrames > 0 {
                 for _ in 0..<transitionFrames {
                     try autoreleasepool { try append(current) }
                 }

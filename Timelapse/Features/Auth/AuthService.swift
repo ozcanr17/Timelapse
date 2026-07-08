@@ -34,6 +34,12 @@ final class AuthService {
 
     var isSignedIn: Bool { userID != nil }
 
+    /// Anlık, önbelleksiz kontrol: başka bir ekrandan (ör. Ayarlar) yapılan giriş
+    /// buradan hemen görünür.
+    static var isSignedInNow: Bool {
+        UserDefaults.standard.string(forKey: Key.userID) != nil
+    }
+
     /// Saklanan e-posta admin listesinde mi — ya da bu hesaba daha önce (herhangi bir
     /// cihazda) admin yetkisi verilmiş mi? Apple, e-postayı yalnızca İLK yetkilendirmede
     /// ilettiği için yetki bir kez tanındığında iCloud anahtar-değer deposuna yazılır ve

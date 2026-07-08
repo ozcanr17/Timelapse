@@ -28,6 +28,8 @@ final class TimelapseExportViewModel {
         speedMultiplier: Double? = nil,
         aspect: TimelapseAspect = .threeFour,
         zoom: Double = 1,
+        soundtrackURL: URL? = nil,
+        beatSync: Bool = false,
         overlay: TimelapseOverlayOptions = TimelapseOverlayOptions(),
         smartAlignment: Bool = false,
         manualAnchor: ManualAlignment? = nil,
@@ -39,16 +41,23 @@ final class TimelapseExportViewModel {
             phase = .failed(String(localized: "Timelapse için en az 2 çekim gerekli.", bundle: .appLanguage))
             return
         }
-        let settings = TimelapseExportSettings.current(
-            isPro: isPro, speed: speed, speedMultiplier: speedMultiplier, aspect: aspect, zoom: zoom, overlay: overlay,
-            smartAlignment: smartAlignment, manualAnchor: manualAnchor, transition: transition,
-            alignmentSubject: alignmentSubject
-        )
         let composer = composer
         phase = .rendering
         progress = 0
         renderTask = Task { [weak self] in
             do {
+                var beats: [Double]? = nil
+                if beatSync, let soundtrackURL {
+                    beats = try? await AudioBeatAnalyzer.beats(in: soundtrackURL)
+                    if beats?.count ?? 0 < 2 { beats = nil }
+                }
+                let settings = TimelapseExportSettings.current(
+                    isPro: isPro, speed: speed, speedMultiplier: speedMultiplier, aspect: aspect, zoom: zoom, overlay: overlay,
+                    smartAlignment: smartAlignment, manualAnchor: manualAnchor, transition: transition,
+                    alignmentSubject: alignmentSubject,
+                    soundtrackURL: soundtrackURL,
+                    beatTimes: beats
+                )
                 let url = try await composer.makeVideo(
                     from: frames,
                     settings: settings,

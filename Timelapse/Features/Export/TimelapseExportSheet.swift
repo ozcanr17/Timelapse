@@ -15,6 +15,10 @@ struct TimelapseExportSheet: View {
     @State private var showPaywall = false
     @State private var speedX: Double = 1.0
     @State private var zoomX: Double = 1.0
+    @State private var soundtrackTitle: String?
+    @State private var soundtrackURL: URL?
+    @State private var beatSync = false
+    @State private var isPickingAudio = false
     @State private var aspect: TimelapseAspect = .threeFour
     @State private var overlay = TimelapseOverlayOptions()
     @State private var noteDraft = ""
@@ -78,6 +82,7 @@ struct TimelapseExportSheet: View {
                     speedControl
                     zoomControl
                     aspectControl
+                    musicControl
                     transitionControl
                     alignmentControl
                     overlayControls
@@ -294,6 +299,68 @@ struct TimelapseExportSheet: View {
         }
     }
 
+    private var musicControl: some View {
+        VStack(spacing: 8) {
+            HStack {
+                Label("Müzik", systemImage: "music.note")
+                    .font(Theme.caption(13))
+                    .foregroundStyle(theme.inkMuted)
+                Spacer()
+                Menu {
+                    Button("Kapalı") { setSoundtrack(nil, title: nil) }
+                    ForEach(SoundtrackOption.bundled) { option in
+                        Button(option.title) { setSoundtrack(option.url, title: option.title) }
+                    }
+                    Button {
+                        if store.isPro { isPickingAudio = true } else { showPaywall = true }
+                    } label: {
+                        Label("Dosyadan seç…", systemImage: "folder")
+                    }
+                } label: {
+                    Text(soundtrackTitle ?? String(localized: "Kapalı", bundle: .appLanguage))
+                        .font(Theme.caption(13))
+                        .foregroundStyle(theme.ink)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(theme.surface, in: Capsule())
+                }
+                .disabled(viewModel.phase == .rendering)
+            }
+            if soundtrackURL != nil {
+                Toggle(isOn: $beatSync) {
+                    Label("Ritme senkronla", systemImage: "waveform.path")
+                        .font(Theme.caption(13))
+                        .foregroundStyle(theme.inkMuted)
+                }
+                .tint(theme.accent)
+                .disabled(viewModel.phase == .rendering)
+                .onChange(of: beatSync) { isStale = true }
+            }
+        }
+        .fileImporter(isPresented: $isPickingAudio, allowedContentTypes: [.audio]) { result in
+            guard case .success(let url) = result else { return }
+            let scoped = url.startAccessingSecurityScopedResource()
+            defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+            let local = FileManager.default.temporaryDirectory
+                .appendingPathComponent("soundtrack-\(UUID().uuidString)")
+                .appendingPathExtension(url.pathExtension.isEmpty ? "m4a" : url.pathExtension)
+            if (try? FileManager.default.copyItem(at: url, to: local)) != nil {
+                setSoundtrack(local, title: url.deletingPathExtension().lastPathComponent)
+            }
+        }
+    }
+
+    private func setSoundtrack(_ url: URL?, title: String?) {
+        if url != nil, !store.isPro {
+            showPaywall = true
+            return
+        }
+        soundtrackURL = url
+        soundtrackTitle = title
+        if url == nil { beatSync = false }
+        isStale = true
+    }
+
     private var transitionControl: some View {
         VStack(spacing: 8) {
             HStack {
@@ -474,6 +541,8 @@ struct TimelapseExportSheet: View {
             speedMultiplier: speedX,
             aspect: aspect,
             zoom: zoomX,
+            soundtrackURL: soundtrackURL,
+            beatSync: beatSync,
             overlay: effectiveOverlay,
             smartAlignment: proAlign && alignMode == .smart,
             manualAnchor: (proAlign && alignMode == .manual) ? manual : nil,

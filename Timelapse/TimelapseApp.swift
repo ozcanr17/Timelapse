@@ -31,6 +31,7 @@ struct TimelapseApp: App {
             if phase == .background {
                 let projects = (try? container.mainContext.fetch(FetchDescriptor<Project>())) ?? []
                 ReminderScheduler.shared.sync(projects: projects)
+                WidgetStateWriter.update(projects: projects)
             }
         }
     }

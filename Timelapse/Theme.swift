@@ -132,6 +132,7 @@ enum Theme {
         case .fitness:      Color(light: "B0722E", dark: "E0A468")
         case .pregnancy:    Color(light: "9A5BA6", dark: "C99BD6")
         case .baby:         Color(light: "3E8E9E", dark: "7FC3D1")
+        case .outfit:       Color(light: "B0568A", dark: "D98BB8")
         case .coupleMode:   Color(light: "C2566B", dark: "F191A6")
         case .other:        Color(light: "6E675E", dark: "B3ABA0")
         }
@@ -147,6 +148,7 @@ enum Theme {
         case .fitness:      "dumbbell.fill"
         case .pregnancy:    "figure.stand"
         case .baby:         "stroller.fill"
+        case .outfit:       "tshirt.fill"
         case .coupleMode:   "person.2.fill"
         case .other:        "sparkles"
         }

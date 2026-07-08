@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		FA000000000000000000000C /* FlapseWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = FA0000000000000000000006 /* FlapseWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		F1C4FEA02FF58B0700294B17 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -21,13 +25,35 @@
 			remoteGlobalIDString = F1C4FE912FF58B0500294B17;
 			remoteInfo = Timelapse;
 		};
+		FA000000000000000000000A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F1C4FE8A2FF58B0500294B17 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = FA0000000000000000000001;
+			remoteInfo = FlapseWidgets;
+		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		FA000000000000000000000B /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				FA000000000000000000000C /* FlapseWidgets.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		F1C4FE922FF58B0500294B17 /* Timelapse.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Timelapse.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F1C4FE9F2FF58B0700294B17 /* TimelapseTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TimelapseTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F1C4FEA92FF58B0700294B17 /* TimelapseUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TimelapseUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F1C4FEBC2FF58B0700294B17 /* Products.storekit */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstorekit; path = Products.storekit; sourceTree = "<group>"; };
+		FA0000000000000000000006 /* FlapseWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = FlapseWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -37,6 +63,13 @@
 				Info.plist,
 			);
 			target = F1C4FE912FF58B0500294B17 /* Timelapse */;
+		};
+		FA000000000000000000000D /* Exceptions for "Widgets" folder in "FlapseWidgets" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = FA0000000000000000000001 /* FlapseWidgets */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -57,6 +90,14 @@
 		F1C4FEAC2FF58B0700294B17 /* TimelapseUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = TimelapseUITests;
+			sourceTree = "<group>";
+		};
+		FA0000000000000000000002 /* Widgets */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				FA000000000000000000000D /* Exceptions for "Widgets" folder in "FlapseWidgets" target */,
+			);
+			path = Widgets;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -83,6 +124,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		FA0000000000000000000008 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -90,6 +138,7 @@
 			isa = PBXGroup;
 			children = (
 				F1C4FE942FF58B0500294B17 /* Timelapse */,
+				FA0000000000000000000002 /* Widgets */,
 				F1C4FEA22FF58B0700294B17 /* TimelapseTests */,
 				F1C4FEAC2FF58B0700294B17 /* TimelapseUITests */,
 				F1C4FEBC2FF58B0700294B17 /* Products.storekit */,
@@ -101,6 +150,7 @@
 			isa = PBXGroup;
 			children = (
 				F1C4FE922FF58B0500294B17 /* Timelapse.app */,
+				FA0000000000000000000006 /* FlapseWidgets.appex */,
 				F1C4FE9F2FF58B0700294B17 /* TimelapseTests.xctest */,
 				F1C4FEA92FF58B0700294B17 /* TimelapseUITests.xctest */,
 			);
@@ -117,10 +167,12 @@
 				F1C4FE8E2FF58B0500294B17 /* Sources */,
 				F1C4FE8F2FF58B0500294B17 /* Frameworks */,
 				F1C4FE902FF58B0500294B17 /* Resources */,
+				FA000000000000000000000B /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				FA000000000000000000000E /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				F1C4FE942FF58B0500294B17 /* Timelapse */,
@@ -178,6 +230,28 @@
 			productReference = F1C4FEA92FF58B0700294B17 /* TimelapseUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
+		FA0000000000000000000001 /* FlapseWidgets */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FA0000000000000000000003 /* Build configuration list for PBXNativeTarget "FlapseWidgets" */;
+			buildPhases = (
+				FA0000000000000000000007 /* Sources */,
+				FA0000000000000000000008 /* Frameworks */,
+				FA0000000000000000000009 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				FA0000000000000000000002 /* Widgets */,
+			);
+			name = FlapseWidgets;
+			packageProductDependencies = (
+			);
+			productName = FlapseWidgets;
+			productReference = FA0000000000000000000006 /* FlapseWidgets.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -227,6 +301,7 @@
 			projectRoot = "";
 			targets = (
 				F1C4FE912FF58B0500294B17 /* Timelapse */,
+				FA0000000000000000000001 /* FlapseWidgets */,
 				F1C4FE9E2FF58B0700294B17 /* TimelapseTests */,
 				F1C4FEA82FF58B0700294B17 /* TimelapseUITests */,
 			);
@@ -249,6 +324,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		F1C4FEA72FF58B0700294B17 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FA0000000000000000000009 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -279,6 +361,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		FA0000000000000000000007 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -291,6 +380,11 @@
 			isa = PBXTargetDependency;
 			target = F1C4FE912FF58B0500294B17 /* Timelapse */;
 			targetProxy = F1C4FEAA2FF58B0700294B17 /* PBXContainerItemProxy */;
+		};
+		FA000000000000000000000E /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = FA0000000000000000000001 /* FlapseWidgets */;
+			targetProxy = FA000000000000000000000A /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -580,6 +674,58 @@
 			};
 			name = Release;
 		};
+		FA0000000000000000000004 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Widgets/FlapseWidgets.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 5ZYCHZ39QV;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Widgets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Flapse;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = rozcan.Flapse.Widgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		FA0000000000000000000005 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Widgets/FlapseWidgets.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 5ZYCHZ39QV;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Widgets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Flapse;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = rozcan.Flapse.Widgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -615,6 +761,15 @@
 			buildConfigurations = (
 				F1C4FEBA2FF58B0700294B17 /* Debug */,
 				F1C4FEBB2FF58B0700294B17 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		FA0000000000000000000003 /* Build configuration list for PBXNativeTarget "FlapseWidgets" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FA0000000000000000000004 /* Debug */,
+				FA0000000000000000000005 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

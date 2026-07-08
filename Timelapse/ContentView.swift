@@ -46,6 +46,7 @@ struct ContentView: View {
         }
         .task {
             try? ProjectRepository(context: modelContext).purgeExpiredProjects(retentionDays: 30, now: Date())
+            WidgetStateWriter.update(projects: (try? modelContext.fetch(FetchDescriptor<Project>())) ?? [])
             try? await Task.sleep(for: .seconds(1.3))
             withAnimation(.easeOut(duration: 0.4)) { isShowingSplash = false }
         }

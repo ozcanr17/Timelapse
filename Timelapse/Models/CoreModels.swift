@@ -15,6 +15,7 @@ enum ProjectCategory: String, Codable, CaseIterable, Identifiable {
     case fitness
     case pregnancy
     case baby
+    case outfit
     case coupleMode = "capture_together"
     case other
 
@@ -31,6 +32,7 @@ enum ProjectCategory: String, Codable, CaseIterable, Identifiable {
         case .fitness:      String(localized: "Fitness", bundle: .appLanguage)
         case .pregnancy:    String(localized: "Hamilelik", bundle: .appLanguage)
         case .baby:         String(localized: "Bebek", bundle: .appLanguage)
+        case .outfit:       String(localized: "Kombin", bundle: .appLanguage)
         case .coupleMode:   String(localized: "Çift Modu", bundle: .appLanguage)
         case .other:        String(localized: "Diğer", bundle: .appLanguage)
         }

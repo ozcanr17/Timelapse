@@ -16,7 +16,6 @@ struct ProjectListView: View {
     @State private var showQuickPick = false
     @State private var captureRoute: CaptureRoute?
     @State private var pendingCapture: Project?
-    @State private var auth = AuthService()
 
     private enum ActiveSheet: Identifiable {
         case addProject
@@ -175,9 +174,7 @@ struct ProjectListView: View {
             case .paywall:
                 PaywallView(store: store)
             case .signIn:
-                SignInGateSheet {
-                    auth = AuthService()
-                }
+                SignInGateSheet {}
             }
         }
         .sheet(isPresented: $showQuickPick, onDismiss: presentPendingCapture) {
@@ -225,7 +222,7 @@ struct ProjectListView: View {
     }
 
     private func addProjectTapped() {
-        guard auth.isSignedIn else {
+        guard AuthService.isSignedInNow else {
             activeSheet = .signIn
             return
         }
@@ -237,7 +234,7 @@ struct ProjectListView: View {
     }
 
     private func importTapped() {
-        guard auth.isSignedIn else {
+        guard AuthService.isSignedInNow else {
             activeSheet = .signIn
             return
         }
