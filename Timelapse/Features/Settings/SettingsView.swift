@@ -195,13 +195,6 @@ struct SettingsView: View {
                         }
                     }
                     .tint(theme.accent)
-                    Button {
-                        AuthService.grantAdminForCurrentICloudAccount()
-                        store.setAdminUnlocked(true)
-                    } label: {
-                        Label("Bu iCloud hesabına admin ver", systemImage: "crown")
-                            .foregroundStyle(theme.ink)
-                    }
                 } header: {
                     Text("Geliştirici")
                 } footer: {
@@ -313,7 +306,7 @@ struct SettingsView: View {
 
     #if DEBUG
     private var isDeveloperUnlocked: Bool {
-        devTapCount >= 7 || store.debugUnlocked
+        devTapCount >= 17 || store.debugUnlocked
     }
 
     private var developerProBinding: Binding<Bool> {
@@ -326,9 +319,9 @@ struct SettingsView: View {
 
     private func revealDeveloperIfNeeded() {
         #if DEBUG
-        guard devTapCount < 7 else { return }
+        guard devTapCount < 17 else { return }
         devTapCount += 1
-        if devTapCount >= 7 {
+        if devTapCount >= 17 {
             UINotificationFeedbackGenerator().notificationOccurred(.success)
         }
         #endif

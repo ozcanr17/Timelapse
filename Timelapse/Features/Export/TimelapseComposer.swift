@@ -1,4 +1,5 @@
 import AVFoundation
+import CoreImage
 import Foundation
 import UIKit
 import SwiftUI
@@ -164,6 +165,7 @@ enum TimelapseTransition: String, CaseIterable, Identifiable {
 struct ManualAlignment: Equatable {
     var center: CGPoint
     var zoom: CGFloat
+    var rotation: Double = 0
 }
 
 struct TimelapseExportSettings: Equatable {
@@ -375,19 +377,20 @@ struct TimelapseComposer: TimelapseComposing {
             if let next { current = next }
         }
 
-        if let outro = outroCard(size: settings.renderSize, logo: logo) {
-            let outroFade = Int(Double(outputFPS) * 0.6)
-            let outroHold = Int(Double(outputFPS) * 1.1)
-            for step in 1...outroFade {
-                try autoreleasepool {
-                    let progress = CGFloat(step) / CGFloat(outroFade + 1)
-                    if let blended = blend(current, outro, progress: progress, size: settings.renderSize) {
-                        try append(blended)
-                    }
+        let outroFade = Int(Double(outputFPS) * 0.6)
+        let outroHold = Int(Double(outputFPS) * 1.1)
+        let lastComposed = UIImage(cgImage: current)
+        for step in 1...outroFade {
+            try autoreleasepool {
+                let progress = CGFloat(step) / CGFloat(outroFade)
+                if let frame = outroFrame(base: lastComposed, progress: progress, logo: logo, size: settings.renderSize) {
+                    try append(frame)
                 }
             }
+        }
+        if let final = outroFrame(base: lastComposed, progress: 1, logo: logo, size: settings.renderSize) {
             for _ in 0..<outroHold {
-                try autoreleasepool { try append(outro) }
+                try autoreleasepool { try append(final) }
             }
         }
 
@@ -456,6 +459,27 @@ struct TimelapseComposer: TimelapseComposing {
         return rendered.cgImage
     }
 
+    private static let ciContext = CIContext()
+
+    /// Siyah bantları önlemek için fotoğrafın küçültülüp bulanıklaştırılmış hâli tuvalin
+    /// tamamına zemin olarak serilir.
+    private static func blurredBackdrop(_ image: UIImage, sigma: Double = 14) -> UIImage? {
+        let maxSide: CGFloat = 240
+        let scale = min(1, maxSide / max(image.size.width, image.size.height, 1))
+        let smallSize = CGSize(width: max(image.size.width * scale, 1), height: max(image.size.height * scale, 1))
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        let small = UIGraphicsImageRenderer(size: smallSize, format: format).image { _ in
+            image.draw(in: CGRect(origin: .zero, size: smallSize))
+        }
+        guard let ci = CIImage(image: small) else { return nil }
+        let blurred = ci.clampedToExtent()
+            .applyingGaussianBlur(sigma: sigma)
+            .cropped(to: ci.extent)
+        guard let cg = ciContext.createCGImage(blurred, from: blurred.extent) else { return nil }
+        return UIImage(cgImage: cg)
+    }
+
     /// Görseli tuvali dolduracak şekilde ortalar (hizalama kapalıyken varsayılan).
     private static func aspectFillRect(for image: UIImage, canvas: CGSize, offset: CGSize = .zero) -> CGRect {
         let scale = max(canvas.width / max(image.size.width, 1), canvas.height / max(image.size.height, 1))
@@ -483,39 +507,63 @@ struct TimelapseComposer: TimelapseComposing {
     }
 
     /// İki tam kareyi yumuşak çapraz geçişle harmanlar (crossfade).
-    /// Video kapanışı: son kareden çapraz geçişle siyah zemin üzerinde logo + uygulama adına bağlanır.
-    private static func outroCard(size: CGSize, logo: CGImage?) -> CGImage? {
+    /// Video kapanışı: son kare giderek bulanıklaşıp zemine dönüşürken logo, uygulama
+    /// açılışındaki gibi dönerek ve büyüyerek belirir; FLAPSE yazısı küçük bir imzadır.
+    private static func outroFrame(base: UIImage, progress: CGFloat, logo: CGImage?, size: CGSize) -> CGImage? {
+        let p = max(0, min(1, progress))
         let format = UIGraphicsImageRendererFormat()
         format.scale = 1
+        format.opaque = true
         let renderer = UIGraphicsImageRenderer(size: size, format: format)
-        let image = renderer.image { _ in
-            UIColor.black.setFill()
-            UIBezierPath(rect: CGRect(origin: .zero, size: size)).fill()
+        let image = renderer.image { context in
+            let ctx = context.cgContext
 
-            let logoSize = size.width * 0.24
+            if p < 0.05 {
+                base.draw(in: CGRect(origin: .zero, size: size))
+            } else if let blurred = blurredBackdrop(base, sigma: 4 + 20 * Double(p)) {
+                blurred.draw(in: CGRect(origin: .zero, size: size))
+            } else {
+                base.draw(in: CGRect(origin: .zero, size: size))
+            }
+            UIColor.black.withAlphaComponent(0.38 * p).setFill()
+            UIRectFill(CGRect(origin: .zero, size: size))
+
+            let logoSize = size.width * 0.30
             let text = "FLAPSE" as NSString
-            let fontSize = size.width * 0.065
+            let fontSize = size.width * 0.042
             let attributes: [NSAttributedString.Key: Any] = [
                 .font: UIFont.monospacedSystemFont(ofSize: fontSize, weight: .semibold),
-                .foregroundColor: UIColor.white,
-                .kern: fontSize * 0.24
+                .foregroundColor: UIColor.white.withAlphaComponent(0.92 * p),
+                .kern: fontSize * 0.3
             ]
             let textSize = text.size(withAttributes: attributes)
-            let spacing = logoSize * 0.36
+            let spacing = logoSize * 0.24
             let contentHeight = logoSize + spacing + textSize.height
-            let logoRect = CGRect(
-                x: (size.width - logoSize) / 2,
-                y: (size.height - contentHeight) / 2,
-                width: logoSize,
-                height: logoSize
+            let logoCenter = CGPoint(
+                x: size.width / 2,
+                y: (size.height - contentHeight) / 2 + logoSize / 2
             )
+
+            let rotation = CGFloat(-120 * (1 - p)) * .pi / 180
+            let scale = 0.6 + 0.4 * p
+            ctx.saveGState()
+            ctx.translateBy(x: logoCenter.x, y: logoCenter.y)
+            ctx.rotate(by: rotation)
+            ctx.scaleBy(x: scale, y: scale)
+            ctx.setAlpha(p)
+            let logoRect = CGRect(x: -logoSize / 2, y: -logoSize / 2, width: logoSize, height: logoSize)
             if let logo {
                 UIImage(cgImage: logo).draw(in: logoRect)
             } else {
                 drawLogoMark(in: logoRect, alpha: 1)
             }
+            ctx.restoreGState()
+
             text.draw(
-                at: CGPoint(x: (size.width - textSize.width) / 2, y: logoRect.maxY + spacing),
+                at: CGPoint(
+                    x: (size.width - textSize.width) / 2,
+                    y: logoCenter.y + logoSize / 2 + spacing
+                ),
                 withAttributes: attributes
             )
         }

@@ -25,7 +25,7 @@ enum AppLanguage: String, CaseIterable, Identifiable {
     /// Her dil kendi adında gösterilir — yanlışlıkla dil değiştiren biri bile tanıyabilsin.
     var nativeName: String {
         switch self {
-        case .system:     String(localized: "Sistem dili")
+        case .system:     String(localized: "Sistem dili", bundle: .appLanguage)
         case .turkish:    "Türkçe"
         case .english:    "English"
         case .german:     "Deutsch"

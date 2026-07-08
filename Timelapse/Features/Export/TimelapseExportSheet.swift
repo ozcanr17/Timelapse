@@ -109,6 +109,21 @@ struct TimelapseExportSheet: View {
 
     @ViewBuilder
     private var previewArea: some View {
+        Group {
+            if aspect.ratio <= 1 {
+                previewContent
+                    .frame(width: 380 * aspect.ratio, height: 380)
+                    .frame(maxWidth: .infinity)
+            } else {
+                previewContent
+                    .aspectRatio(aspect.ratio, contentMode: .fit)
+                    .frame(maxWidth: .infinity)
+            }
+        }
+        .animation(.easeInOut(duration: 0.25), value: aspect)
+    }
+
+    private var previewContent: some View {
         ZStack {
             RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
                 .fill(theme.surface)
@@ -124,17 +139,14 @@ struct TimelapseExportSheet: View {
             case .finished(let url):
                 ExportedVideoPlayer(url: url)
                     .id(url)
-                    .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
             case .failed(let message):
                 failedView(message)
             case .idle:
                 posterPreview
             }
         }
-        .aspectRatio(aspect.ratio, contentMode: .fit)
-        .frame(maxHeight: 380)
         .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
-        .animation(.easeInOut(duration: 0.25), value: aspect)
+        .clipped()
     }
 
     private var posterPreview: some View {
@@ -496,6 +508,8 @@ private struct ManualAlignView: View {
     @Environment(\.theme) private var theme
     @State private var uiImage: UIImage?
     @State private var dragStart: CGPoint?
+    @State private var pinchStartZoom: CGFloat?
+    @State private var rotationStart: Double?
 
     var body: some View {
         NavigationStack {
@@ -510,13 +524,16 @@ private struct ManualAlignView: View {
                         if let uiImage {
                             let disp = displaySize(image: uiImage.size, container: geo.size)
                             let point = CGPoint(x: manual.center.x * disp.width, y: manual.center.y * disp.height)
-                            Image(uiImage: uiImage)
-                                .resizable()
-                                .frame(width: disp.width, height: disp.height)
-                                .position(
-                                    x: geo.size.width / 2 + disp.width / 2 - point.x,
-                                    y: geo.size.height / 2 + disp.height / 2 - point.y
-                                )
+                            ZStack {
+                                Image(uiImage: uiImage)
+                                    .resizable()
+                                    .frame(width: disp.width, height: disp.height)
+                                    .position(
+                                        x: geo.size.width / 2 + disp.width / 2 - point.x,
+                                        y: geo.size.height / 2 + disp.height / 2 - point.y
+                                    )
+                            }
+                            .rotationEffect(.degrees(manual.rotation))
                         }
                         ThirdsReticle()
                     }
@@ -534,6 +551,24 @@ private struct ManualAlignView: View {
                             }
                             .onEnded { _ in dragStart = nil }
                     )
+                    .simultaneousGesture(
+                        MagnificationGesture()
+                            .onChanged { value in
+                                if pinchStartZoom == nil { pinchStartZoom = manual.zoom }
+                                let base = pinchStartZoom ?? manual.zoom
+                                manual.zoom = min(max(base * value, 0.5), 3)
+                            }
+                            .onEnded { _ in pinchStartZoom = nil }
+                    )
+                    .simultaneousGesture(
+                        RotationGesture()
+                            .onChanged { value in
+                                if rotationStart == nil { rotationStart = manual.rotation }
+                                let base = rotationStart ?? manual.rotation
+                                manual.rotation = min(max(base + value.degrees, -180), 180)
+                            }
+                            .onEnded { _ in rotationStart = nil }
+                    )
                     .clipped()
                 }
                 .aspectRatio(ratio, contentMode: .fit)
@@ -545,9 +580,16 @@ private struct ManualAlignView: View {
 
                 HStack(spacing: 12) {
                     Image(systemName: "minus.magnifyingglass").foregroundStyle(theme.inkMuted)
-                    Slider(value: Binding(get: { Double(manual.zoom) }, set: { manual.zoom = CGFloat($0) }), in: 1...3)
+                    Slider(value: Binding(get: { Double(manual.zoom) }, set: { manual.zoom = CGFloat($0) }), in: 0.5...3)
                         .tint(theme.accent)
                     Image(systemName: "plus.magnifyingglass").foregroundStyle(theme.inkMuted)
+                }
+
+                HStack(spacing: 12) {
+                    Image(systemName: "rotate.left").foregroundStyle(theme.inkMuted)
+                    Slider(value: $manual.rotation, in: -180...180, step: 1)
+                        .tint(theme.accent)
+                    Image(systemName: "rotate.right").foregroundStyle(theme.inkMuted)
                 }
             }
             .padding(20)
