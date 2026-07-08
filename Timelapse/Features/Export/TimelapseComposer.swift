@@ -1,6 +1,7 @@
 import AVFoundation
 import Foundation
 import UIKit
+import SwiftUI
 
 private final class CancellationToken: @unchecked Sendable {
     private let lock = NSLock()
@@ -191,9 +192,10 @@ struct TimelapseComposer: TimelapseComposing {
     ) async throws -> URL {
         guard frames.count >= 2 else { throw TimelapseComposerError.notEnoughFrames }
         let token = CancellationToken()
+        let logo = await Self.renderedLogo()
         return try await withTaskCancellationHandler {
             try await Task.detached(priority: .userInitiated) {
-                try Self.render(frames: frames, settings: settings,
+                try Self.render(frames: frames, settings: settings, logo: logo,
                                 isCancelled: { token.isCancelled }, onProgress: onProgress)
             }.value
         } onCancel: {
@@ -201,9 +203,19 @@ struct TimelapseComposer: TimelapseComposing {
         }
     }
 
+    /// Gerçek uygulama logosunu (SwiftUI LogoMark) video kapanış kartı için bir kez çizer.
+    @MainActor
+    private static func renderedLogo() -> CGImage? {
+        let renderer = ImageRenderer(content: LogoMark(size: 512))
+        renderer.scale = 1
+        renderer.isOpaque = false
+        return renderer.cgImage
+    }
+
     private static func render(
         frames: [TimelapseFrame],
         settings: TimelapseExportSettings,
+        logo: CGImage?,
         isCancelled: @Sendable () -> Bool,
         onProgress: @Sendable (Double) -> Void
     ) throws -> URL {
@@ -322,7 +334,7 @@ struct TimelapseComposer: TimelapseComposing {
             if let next { current = next }
         }
 
-        if let outro = outroCard(size: settings.renderSize) {
+        if let outro = outroCard(size: settings.renderSize, logo: logo) {
             let outroFade = Int(Double(outputFPS) * 0.6)
             let outroHold = Int(Double(outputFPS) * 1.1)
             for step in 1...outroFade {
@@ -418,7 +430,7 @@ struct TimelapseComposer: TimelapseComposing {
 
     /// İki tam kareyi yumuşak çapraz geçişle harmanlar (crossfade).
     /// Video kapanışı: son kareden çapraz geçişle siyah zemin üzerinde logo + uygulama adına bağlanır.
-    private static func outroCard(size: CGSize) -> CGImage? {
+    private static func outroCard(size: CGSize, logo: CGImage?) -> CGImage? {
         let format = UIGraphicsImageRendererFormat()
         format.scale = 1
         let renderer = UIGraphicsImageRenderer(size: size, format: format)
@@ -443,7 +455,11 @@ struct TimelapseComposer: TimelapseComposing {
                 width: logoSize,
                 height: logoSize
             )
-            drawLogoMark(in: logoRect, alpha: 1)
+            if let logo {
+                UIImage(cgImage: logo).draw(in: logoRect)
+            } else {
+                drawLogoMark(in: logoRect, alpha: 1)
+            }
             text.draw(
                 at: CGPoint(x: (size.width - textSize.width) / 2, y: logoRect.maxY + spacing),
                 withAttributes: attributes

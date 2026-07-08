@@ -83,9 +83,15 @@ struct ProjectDetailView: View {
             .padding(16)
         }
         .background(theme.canvas.ignoresSafeArea())
-        .navigationTitle(project.title)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
+            ToolbarItem(placement: .principal) {
+                Text(project.title)
+                    .font(Theme.headline(17))
+                    .foregroundStyle(theme.ink)
+                    .lineLimit(1)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
             if let shareCardURL {
                 ToolbarItem(placement: .primaryAction) {
                     ShareLink(
@@ -95,8 +101,7 @@ struct ProjectDetailView: View {
                             image: Image(systemName: "camera.aperture")
                         )
                     ) {
-                        Image(systemName: "square.and.arrow.up")
-                            .foregroundStyle(accent)
+                        toolbarIcon("square.and.arrow.up")
                     }
                     .accessibilityLabel(Text("Projeyi paylaş"))
                 }
@@ -105,8 +110,7 @@ struct ProjectDetailView: View {
                 Button {
                     importTapped()
                 } label: {
-                    Image(systemName: "photo.badge.plus")
-                        .foregroundStyle(accent)
+                    toolbarIcon("photo.badge.plus")
                 }
                 .accessibilityIdentifier("importButton")
                 .accessibilityLabel(Text("Fotoğraf ekle"))
@@ -115,9 +119,15 @@ struct ProjectDetailView: View {
                 Button {
                     inviteTapped()
                 } label: {
-                    Image(systemName: project.isCollaborative ? "person.2.fill" : "person.badge.plus")
-                        .foregroundStyle(accent)
+                    if isPreparingShare {
+                        ProgressView()
+                            .tint(accent)
+                            .frame(width: 30, height: 30)
+                    } else {
+                        toolbarIcon(project.isCollaborative ? "person.2.fill" : "person.badge.plus")
+                    }
                 }
+                .disabled(isPreparingShare)
                 .accessibilityIdentifier("inviteButton")
                 .accessibilityLabel(Text("Birlikte çekim daveti"))
             }
@@ -214,6 +224,13 @@ struct ProjectDetailView: View {
         .background(theme.surface, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 
+    private func toolbarIcon(_ name: String) -> some View {
+        Image(systemName: name)
+            .font(.system(size: 17, weight: .medium))
+            .foregroundStyle(accent)
+            .frame(width: 30, height: 30, alignment: .center)
+    }
+
     private var inviteText: String {
         String(localized: "Flapse'te \"\(project.title)\" projesinde birlikte çekim yapalım! Uygulamayı indirip aynı hikayeyi birlikte biriktirelim. 📸")
     }
@@ -249,8 +266,14 @@ struct ProjectDetailView: View {
         }
 
         do {
-            let entries = liveEntries.compactMap { entry -> (data: Data, capturedAt: Date)? in
-                entry.imageData.map { (data: $0, capturedAt: entry.capturedAt) }
+            var entries: [(data: Data, capturedAt: Date)] = []
+            for entry in liveEntries {
+                guard let original = entry.imageData else { continue }
+                let data = await Task.detached(priority: .userInitiated) {
+                    ImageDownsampler.image(from: original, maxPixelSize: 1600)?
+                        .jpegData(compressionQuality: 0.82) ?? original
+                }.value
+                entries.append((data: data, capturedAt: entry.capturedAt))
             }
             let share = try await SharedProjectService.shared.createShare(
                 title: project.title,

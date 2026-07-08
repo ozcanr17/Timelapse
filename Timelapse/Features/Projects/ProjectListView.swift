@@ -558,6 +558,11 @@ private struct ProjectCard: View {
             }
         }
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .overlay {
+            if streak > 0 {
+                FireStreakBorder(cornerRadius: 24)
+            }
+        }
         .contentShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .shadow(color: .black.opacity(0.12), radius: 12, x: 0, y: 6)
         .task(id: project.sortedEntries.last?.imageData?.count) {
@@ -575,6 +580,48 @@ private struct ProjectCard: View {
         .padding(.vertical, 5)
         .background(.black.opacity(0.28), in: Capsule())
         .overlay(Capsule().strokeBorder(.white.opacity(0.7), lineWidth: 1.5))
+    }
+}
+
+/// Gün serisi olan projelerin kartını saran "alev" çerçevesi: içeri alınmış ince bir
+/// şerit, ateş renkleriyle döner ve hafifçe titreyerek gerçekten yanıyormuş hissi verir.
+private struct FireStreakBorder: View {
+    let cornerRadius: CGFloat
+
+    private static let fire: [Color] = [
+        Color(red: 1.00, green: 0.30, blue: 0.10),
+        Color(red: 1.00, green: 0.62, blue: 0.12),
+        Color(red: 1.00, green: 0.86, blue: 0.35),
+        Color(red: 1.00, green: 0.45, blue: 0.10),
+        Color(red: 0.88, green: 0.18, blue: 0.08),
+        Color(red: 1.00, green: 0.70, blue: 0.20),
+        Color(red: 1.00, green: 0.30, blue: 0.10)
+    ]
+
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 1.0 / 30)) { context in
+            let t = context.date.timeIntervalSinceReferenceDate
+            let angle = Angle.degrees((t * 140).truncatingRemainder(dividingBy: 360))
+            let flicker = 0.82 + 0.18 * sin(t * 6.3) * sin(t * 2.1)
+            let shape = RoundedRectangle(cornerRadius: cornerRadius - 2, style: .continuous)
+            ZStack {
+                shape
+                    .strokeBorder(
+                        AngularGradient(colors: Self.fire, center: .center, angle: angle),
+                        lineWidth: 3.5
+                    )
+                    .blur(radius: 3)
+                    .opacity(0.85 * flicker)
+                shape
+                    .strokeBorder(
+                        AngularGradient(colors: Self.fire, center: .center, angle: angle),
+                        lineWidth: 1.5
+                    )
+                    .opacity(flicker)
+            }
+            .padding(2)
+        }
+        .allowsHitTesting(false)
     }
 }
 
