@@ -50,8 +50,9 @@ final class TimelapseExportViewModel {
                     from: frames,
                     settings: settings,
                     onProgress: { [weak self] value in
+                        guard let self else { return }
                         Task { @MainActor in
-                            guard let self, !Task.isCancelled else { return }
+                            guard self.renderTask?.isCancelled == false else { return }
                             self.progress = value
                         }
                     }

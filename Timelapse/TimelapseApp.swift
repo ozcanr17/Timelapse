@@ -6,7 +6,9 @@ struct TimelapseApp: App {
 
     @UIApplicationDelegateAdaptor(FlapseAppDelegate.self) private var appDelegate
 
-    let container = AppModelContainer.makeProduction()
+    let container = ProcessInfo.processInfo.arguments.contains("--uitests")
+        ? AppModelContainer.makeInMemory()
+        : AppModelContainer.makeProduction()
 
     @State private var store = StoreService()
     @Environment(\.scenePhase) private var scenePhase

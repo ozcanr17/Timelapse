@@ -400,10 +400,8 @@ struct TimelapseExportSheet: View {
             PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: url)
         } completionHandler: { success, _ in
             Task { @MainActor in
-                if success {
-                    savedToPhotos = true
-                    UINotificationFeedbackGenerator().notificationOccurred(.success)
-                }
+                savedToPhotos = success
+                UINotificationFeedbackGenerator().notificationOccurred(success ? .success : .error)
             }
         }
     }

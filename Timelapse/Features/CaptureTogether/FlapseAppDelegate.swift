@@ -7,9 +7,32 @@ final class FlapseAppDelegate: NSObject, UIApplicationDelegate {
         _ application: UIApplication,
         userDidAcceptCloudKitShareWith cloudKitShareMetadata: CKShare.Metadata
     ) {
+        FlapseSceneDelegate.acceptShare(cloudKitShareMetadata)
+    }
+
+    func application(
+        _ application: UIApplication,
+        configurationForConnecting connectingSceneSession: UISceneSession,
+        options: UIScene.ConnectionOptions
+    ) -> UISceneConfiguration {
+        let configuration = UISceneConfiguration(name: nil, sessionRole: connectingSceneSession.role)
+        configuration.delegateClass = FlapseSceneDelegate.self
+        return configuration
+    }
+}
+
+final class FlapseSceneDelegate: NSObject, UIWindowSceneDelegate {
+    func windowScene(
+        _ windowScene: UIWindowScene,
+        userDidAcceptCloudKitShareWith cloudKitShareMetadata: CKShare.Metadata
+    ) {
+        Self.acceptShare(cloudKitShareMetadata)
+    }
+
+    static func acceptShare(_ metadata: CKShare.Metadata) {
         Task { @MainActor in
-            try? await SharedProjectService.shared.accept(cloudKitShareMetadata)
-            NotificationCenter.default.post(name: .flapseDidAcceptShare, object: cloudKitShareMetadata)
+            try? await SharedProjectService.shared.accept(metadata)
+            NotificationCenter.default.post(name: .flapseDidAcceptShare, object: metadata)
         }
     }
 }

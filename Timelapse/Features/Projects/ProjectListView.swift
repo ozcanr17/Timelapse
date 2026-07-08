@@ -90,6 +90,7 @@ struct ProjectListView: View {
                         .foregroundStyle(theme.inkMuted)
                 }
                 .accessibilityIdentifier("settingsButton")
+                .accessibilityLabel(Text("Ayarlar"))
             }
             ToolbarItem(placement: .primaryAction) {
                 Button {
@@ -100,6 +101,7 @@ struct ProjectListView: View {
                         .foregroundStyle(theme.accent)
                 }
                 .accessibilityIdentifier("importProjectButton")
+                .accessibilityLabel(Text("Fotoğraflardan proje oluştur"))
             }
             ToolbarItem(placement: .primaryAction) {
                 Button {
@@ -110,6 +112,7 @@ struct ProjectListView: View {
                         .foregroundStyle(theme.accent)
                 }
                 .accessibilityIdentifier("addProjectButton")
+                .accessibilityLabel(Text("Yeni proje"))
             }
         }
         .safeAreaInset(edge: .bottom) {
@@ -297,8 +300,12 @@ private struct ActivityHeroCard: View {
         projects.filter { !$0.isDeleted }
     }
 
+    private var liveEntries: [Entry] {
+        liveProjects.flatMap { ($0.entries ?? []).filter { !$0.isDeleted } }
+    }
+
     private var capturedDates: [Date] {
-        liveProjects.flatMap { ($0.entries ?? []).map(\.capturedAt) }
+        liveEntries.map(\.capturedAt)
     }
 
     private var totalCaptures: Int { capturedDates.count }
@@ -327,7 +334,7 @@ private struct ActivityHeroCard: View {
                 )
             }
 
-            ContributionGrid(capturedDates: capturedDates, accent: theme.accent)
+            ContributionGrid(entries: liveEntries, accent: theme.accent)
 
             if dueCount > 0 {
                 Label("Bugün \(dueCount) projede çekim zamanı", systemImage: "bell.fill")
@@ -349,10 +356,12 @@ private struct ActivityHeroCard: View {
 }
 
 private struct ContributionGrid: View {
-    let capturedDates: [Date]
+    let entries: [Entry]
     let accent: Color
 
     @Environment(\.theme) private var theme
+    @Environment(\.displayScale) private var displayScale
+    @State private var thumbnails: [Date: UIImage] = [:]
 
     private let weeks = 15
     private let cell: CGFloat = 11
@@ -361,8 +370,8 @@ private struct ContributionGrid: View {
     private var countsByDay: [Date: Int] {
         let calendar = Calendar.current
         var counts: [Date: Int] = [:]
-        for date in capturedDates {
-            counts[calendar.startOfDay(for: date), default: 0] += 1
+        for entry in entries {
+            counts[calendar.startOfDay(for: entry.capturedAt), default: 0] += 1
         }
         return counts
     }
@@ -383,6 +392,7 @@ private struct ContributionGrid: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+        .task(id: entries.count) { await loadThumbnails() }
     }
 
     @ViewBuilder
@@ -391,9 +401,17 @@ private struct ContributionGrid: View {
             Color.clear.frame(width: cell, height: cell)
         } else {
             let date = calendar.date(byAdding: .day, value: -offset, to: today) ?? today
-            RoundedRectangle(cornerRadius: 2.5, style: .continuous)
-                .fill(fill(for: counts[date] ?? 0))
-                .frame(width: cell, height: cell)
+            if let thumbnail = thumbnails[date] {
+                Image(uiImage: thumbnail)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: cell, height: cell)
+                    .clipShape(RoundedRectangle(cornerRadius: 2.5, style: .continuous))
+            } else {
+                RoundedRectangle(cornerRadius: 2.5, style: .continuous)
+                    .fill(fill(for: counts[date] ?? 0))
+                    .frame(width: cell, height: cell)
+            }
         }
     }
 
@@ -404,6 +422,26 @@ private struct ContributionGrid: View {
         case 2:  accent.opacity(0.7)
         default: accent
         }
+    }
+
+    private func loadThumbnails() async {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        guard let earliest = calendar.date(byAdding: .day, value: -(weeks * 7), to: today) else { return }
+
+        var latestByDay: [Date: Entry] = [:]
+        for entry in entries {
+            let day = calendar.startOfDay(for: entry.capturedAt)
+            guard day >= earliest else { continue }
+            if let current = latestByDay[day], current.capturedAt >= entry.capturedAt { continue }
+            latestByDay[day] = entry
+        }
+
+        var thumbs: [Date: UIImage] = [:]
+        for (day, entry) in latestByDay {
+            thumbs[day] = await ImageDownsampler.image(from: entry.imageData, maxPixelSize: cell * displayScale * 2)
+        }
+        thumbnails = thumbs
     }
 }
 

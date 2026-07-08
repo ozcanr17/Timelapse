@@ -98,6 +98,7 @@ struct ProjectDetailView: View {
                         Image(systemName: "square.and.arrow.up")
                             .foregroundStyle(accent)
                     }
+                    .accessibilityLabel(Text("Projeyi paylaş"))
                 }
             }
             ToolbarItem(placement: .primaryAction) {
@@ -108,6 +109,7 @@ struct ProjectDetailView: View {
                         .foregroundStyle(accent)
                 }
                 .accessibilityIdentifier("importButton")
+                .accessibilityLabel(Text("Fotoğraf ekle"))
             }
             ToolbarItem(placement: .primaryAction) {
                 Button {
@@ -117,6 +119,7 @@ struct ProjectDetailView: View {
                         .foregroundStyle(accent)
                 }
                 .accessibilityIdentifier("inviteButton")
+                .accessibilityLabel(Text("Birlikte çekim daveti"))
             }
         }
         .sheet(item: $activeSheet) { sheet in

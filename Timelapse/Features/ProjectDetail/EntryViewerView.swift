@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 import UIKit
+import Photos
 
 struct EntryViewerView: View {
 
@@ -68,7 +69,7 @@ struct EntryViewerView: View {
 
     private var topBar: some View {
         HStack {
-            CameraControlButton(icon: "xmark") { dismiss() }
+            CameraControlButton(icon: "xmark", label: "Kapat") { dismiss() }
             Spacer()
             if let index = selectedIndex {
                 Text(String(format: "No. %02d", index + 1))
@@ -81,9 +82,12 @@ struct EntryViewerView: View {
                     ShareLink(item: Image(uiImage: shareImage), preview: SharePreview("Kare", image: Image(uiImage: shareImage))) {
                         controlIcon("square.and.arrow.up")
                     }
+                    .accessibilityLabel(Text("Kareyi paylaş"))
                 }
                 Button { saveToPhotos() } label: { controlIcon("square.and.arrow.down") }
+                    .accessibilityLabel(Text("Fotoğraflara kaydet"))
                 Button { isConfirmingDelete = true } label: { controlIcon("trash") }
+                    .accessibilityLabel(Text("Kareyi sil"))
             }
         }
         .padding(.horizontal, 16)
@@ -103,8 +107,13 @@ struct EntryViewerView: View {
 
     private func saveToPhotos() {
         guard let image = shareImage else { return }
-        UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil)
-        UINotificationFeedbackGenerator().notificationOccurred(.success)
+        PHPhotoLibrary.shared().performChanges {
+            PHAssetChangeRequest.creationRequestForAsset(from: image)
+        } completionHandler: { success, _ in
+            Task { @MainActor in
+                UINotificationFeedbackGenerator().notificationOccurred(success ? .success : .error)
+            }
+        }
     }
 
     @ViewBuilder

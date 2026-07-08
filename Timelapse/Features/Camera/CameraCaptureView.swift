@@ -117,7 +117,7 @@ private struct CameraSessionView: View {
 
     private var topBar: some View {
         HStack {
-            CameraControlButton(icon: "xmark") { dismiss() }
+            CameraControlButton(icon: "xmark", label: "Kapat") { dismiss() }
             Spacer()
         }
         .padding(.horizontal, 16)
@@ -131,7 +131,7 @@ private struct CameraSessionView: View {
             HStack {
                 Color.clear.frame(width: 48, height: 48)
                 Spacer()
-                CameraControlButton(icon: "arrow.triangle.2.circlepath.camera", size: 48) {
+                CameraControlButton(icon: "arrow.triangle.2.circlepath.camera", size: 48, label: "Kamerayı çevir") {
                     Task { await viewModel.flipCamera() }
                 }
                 .disabled(!canInteract)
@@ -280,6 +280,7 @@ private struct CenterCrossShape: Shape {
 struct CameraControlButton: View {
     let icon: String
     var size: CGFloat = 42
+    var label: LocalizedStringKey = "Düğme"
     let action: () -> Void
 
     var body: some View {
@@ -290,6 +291,7 @@ struct CameraControlButton: View {
                 .frame(width: size, height: size)
                 .background(.ultraThinMaterial, in: Circle())
         }
+        .accessibilityLabel(Text(label))
     }
 }
 

@@ -10,7 +10,9 @@ final class SharedProjectService {
 
     static let shared = SharedProjectService()
 
-    let container = CKContainer.default()
+    static let containerIdentifier = "iCloud.rozcan.Flapse"
+
+    let container = CKContainer(identifier: SharedProjectService.containerIdentifier)
     private var privateDB: CKDatabase { container.privateCloudDatabase }
     private var sharedDB: CKDatabase { container.sharedCloudDatabase }
     let zoneID = CKRecordZone.ID(zoneName: "SharedProjects", ownerName: CKCurrentUserDefaultName)

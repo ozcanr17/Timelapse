@@ -46,7 +46,7 @@ final class StoreService: StoreServiceProtocol {
     }
 
     private var storeProducts: [Product] = []   // satın alma için Product'ları içeride tutuyoruz
-    nonisolated(unsafe) private var updatesTask: Task<Void, Never>?
+    @ObservationIgnored nonisolated(unsafe) private var updatesTask: Task<Void, Never>?
 
     init() {
         // Uygulama açıkken DIŞARIDA olan işlemleri (yenileme, başka cihaz, iade, "Ask to Buy"

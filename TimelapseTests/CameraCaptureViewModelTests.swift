@@ -205,7 +205,9 @@ final class CameraCaptureViewModelTests: XCTestCase {
 
     func test_baslangicReferansi_oncekiCekimdenGelir() throws {
         // Önceki çekimin anchor'ı, yeni oturumun başlangıç referansı olmalı.
-        let context = AppModelContainer.makeInMemory().mainContext
+        let container = AppModelContainer.makeInMemory()
+        defer { withExtendedLifetime(container) {} }
+        let context = container.mainContext
         let project = Project(title: "Sakal", category: .hairAndBeard, cadence: .daily)
         context.insert(project)
 
@@ -223,7 +225,9 @@ final class CameraCaptureViewModelTests: XCTestCase {
     // MARK: - Ghost mantığı
 
     func test_ghostImageData_enYeniCekiminFotografidir() throws {
-        let context = AppModelContainer.makeInMemory().mainContext
+        let container = AppModelContainer.makeInMemory()
+        defer { withExtendedLifetime(container) {} }
+        let context = container.mainContext
         let project = Project(title: "Sakal", category: .hairAndBeard, cadence: .daily)
         context.insert(project)
 
