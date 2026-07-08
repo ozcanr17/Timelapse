@@ -17,6 +17,7 @@ struct TimelapseExportSheet: View {
     @State private var zoomX: Double = 1.0
     @State private var soundtrackTitle: String?
     @State private var soundtrackURL: URL?
+    @State private var bundledBeats: [Double]?
     @State private var beatSync = false
     @State private var isPickingAudio = false
     @State private var aspect: TimelapseAspect = .threeFour
@@ -74,9 +75,16 @@ struct TimelapseExportSheet: View {
     private var isRendering: Bool { viewModel.phase == .rendering }
 
     private var content: some View {
+        ScrollViewReader { proxy in
+            scrollBody(proxy)
+        }
+    }
+
+    private func scrollBody(_ proxy: ScrollViewProxy) -> some View {
         ScrollView {
             VStack(spacing: 18) {
                 previewArea
+                    .id("previewArea")
 
                 VStack(spacing: 18) {
                     speedControl
@@ -108,6 +116,11 @@ struct TimelapseExportSheet: View {
             if case .finished(let url) = viewModel.phase {
                 lastRenderedURL = url
                 isStale = false
+            }
+            if viewModel.phase == .rendering {
+                withAnimation(.easeInOut(duration: 0.4)) {
+                    proxy.scrollTo("previewArea", anchor: .top)
+                }
             }
         }
     }
@@ -309,7 +322,7 @@ struct TimelapseExportSheet: View {
                 Menu {
                     Button("Kapalı") { setSoundtrack(nil, title: nil) }
                     ForEach(SoundtrackOption.bundled) { option in
-                        Button(option.title) { setSoundtrack(option.url, title: option.title) }
+                        Button(option.title) { setSoundtrack(option.url, title: option.title, beats: option.beatGrid) }
                     }
                     Button {
                         if store.isPro { isPickingAudio = true } else { showPaywall = true }
@@ -350,14 +363,15 @@ struct TimelapseExportSheet: View {
         }
     }
 
-    private func setSoundtrack(_ url: URL?, title: String?) {
+    private func setSoundtrack(_ url: URL?, title: String?, beats: [Double]? = nil) {
         if url != nil, !store.isPro {
             showPaywall = true
             return
         }
         soundtrackURL = url
         soundtrackTitle = title
-        if url == nil { beatSync = false }
+        bundledBeats = beats
+        beatSync = url != nil
         isStale = true
     }
 
@@ -513,9 +527,9 @@ struct TimelapseExportSheet: View {
     private var alignmentSubject: AlignmentSubject {
         if project.isCoupleMode { return .group }
         switch project.category {
-        case .fitness:   return .body
-        case .pregnancy: return .belly
-        default:         return .auto
+        case .fitness, .outfit: return .body
+        case .pregnancy:        return .belly
+        default:                return .auto
         }
     }
 
@@ -542,6 +556,7 @@ struct TimelapseExportSheet: View {
             aspect: aspect,
             zoom: zoomX,
             soundtrackURL: soundtrackURL,
+            bundledBeats: bundledBeats,
             beatSync: beatSync,
             overlay: effectiveOverlay,
             smartAlignment: proAlign && alignMode == .smart,

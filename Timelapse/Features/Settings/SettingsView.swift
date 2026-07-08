@@ -2,6 +2,7 @@ import SwiftUI
 import SwiftData
 import UIKit
 import AuthenticationServices
+import CloudKit
 
 struct SettingsView: View {
 
@@ -9,7 +10,8 @@ struct SettingsView: View {
     @Environment(\.openURL) private var openURL
     @Environment(\.theme) private var theme
     @Environment(\.colorScheme) private var colorScheme
-    @Query private var projects: [Project]
+    @Environment(\.modelContext) private var settingsContext
+    @State private var projects: [Project] = []
 
     @AppStorage(AppTheme.storageKey) private var themeID = AppTheme.filmNegative.rawValue
     @AppStorage(AppLanguage.storageKey) private var languageID = AppLanguage.system.rawValue
@@ -20,6 +22,7 @@ struct SettingsView: View {
 
     @State private var auth = AuthService()
     @State private var showPaywall = false
+    @State private var cloudAccountAvailable: Bool?
     @State private var showWelcome = false
     @State private var devTapCount = 0
     @State private var adminSignInMessage: String?
@@ -108,6 +111,27 @@ struct SettingsView: View {
                 } else {
                     Text("Bu özellikler Flapse Pro ile açılır.")
                 }
+            }
+
+            Section {
+                LabeledContent("Apple ile giriş") {
+                    statusText(auth.isSignedIn, on: String(localized: "Var", bundle: .appLanguage), off: String(localized: "Yok", bundle: .appLanguage))
+                }
+                LabeledContent("iCloud hesabı") {
+                    statusText(cloudAccountAvailable ?? false, on: String(localized: "Var", bundle: .appLanguage), off: String(localized: "Yok", bundle: .appLanguage))
+                }
+                LabeledContent("iCloud yedekleme") {
+                    statusText(cloudBackupEnabled, on: String(localized: "Açık", bundle: .appLanguage), off: String(localized: "Kapalı", bundle: .appLanguage))
+                }
+                LabeledContent("Bulut deposu") {
+                    statusText(iCloudActive, on: String(localized: "Aktif", bundle: .appLanguage), off: String(localized: "Yerel", bundle: .appLanguage))
+                }
+            } header: {
+                Text("iCloud Durumu")
+            } footer: {
+                Text(iCloudActive
+                     ? "Fotoğrafların iCloud'a kaydediliyor; aynı hesapla giren her cihazda geri gelir."
+                     : "Fotoğrafların şu an yalnızca bu cihazda. Eşitleme için Pro + iCloud yedekleme gerekir; açtıktan sonra uygulamayı yeniden başlat.")
             }
 
             Section("Görünüm") {
@@ -222,6 +246,12 @@ struct SettingsView: View {
         .scrollContentBackground(.hidden)
         .background(theme.canvas)
         .navigationTitle("Ayarlar")
+        .task {
+            let descriptor = FetchDescriptor<Project>(predicate: #Predicate { $0.deletedAt == nil })
+            projects = (try? settingsContext.fetch(descriptor)) ?? []
+            let status = try? await CKContainer(identifier: SharedProjectService.containerIdentifier).accountStatus()
+            cloudAccountAvailable = status == .available
+        }
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showPaywall) {
             PaywallView(store: store)
@@ -333,6 +363,17 @@ struct SettingsView: View {
 
     private var appVersion: String {
         Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0"
+    }
+
+    private func statusText(_ on: Bool, on onText: String, off offText: String) -> some View {
+        HStack(spacing: 6) {
+            Circle()
+                .fill(on ? Color.green : Color.orange)
+                .frame(width: 8, height: 8)
+            Text(on ? onText : offText)
+                .font(Theme.caption(13))
+                .foregroundStyle(theme.ink)
+        }
     }
 
     private var languageBinding: Binding<String> {

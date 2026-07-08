@@ -13,7 +13,7 @@ struct RecentlyDeletedView: View {
         let daysRemaining: Int
     }
 
-    @Query private var projects: [Project]
+    @Query(filter: #Predicate<Project> { $0.deletedAt != nil }) private var projects: [Project]
     @Environment(\.modelContext) private var modelContext
     @Environment(\.theme) private var theme
 
@@ -21,7 +21,7 @@ struct RecentlyDeletedView: View {
 
     private var deletedItems: [DeletedItem] {
         projects
-            .filter { !$0.isDeleted && $0.deletedAt != nil }
+            .filter { !$0.isDeleted }
             .sorted { ($0.deletedAt ?? .distantPast) > ($1.deletedAt ?? .distantPast) }
             .map { project in
                 let elapsed = Calendar.current.dateComponents(

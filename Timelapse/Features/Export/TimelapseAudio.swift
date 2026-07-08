@@ -7,18 +7,28 @@ struct SoundtrackOption: Identifiable, Equatable {
     let id: String
     let title: String
     let url: URL
+    /// Sentezlenmiş parçaların bilinen vuruş aralığı (sn). Analize gerek kalmadan
+    /// kusursuz ritim senkronu sağlar.
+    let beatInterval: Double?
+
+    var beatGrid: [Double]? {
+        guard let beatInterval else { return nil }
+        return stride(from: beatInterval, through: 24.0, by: beatInterval).map { $0 }
+    }
 
     static var bundled: [SoundtrackOption] {
-        let names: [(file: String, title: String)] = [
-            ("calm", String(localized: "Sakin", bundle: .appLanguage)),
-            ("upbeat", String(localized: "Tempolu", bundle: .appLanguage)),
-            ("cinematic", String(localized: "Sinematik", bundle: .appLanguage))
+        let names: [(file: String, title: String, beat: Double?)] = [
+            ("calm", String(localized: "Sakin", bundle: .appLanguage), 1.5),
+            ("joyful", String(localized: "Neşeli", bundle: .appLanguage), 0.5),
+            ("upbeat", String(localized: "Tempolu", bundle: .appLanguage), 0.6),
+            ("sad", String(localized: "Hüzünlü", bundle: .appLanguage), 60.0 / 70.0),
+            ("cinematic", String(localized: "Sinematik", bundle: .appLanguage), 2.0)
         ]
         return names.compactMap { entry in
             guard let url = Bundle.main.url(forResource: entry.file, withExtension: "m4a")
                 ?? Bundle.main.url(forResource: entry.file, withExtension: "m4a", subdirectory: "Soundtracks")
             else { return nil }
-            return SoundtrackOption(id: entry.file, title: entry.title, url: url)
+            return SoundtrackOption(id: entry.file, title: entry.title, url: url, beatInterval: entry.beat)
         }
     }
 }
@@ -79,6 +89,7 @@ enum AudioBeatAnalyzer {
 
         guard energies.count > 8 else { return [] }
 
+
         var flux: [Double] = [0]
         for i in 1..<energies.count {
             flux.append(max(0, energies[i] - energies[i - 1]))
@@ -99,7 +110,25 @@ enum AudioBeatAnalyzer {
                 lastBeat = time
             }
         }
-        return beats
+        if beats.count >= 4 { return beats }
+
+        // Belirgin vuruş bulunamadıysa (ör. yumuşak/pad ağırlıklı parça) enerji akısının
+        // özilintisinden (autocorrelation) tempo kestirilir ve düzenli bir ızgara üretilir.
+        let minLagSeconds = 0.3
+        let maxLagSeconds = 1.2
+        let minLag = Int(minLagSeconds / hopDuration)
+        let maxLag = min(flux.count / 2, Int(maxLagSeconds / hopDuration))
+        guard maxLag > minLag else { return beats }
+        var bestLag = minLag
+        var bestScore = -Double.infinity
+        for lag in minLag...maxLag {
+            var score = 0.0
+            for i in 0..<(flux.count - lag) { score += flux[i] * flux[i + lag] }
+            if score > bestScore { bestScore = score; bestLag = lag }
+        }
+        let interval = Double(bestLag) * hopDuration
+        let total = Double(flux.count) * hopDuration
+        return stride(from: interval, through: total, by: interval).map { $0 }
     }
 }
 

@@ -336,11 +336,19 @@ struct TimelapseComposer: TimelapseComposing {
 
         var holds = Array(repeating: holdFrames, count: frames.count)
         if let beats = settings.beatTimes, beats.count >= 2 {
+            var boundaries: [Double] = [0]
+            boundaries.append(contentsOf: beats)
             var gaps: [Double] = []
             for i in 1..<beats.count { gaps.append(beats[i] - beats[i - 1]) }
+            while boundaries.count < frames.count + 1 {
+                let gap = gaps[(boundaries.count - 1) % gaps.count]
+                boundaries.append((boundaries.last ?? 0) + gap)
+            }
+            var lastFrameIndex = 0
             for i in frames.indices {
-                let gap = gaps[i % gaps.count]
-                holds[i] = min(Int(Double(outputFPS) * 2), max(3, Int((gap * Double(outputFPS)).rounded())))
+                let endFrame = Int((boundaries[i + 1] * Double(outputFPS)).rounded())
+                holds[i] = max(2, endFrame - lastFrameIndex)
+                lastFrameIndex += holds[i]
             }
         }
         var presentationIndex: Int64 = 0
@@ -355,18 +363,22 @@ struct TimelapseComposer: TimelapseComposing {
             presentationIndex += 1
         }
 
+        var referenceLuma: CGFloat?
+
         func keyframe(_ index: Int) throws -> CGImage {
-            guard
-                let image = UIImage(data: frames[index].imageData),
-                let composed = composeFrame(
-                    image,
-                    date: frames[index].capturedAt,
-                    anchor: anchors[index],
-                    reference: reference,
-                    offset: offsets[index],
-                    settings: settings
-                )
-            else { throw TimelapseComposerError.frameDecodingFailed }
+            guard let image = UIImage(data: frames[index].imageData) else {
+                throw TimelapseComposerError.frameDecodingFailed
+            }
+            if referenceLuma == nil { referenceLuma = averageLuma(of: image) }
+            guard let composed = composeFrame(
+                image,
+                date: frames[index].capturedAt,
+                anchor: anchors[index],
+                reference: reference,
+                offset: offsets[index],
+                settings: settings,
+                referenceLuma: referenceLuma
+            ) else { throw TimelapseComposerError.frameDecodingFailed }
             return composed
         }
 
@@ -457,7 +469,8 @@ struct TimelapseComposer: TimelapseComposing {
         anchor: FrameAnchor?,
         reference: FrameAnchor?,
         offset: CGSize?,
-        settings: TimelapseExportSettings
+        settings: TimelapseExportSettings,
+        referenceLuma: CGFloat? = nil
     ) -> CGImage? {
         let size = settings.renderSize
         let format = UIGraphicsImageRendererFormat()
@@ -505,9 +518,48 @@ struct TimelapseComposer: TimelapseComposing {
                 context.cgContext.restoreGState()
             }
 
+            if let referenceLuma {
+                applyExposureMatch(canvas: size, image: image, referenceLuma: referenceLuma)
+            }
+
             drawOverlays(size: size, date: date, settings: settings)
         }
         return rendered.cgImage
+    }
+
+    /// Günler arasındaki pozlama farkı titremesin diye her kare, ilk karenin ortalama
+    /// parlaklığına yaklaştırılır: karanlık kareler çarpımsal olarak aydınlatılamasa da
+    /// hafif toplamsal parlatma, parlak kareler ise çarpımsal karartma uygulanır.
+    private static func averageLuma(of image: UIImage) -> CGFloat? {
+        guard let tiny = blurredBackdrop(image, tinyLongSide: 4)?.cgImage,
+              let data = tiny.dataProvider?.data as Data? else { return nil }
+        let bpp = tiny.bitsPerPixel / 8
+        guard bpp >= 3 else { return nil }
+        var total: CGFloat = 0
+        var count = 0
+        var offset = 0
+        while offset + 2 < data.count {
+            let r = CGFloat(data[offset]) / 255
+            let g = CGFloat(data[offset + 1]) / 255
+            let b = CGFloat(data[offset + 2]) / 255
+            total += 0.299 * r + 0.587 * g + 0.114 * b
+            count += 1
+            offset += bpp
+        }
+        return count > 0 ? total / CGFloat(count) : nil
+    }
+
+    private static func applyExposureMatch(canvas: CGSize, image: UIImage, referenceLuma: CGFloat) {
+        guard let luma = averageLuma(of: image), luma > 0.02 else { return }
+        let gain = min(1.35, max(0.75, referenceLuma / luma))
+        let rect = CGRect(origin: .zero, size: canvas)
+        if gain < 0.99 {
+            UIColor(white: gain, alpha: 1).setFill()
+            UIRectFillUsingBlendMode(rect, .multiply)
+        } else if gain > 1.01 {
+            UIColor(white: min(gain - 1, 0.22), alpha: 1).setFill()
+            UIRectFillUsingBlendMode(rect, .plusLighter)
+        }
     }
 
     /// Siyah bantları önlemek için fotoğrafın aşırı küçültülmüş hâli zemin olarak serilir;

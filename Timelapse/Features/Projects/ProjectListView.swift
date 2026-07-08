@@ -5,7 +5,8 @@ import UIKit
 /// Projeleri listeleyen ana ekran.
 struct ProjectListView: View {
 
-    @Query(sort: \Project.createdAt, order: .reverse) private var projects: [Project]
+    @Query(filter: #Predicate<Project> { $0.deletedAt == nil }, sort: \Project.createdAt, order: .reverse)
+    private var projects: [Project]
     @Environment(\.modelContext) private var modelContext
     @Environment(StoreService.self) private var store
     @Environment(\.theme) private var theme
