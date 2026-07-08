@@ -173,11 +173,10 @@ struct ProjectDetailView: View {
                     maxSelection: store.isPro ? nil : max(0, FeatureGate.freeEntryLimit - liveEntries.count)
                 )
             case .cloudShare:
-                if let preparedShare {
-                    CloudSharingView(share: preparedShare, container: SharedProjectService.shared.container) { updated in
-                        applyShare(updated)
-                    }
-                    .ignoresSafeArea()
+                if let preparedShare, let url = preparedShare.url {
+                    ActivityView(activityItems: [inviteMessage, url])
+                } else {
+                    ActivityView(activityItems: [inviteText])
                 }
             }
         }
@@ -256,6 +255,11 @@ struct ProjectDetailView: View {
             .frame(width: 21, height: 21)
             .offset(y: yOffset)
             .frame(width: 30, height: 30, alignment: .center)
+    }
+
+    /// Davet bağlantısının yanına eklenen, uygulama diline göre yazılmış kısa davet metni.
+    private var inviteMessage: String {
+        String(localized: "Flapse'te \"\(project.title)\" projesine katıl — birlikte çekelim! Bağlantıya dokunman yeterli. 📸", bundle: .appLanguage)
     }
 
     private var inviteText: String {

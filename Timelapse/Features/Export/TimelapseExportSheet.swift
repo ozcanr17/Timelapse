@@ -28,6 +28,7 @@ struct TimelapseExportSheet: View {
     @State private var lastRenderedURL: URL?
     @State private var alignMode: AlignMode = .off
     @State private var manual = ManualAlignment(center: CGPoint(x: 0.5, y: 0.5), zoom: 1)
+    @State private var manuals: [ManualAlignment] = []
     @State private var transition: TimelapseTransition = .cut
     @State private var showManualAlign = false
     @State private var didInitAlign = false
@@ -70,8 +71,12 @@ struct TimelapseExportSheet: View {
                 PaywallView(store: store)
             }
             .sheet(isPresented: $showManualAlign) {
-                if let data = frames.first?.imageData {
-                    ManualAlignView(imageData: data, ratio: aspect.ratio, manual: $manual) {
+                if !frames.isEmpty {
+                    ManualAlignView(
+                        imagesData: frames.map(\.imageData),
+                        ratio: aspect.ratio,
+                        manuals: $manuals
+                    ) {
                         isStale = true
                     }
                 }
@@ -471,7 +476,14 @@ struct TimelapseExportSheet: View {
                     showPaywall = true
                     return
                 }
-                if mode == .manual { showManualAlign = true } else { isStale = true }
+                if mode == .manual {
+                    if manuals.count != frames.count {
+                        manuals = Array(repeating: manual, count: frames.count)
+                    }
+                    showManualAlign = true
+                } else {
+                    isStale = true
+                }
             }
             if alignMode == .manual {
                 Button {
@@ -612,6 +624,7 @@ struct TimelapseExportSheet: View {
             overlay: effectiveOverlay,
             smartAlignment: proAlign && alignMode == .smart,
             manualAnchor: (proAlign && alignMode == .manual) ? manual : nil,
+            manualAnchors: (proAlign && alignMode == .manual && manuals.count == frames.count) ? manuals : nil,
             transition: transition,
             alignmentSubject: alignmentSubject
         )
@@ -634,22 +647,28 @@ private enum AlignMode: String, CaseIterable, Identifiable {
 /// kullanıcı fotoğrafı SÜRÜKLEYEREK özneyi ortalar ve yakınlaştırmayı ayarlar. Kutuda
 /// ne görüyorsa videoda o olur. Bu seçim tüm karelere uygulanır.
 private struct ManualAlignView: View {
-    let imageData: Data
+    let imagesData: [Data]
     var ratio: CGFloat = 3.0 / 4.0
-    @Binding var manual: ManualAlignment
+    @Binding var manuals: [ManualAlignment]
     let onDone: () -> Void
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.theme) private var theme
+    @State private var index = 0
     @State private var uiImage: UIImage?
     @State private var dragStart: CGPoint?
     @State private var pinchStartZoom: CGFloat?
     @State private var rotationStart: Double?
 
+    private var manual: ManualAlignment {
+        get { manuals.indices.contains(index) ? manuals[index] : ManualAlignment(center: CGPoint(x: 0.5, y: 0.5), zoom: 1) }
+        nonmutating set { if manuals.indices.contains(index) { manuals[index] = newValue } }
+    }
+
     var body: some View {
         NavigationStack {
             VStack(spacing: 18) {
-                Text("Fotoğrafı sürükleyerek özneyi ortala")
+                Text("Fotoğrafı sürükleyerek özneyi ortala; her kareyi ayrı ayrı hizalayabilirsin")
                     .font(Theme.caption(13))
                     .foregroundStyle(theme.inkMuted)
 
@@ -720,9 +739,51 @@ private struct ManualAlignView: View {
                     Image(systemName: "plus.magnifyingglass").foregroundStyle(theme.inkMuted)
                 }
 
+                HStack(spacing: 14) {
+                    Button {
+                        index = max(0, index - 1)
+                        dragStart = nil; pinchStartZoom = nil; rotationStart = nil
+                    } label: {
+                        Image(systemName: "chevron.left.circle.fill")
+                            .font(.system(size: 26))
+                            .foregroundStyle(index > 0 ? theme.accent : theme.inkMuted.opacity(0.3))
+                    }
+                    .disabled(index == 0)
+                    .accessibilityLabel(Text("Önceki kare"))
+
+                    Text("\(index + 1) / \(imagesData.count)")
+                        .font(Theme.headline(15)).monospacedDigit()
+                        .foregroundStyle(theme.ink)
+                        .frame(minWidth: 64)
+
+                    Button {
+                        index = min(imagesData.count - 1, index + 1)
+                        dragStart = nil; pinchStartZoom = nil; rotationStart = nil
+                    } label: {
+                        Image(systemName: "chevron.right.circle.fill")
+                            .font(.system(size: 26))
+                            .foregroundStyle(index < imagesData.count - 1 ? theme.accent : theme.inkMuted.opacity(0.3))
+                    }
+                    .disabled(index >= imagesData.count - 1)
+                    .accessibilityLabel(Text("Sonraki kare"))
+
+                    Spacer()
+
+                    Button("Tümüne Uygula") {
+                        let value = manual
+                        manuals = Array(repeating: value, count: manuals.count)
+                    }
+                    .font(Theme.caption(13))
+                    .buttonStyle(.bordered)
+                    .tint(theme.accent)
+                }
+
                 HStack(spacing: 12) {
                     Image(systemName: "rotate.left").foregroundStyle(theme.inkMuted)
-                    Slider(value: $manual.rotation, in: -180...180, step: 1)
+                    Slider(
+                        value: Binding(get: { manual.rotation }, set: { manual.rotation = $0 }),
+                        in: -180...180, step: 1
+                    )
                         .tint(theme.accent)
                     Image(systemName: "rotate.right").foregroundStyle(theme.inkMuted)
                 }
@@ -740,7 +801,10 @@ private struct ManualAlignView: View {
                 }
             }
         }
-        .task { uiImage = await ImageDownsampler.image(from: imageData, maxPixelSize: 1400) }
+        .task(id: index) {
+            guard imagesData.indices.contains(index) else { return }
+            uiImage = await ImageDownsampler.image(from: imagesData[index], maxPixelSize: 1400)
+        }
     }
 
     /// Görselin kutu içindeki gösterim boyutu: doldur (aspect-fill) × zoom. Composer'daki

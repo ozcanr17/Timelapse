@@ -56,7 +56,7 @@ final class SharedProjectService {
 
         let share = CKShare(rootRecord: project)
         share[CKShare.SystemFieldKey.title] = title as CKRecordValue
-        share.publicPermission = .none
+        share.publicPermission = .readWrite
 
         var toSave: [CKRecord] = [project, share]
         for entry in entries.sorted(by: { $0.capturedAt < $1.capturedAt }).suffix(50) {

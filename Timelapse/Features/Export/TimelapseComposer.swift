@@ -178,6 +178,8 @@ struct TimelapseExportSettings: Equatable {
     var smartAlignment: Bool = false
     /// Manuel hizalama (Pro): ayarlıysa Akıllı Hizalama'nın yerine geçer.
     var manualAnchor: ManualAlignment? = nil
+    /// Kare başına manuel hizalama (Pro): her fotoğraf ayrı ayrı hizalanmışsa dolu.
+    var manualAnchors: [ManualAlignment]? = nil
     /// Kareler arası geçiş.
     var transition: TimelapseTransition = .cut
     /// Akıllı Hizalama'nın hangi özneyi kilitleyeceği (yüz / gövde / karın / grup).
@@ -198,6 +200,7 @@ struct TimelapseExportSettings: Equatable {
         overlay: TimelapseOverlayOptions = TimelapseOverlayOptions(),
         smartAlignment: Bool = false,
         manualAnchor: ManualAlignment? = nil,
+        manualAnchors: [ManualAlignment]? = nil,
         transition: TimelapseTransition = .cut,
         alignmentSubject: AlignmentSubject = .auto,
         soundtrackURL: URL? = nil,
@@ -212,6 +215,7 @@ struct TimelapseExportSettings: Equatable {
             overlay: overlay,
             smartAlignment: smartAlignment,
             manualAnchor: manualAnchor,
+            manualAnchors: manualAnchors,
             transition: transition,
             alignmentSubject: alignmentSubject,
             zoom: CGFloat(min(2, max(0.5, zoom))),
@@ -369,13 +373,17 @@ struct TimelapseComposer: TimelapseComposing {
             guard let image = UIImage(data: frames[index].imageData) else {
                 throw TimelapseComposerError.frameDecodingFailed
             }
+            var frameSettings = settings
+            if let perFrame = settings.manualAnchors, index < perFrame.count {
+                frameSettings.manualAnchor = perFrame[index]
+            }
             guard let composed = composeFrame(
                 image,
                 date: frames[index].capturedAt,
                 anchor: anchors[index],
                 reference: reference,
                 offset: offsets[index],
-                settings: settings
+                settings: frameSettings
             ) else { throw TimelapseComposerError.frameDecodingFailed }
             return composed
         }

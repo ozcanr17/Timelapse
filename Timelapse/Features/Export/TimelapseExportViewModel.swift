@@ -35,6 +35,7 @@ final class TimelapseExportViewModel {
         overlay: TimelapseOverlayOptions = TimelapseOverlayOptions(),
         smartAlignment: Bool = false,
         manualAnchor: ManualAlignment? = nil,
+        manualAnchors: [ManualAlignment]? = nil,
         transition: TimelapseTransition = .cut,
         alignmentSubject: AlignmentSubject = .auto
     ) {
@@ -64,7 +65,7 @@ final class TimelapseExportViewModel {
                 }
                 let settings = TimelapseExportSettings.current(
                     isPro: isPro, speed: speed, speedMultiplier: speedMultiplier, aspect: aspect, zoom: zoom, overlay: overlay,
-                    smartAlignment: smartAlignment, manualAnchor: manualAnchor, transition: transition,
+                    smartAlignment: smartAlignment, manualAnchor: manualAnchor, manualAnchors: manualAnchors, transition: transition,
                     alignmentSubject: alignmentSubject,
                     soundtrackURL: soundtrackURL,
                     beatTimes: beats
