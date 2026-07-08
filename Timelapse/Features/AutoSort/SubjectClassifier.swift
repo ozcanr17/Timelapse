@@ -14,9 +14,11 @@ struct SubjectClassifier: SubjectClassifying {
     }
 
     static func compute(_ data: Data) -> SubjectSignature {
-        guard let image = UIImage(data: data), let cgImage = image.cgImage else { return .empty }
-        let orientation = cgOrientation(from: image.imageOrientation)
-        let handler = VNImageRequestHandler(cgImage: cgImage, orientation: orientation, options: [:])
+        guard
+            let image = ImageDownsampler.image(from: data, maxPixelSize: 1024),
+            let cgImage = image.cgImage
+        else { return .empty }
+        let handler = VNImageRequestHandler(cgImage: cgImage, orientation: .up, options: [:])
 
         let faceRequest = VNDetectFaceRectanglesRequest()
         let animalRequest = VNRecognizeAnimalsRequest()
@@ -37,13 +39,41 @@ struct SubjectClassifier: SubjectClassifying {
             kind = kindFromLabels(labels)
         }
 
-        let vector = featurePrint(cgImage, orientation: orientation)
+        var focus = cgImage
+        if kind == .person,
+           let box = largestFaceBox(faceRequest.results),
+           let crop = faceCrop(cgImage, normalizedBox: box) {
+            focus = crop
+        }
+
+        let vector = featurePrint(focus)
         return SubjectSignature(kind: kind, vector: FeatureVector.normalized(vector), labels: labels)
     }
 
-    private static func featurePrint(_ cgImage: CGImage, orientation: CGImagePropertyOrientation) -> [Float] {
+    /// Kişi fotoğraflarında imza tüm sahneden değil YÜZ bölgesinden çıkarılır; böylece
+    /// arka plan ve kıyafet değişse de aynı kişi aynı projeye eşleşir.
+    private static func largestFaceBox(_ faces: [VNFaceObservation]?) -> CGRect? {
+        faces?.max(by: { $0.boundingBox.width * $0.boundingBox.height < $1.boundingBox.width * $1.boundingBox.height })?.boundingBox
+    }
+
+    private static func faceCrop(_ cgImage: CGImage, normalizedBox box: CGRect) -> CGImage? {
+        let width = CGFloat(cgImage.width)
+        let height = CGFloat(cgImage.height)
+        var rect = CGRect(
+            x: box.minX * width,
+            y: (1 - box.maxY) * height,
+            width: box.width * width,
+            height: box.height * height
+        )
+        rect = rect.insetBy(dx: -rect.width * 0.45, dy: -rect.height * 0.45)
+        rect = rect.intersection(CGRect(x: 0, y: 0, width: width, height: height))
+        guard rect.width >= 32, rect.height >= 32 else { return nil }
+        return cgImage.cropping(to: rect.integral)
+    }
+
+    private static func featurePrint(_ cgImage: CGImage) -> [Float] {
         let request = VNGenerateImageFeaturePrintRequest()
-        let handler = VNImageRequestHandler(cgImage: cgImage, orientation: orientation, options: [:])
+        let handler = VNImageRequestHandler(cgImage: cgImage, orientation: .up, options: [:])
         try? handler.perform([request])
         guard let observation = request.results?.first as? VNFeaturePrintObservation else { return [] }
         let data = observation.data
@@ -65,17 +95,4 @@ struct SubjectClassifier: SubjectClassifying {
         return labels.isEmpty ? .unknown : .object
     }
 
-    private static func cgOrientation(from orientation: UIImage.Orientation) -> CGImagePropertyOrientation {
-        switch orientation {
-        case .up:            .up
-        case .upMirrored:    .upMirrored
-        case .down:          .down
-        case .downMirrored:  .downMirrored
-        case .left:          .left
-        case .leftMirrored:  .leftMirrored
-        case .right:         .right
-        case .rightMirrored: .rightMirrored
-        @unknown default:    .up
-        }
-    }
 }

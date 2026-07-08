@@ -73,7 +73,7 @@ struct PaywallView: View {
             ProFeatureRow(icon: "wand.and.stars", title: "Akıllı hizalama", subtitle: "Otomatik kare eşleştirme")
             ProFeatureRow(icon: "icloud.fill", title: "iCloud yedekleme", subtitle: "Fotoğrafların hep güvende")
             ProFeatureRow(icon: "person.2.fill", title: "Çift modu", subtitle: "Birlikte kaydedin")
-            ProFeatureRow(icon: "photo.on.rectangle.angled", title: "Fotoğraflardan içe aktar", subtitle: "Var olan kareleri timelapse yap")
+            ProFeatureRow(icon: "photo.on.rectangle.angled", title: "Sınırsız fotoğraf aktarımı", subtitle: "14 kare sınırı olmadan içe aktar")
             ProFeatureRow(icon: "wand.and.rays", title: "Otomatik proje ayırma", subtitle: "Kare doğru projeye kendiliğinden gitsin")
             ProFeatureRow(icon: "film", title: "4K, filigransız export", subtitle: "Paylaşıma hazır video")
         }
@@ -90,7 +90,7 @@ struct PaywallView: View {
                 ForEach(viewModel.packages) { package in
                     PackageCard(
                         package: package,
-                        isBestValue: package.id.contains("lifetime"),
+                        badge: badge(for: package),
                         isSelected: selectedPackageID == package.id
                     ) {
                         selectedPackageID = package.id
@@ -102,7 +102,7 @@ struct PaywallView: View {
                     else { return }
                     Task { if await viewModel.purchase(package) { dismiss() } }
                 } label: {
-                    Text(viewModel.isPurchasing ? "İşleniyor…" : "Devam Et")
+                    Text(ctaTitle)
                 }
                 .buttonStyle(.timelapsePrimary)
                 .disabled(viewModel.isPurchasing)
@@ -111,9 +111,21 @@ struct PaywallView: View {
         }
         .onChange(of: viewModel.packages) { _, packages in
             if selectedPackageID == nil {
-                selectedPackageID = packages.first(where: { $0.id.contains("lifetime") })?.id ?? packages.first?.id
+                selectedPackageID = packages.first(where: { $0.id.contains("yearly") })?.id ?? packages.first?.id
             }
         }
+    }
+
+    private var ctaTitle: LocalizedStringKey {
+        if viewModel.isPurchasing { return "İşleniyor…" }
+        let selected = viewModel.packages.first { $0.id == selectedPackageID }
+        return selected?.hasTrial == true ? "7 Gün Ücretsiz Başla" : "Devam Et"
+    }
+
+    private func badge(for package: StorePackage) -> LocalizedStringKey? {
+        if package.id.contains("yearly") { return "EN AVANTAJLI" }
+        if package.id.contains("lifetime") { return "TEK SEFERLİK" }
+        return nil
     }
 
     private var restoreButton: some View {
@@ -127,7 +139,7 @@ struct PaywallView: View {
 
     private var legalText: some View {
         VStack(spacing: 10) {
-            Text("Aylık abonelik dönem sonunda otomatik yenilenir; en az 24 saat önce iptal etmezsen ücret Apple Kimliği hesabından tahsil edilir. Ömür boyu seçenek tek seferlik bir satın alımdır. Aboneliğini App Store hesap ayarlarından yönetebilir veya iptal edebilirsin.")
+            Text("Abonelikler 7 günlük ücretsiz denemeyle başlar; deneme bitmeden en az 24 saat önce iptal etmezsen abonelik otomatik başlar ve dönem sonunda yenilenir. Ücret Apple Kimliği hesabından tahsil edilir. Ömür boyu seçenek tek seferlik bir satın alımdır. Aboneliğini App Store hesap ayarlarından yönetebilir veya iptal edebilirsin.")
                 .font(.caption2)
                 .foregroundStyle(.white.opacity(0.6))
                 .multilineTextAlignment(.center)
@@ -169,7 +181,7 @@ private struct ProFeatureRow: View {
 
 private struct PackageCard: View {
     let package: StorePackage
-    let isBestValue: Bool
+    let badge: LocalizedStringKey?
     let isSelected: Bool
     let action: () -> Void
 
@@ -181,8 +193,8 @@ private struct PackageCard: View {
                 VStack(alignment: .leading, spacing: 4) {
                     HStack(spacing: 6) {
                         Text(package.displayName).font(Theme.headline(16)).foregroundStyle(theme.ink)
-                        if isBestValue {
-                            Text("TEK SEFERLİK")
+                        if let badge {
+                            Text(badge)
                                 .font(.system(size: 10, weight: .bold))
                                 .foregroundStyle(.white)
                                 .padding(.horizontal, 6).padding(.vertical, 2)
@@ -193,6 +205,11 @@ private struct PackageCard: View {
                     Text(package.displayPrice)
                         .font(Theme.body(15)).monospacedDigit()
                         .foregroundStyle(theme.inkMuted)
+                    if package.hasTrial {
+                        Text("İlk 7 gün ücretsiz")
+                            .font(Theme.caption(12))
+                            .foregroundStyle(theme.accent)
+                    }
                 }
                 Spacer()
                 Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")

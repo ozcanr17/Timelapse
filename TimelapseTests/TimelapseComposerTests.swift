@@ -99,16 +99,16 @@ final class TimelapseExportSettingsTests: XCTestCase {
         XCTAssertTrue(settings.includesWatermark)
     }
 
-    func test_varsayilanHiz_normaldirVe8fpsdir() {
-        XCTAssertEqual(TimelapseExportSettings.current(isPro: false).framesPerSecond, 8)
-        XCTAssertEqual(TimelapseExportSettings.current(isPro: true).framesPerSecond, 8)
+    func test_varsayilanHiz_normaldirVe4fpsdir() {
+        XCTAssertEqual(TimelapseExportSettings.current(isPro: false).framesPerSecond, 4)
+        XCTAssertEqual(TimelapseExportSettings.current(isPro: true).framesPerSecond, 4)
     }
 
     func test_hizSeciminiKareHizinaUygular() {
-        XCTAssertEqual(TimelapseExportSettings.current(isPro: false, speed: .quarter).framesPerSecond, 2)
-        XCTAssertEqual(TimelapseExportSettings.current(isPro: false, speed: .slow).framesPerSecond, 4)
-        XCTAssertEqual(TimelapseExportSettings.current(isPro: true, speed: .fast).framesPerSecond, 16)
-        XCTAssertEqual(TimelapseExportSettings.current(isPro: true, speed: .turbo).framesPerSecond, 24)
+        XCTAssertEqual(TimelapseExportSettings.current(isPro: false, speed: .quarter).framesPerSecond, 1)
+        XCTAssertEqual(TimelapseExportSettings.current(isPro: false, speed: .slow).framesPerSecond, 2)
+        XCTAssertEqual(TimelapseExportSettings.current(isPro: true, speed: .fast).framesPerSecond, 8)
+        XCTAssertEqual(TimelapseExportSettings.current(isPro: true, speed: .turbo).framesPerSecond, 12)
     }
 
     func test_besHizSecenegiVar() {

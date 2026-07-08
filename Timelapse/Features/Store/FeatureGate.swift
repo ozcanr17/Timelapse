@@ -1,5 +1,6 @@
 import Foundation
 
+
 /// Uygulamanın premium özellikleri. Hangi özelliğin ücretli olduğunu tek listede toplar.
 enum PremiumFeature {
     case unlimitedProjects
@@ -77,5 +78,23 @@ enum FeatureGate {
     /// Bir premium özellik açık mı? Şimdilik hepsi tek kapıdan (Pro aboneliği) açılır.
     static func isUnlocked(_ feature: PremiumFeature, isPro: Bool) -> Bool {
         isPro
+    }
+
+    /// Abonelik bittiğinde (veya hiç alınmadığında) projenin yalnızca son 14 karesi
+    /// görünür; daha eskiler kilitlenir.
+    static func lockedEntryCount(isPro: Bool, totalEntries: Int) -> Int {
+        isPro ? 0 : max(0, totalEntries - freeEntryLimit)
+    }
+
+    /// 14 kareden büyük projelerde timelapse üretimi Pro ister; ücretsiz ayarlarla bile
+    /// oluşturulamaz.
+    static func canExportTimelapse(isPro: Bool, entryCount: Int) -> Bool {
+        isPro || entryCount <= freeEntryLimit
+    }
+
+    /// Ücretsiz katmanda yalnızca EN YENİ proje erişilebilir kalır; eskiler kilitlenir.
+    static func unlockedProjectID(isPro: Bool, projects: [(id: UUID, createdAt: Date)]) -> UUID? {
+        if isPro { return nil }
+        return projects.max(by: { $0.createdAt < $1.createdAt })?.id
     }
 }

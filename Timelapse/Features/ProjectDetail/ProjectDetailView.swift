@@ -131,7 +131,11 @@ struct ProjectDetailView: View {
             case .invite:
                 ActivityView(activityItems: [inviteText])
             case .importPhotos:
-                PhotoImportSheet(mode: .existing(project), repository: ProjectRepository(context: modelContext))
+                PhotoImportSheet(
+                    mode: .existing(project),
+                    repository: ProjectRepository(context: modelContext),
+                    maxSelection: store.isPro ? nil : max(0, FeatureGate.freeEntryLimit - liveEntries.count)
+                )
             case .cloudShare:
                 if let preparedShare {
                     CloudSharingView(share: preparedShare, container: SharedProjectService.shared.container) { updated in
@@ -211,13 +215,17 @@ struct ProjectDetailView: View {
     }
 
     private var inviteText: String {
-        String(localized: "Flapse'te \"\(project.title)\" projesinde birlikte çekim yapalım! Uygulamayı indirip aynı hikâyeyi birlikte biriktirelim. 📸")
+        String(localized: "Flapse'te \"\(project.title)\" projesinde birlikte çekim yapalım! Uygulamayı indirip aynı hikayeyi birlikte biriktirelim. 📸")
     }
 
     /// Birlikte Çekim: arkadaşları davet edip aynı projeye birlikte katkı yapmak için
     /// sistem paylaşım sayfasını açar (Pro). Ücretsiz kullanıcı paywall görür.
     private func importTapped() {
-        if store.isPro { activeSheet = .importPhotos } else { activeSheet = .paywall }
+        if store.isPro || liveEntries.count < FeatureGate.freeEntryLimit {
+            activeSheet = .importPhotos
+        } else {
+            activeSheet = .paywall
+        }
     }
 
     private func inviteTapped() {
@@ -407,11 +415,16 @@ struct ProjectDetailView: View {
         }
     }
 
+    private var canExport: Bool {
+        FeatureGate.canExportTimelapse(isPro: store.isPro, entryCount: liveEntries.count)
+    }
+
     private var exportButton: some View {
         Button {
-            activeSheet = .export
+            activeSheet = canExport ? .export : .paywall
         } label: {
-            Label("Timelapse'i Oluştur", systemImage: "film.stack")
+            Label(canExport ? "Timelapse'i Oluştur" : "Timelapse için Pro'ya geç",
+                  systemImage: canExport ? "film.stack" : "lock.fill")
                 .font(Theme.headline(17))
                 .foregroundStyle(accent)
                 .frame(maxWidth: .infinity)
@@ -453,8 +466,41 @@ struct ProjectDetailView: View {
                     }
                 }
             }
+
+            if lockedCount > 0 {
+                lockedEntriesBanner
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var lockedCount: Int {
+        FeatureGate.lockedEntryCount(isPro: store.isPro, totalEntries: liveEntries.count)
+    }
+
+    private var lockedEntriesBanner: some View {
+        Button {
+            activeSheet = .paywall
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: "lock.fill")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(accent)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("\(lockedCount) kare kilitli")
+                        .font(Theme.headline(15)).foregroundStyle(theme.ink)
+                    Text("Tüm karelerine erişmek için Pro'ya geç")
+                        .font(Theme.caption(12)).foregroundStyle(theme.inkMuted)
+                }
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 13, weight: .semibold)).foregroundStyle(theme.inkMuted)
+            }
+            .padding(14)
+            .background(theme.surface, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .padding(.top, 10)
     }
 
     private var monthFilterBar: some View {
@@ -473,14 +519,19 @@ struct ProjectDetailView: View {
         }
     }
 
-    private var displayedEntries: [Entry] {
+    private var accessibleEntries: [Entry] {
         let newestFirst = liveEntries.sorted { $0.capturedAt > $1.capturedAt }
-        guard let monthFilter else { return newestFirst }
-        return newestFirst.filter { monthKey(for: $0.capturedAt) == monthFilter }
+        guard lockedCount > 0 else { return newestFirst }
+        return Array(newestFirst.prefix(FeatureGate.freeEntryLimit))
+    }
+
+    private var displayedEntries: [Entry] {
+        guard let monthFilter else { return accessibleEntries }
+        return accessibleEntries.filter { monthKey(for: $0.capturedAt) == monthFilter }
     }
 
     private var availableMonths: [MonthKey] {
-        let keys = Set(liveEntries.map { monthKey(for: $0.capturedAt) })
+        let keys = Set(accessibleEntries.map { monthKey(for: $0.capturedAt) })
         return keys.sorted { ($0.year, $0.month) > ($1.year, $1.month) }
     }
 

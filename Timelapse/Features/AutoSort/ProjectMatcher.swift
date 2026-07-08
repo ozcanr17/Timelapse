@@ -13,7 +13,7 @@ struct ProjectMatch: Equatable {
 
 enum ProjectMatcher {
 
-    static let autoAssignDistance: Float = 0.55
+    static let autoAssignDistance: Float = 0.65
     static let suggestDistance: Float = 0.95
 
     enum Decision: Equatable {

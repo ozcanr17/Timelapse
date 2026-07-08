@@ -20,14 +20,14 @@ enum TimelapseSpeed: String, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
-    /// Saniyedeki kare sayısı. `normal` mevcut varsayılanı (8 fps) korur.
+    /// Saniyedeki kare sayısı. `normal` = 4 fps (eski 0.5×); diğerleri buna göre ölçeklenir.
     var framesPerSecond: Int32 {
         switch self {
-        case .quarter: 2
-        case .slow:    4
-        case .normal:  8
-        case .fast:    16
-        case .turbo:   24
+        case .quarter: 1
+        case .slow:    2
+        case .normal:  4
+        case .fast:    8
+        case .turbo:   12
         }
     }
 

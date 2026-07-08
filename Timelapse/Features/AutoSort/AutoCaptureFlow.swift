@@ -96,6 +96,7 @@ struct AutoCaptureFlow: View {
         lastData = data
         withAnimation { phase = .classifying }
         Task {
+            await migrateSignaturesIfNeeded()
             let computed = await classifier.signature(for: data)
             signature = computed
             let sets = projects.compactMap(signatureSet(for:))
@@ -148,6 +149,26 @@ struct AutoCaptureFlow: View {
         ) {
             assign(to: project)
         }
+    }
+
+    private static let signatureVersionKey = "autosort.signature.version"
+
+    /// Yüz-odaklı imza (v2) öncesinde kaydedilmiş tüm-sahne imzalarını, projelerin son
+    /// karelerinden bir kez yeniden hesaplar; eski projeler de yeni eşleştirmeden yararlanır.
+    private func migrateSignaturesIfNeeded() async {
+        let defaults = UserDefaults.standard
+        guard defaults.integer(forKey: Self.signatureVersionKey) < 2 else { return }
+        for project in projects {
+            for entry in project.sortedEntries.suffix(8) {
+                guard let data = entry.imageData else { continue }
+                let sig = await classifier.signature(for: data)
+                guard !sig.isEmpty else { continue }
+                entry.featurePrintData = FeatureVector.data(from: sig.vector)
+                if sig.kind != .unknown { entry.subjectKindRaw = sig.kind.rawValue }
+            }
+        }
+        try? modelContext.save()
+        defaults.set(2, forKey: Self.signatureVersionKey)
     }
 
     private func signatureSet(for project: Project) -> ProjectSignatureSet? {

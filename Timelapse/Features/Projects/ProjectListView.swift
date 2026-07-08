@@ -39,6 +39,22 @@ struct ProjectListView: View {
         projects.filter { !$0.isDeleted }
     }
 
+    private var unlockedProjectID: UUID? {
+        FeatureGate.unlockedProjectID(
+            isPro: store.isPro,
+            projects: liveProjects.map { (id: $0.id, createdAt: $0.createdAt) }
+        )
+    }
+
+    private func isLocked(_ project: Project) -> Bool {
+        guard !store.isPro else { return false }
+        return project.id != unlockedProjectID
+    }
+
+    private var capturableProjects: [Project] {
+        liveProjects.filter { !isLocked($0) }
+    }
+
     var body: some View {
         ZStack {
             theme.canvas.ignoresSafeArea()
@@ -56,14 +72,34 @@ struct ProjectListView: View {
                         if !project.isDeleted {
                             ProjectCard(project: project)
                                 .overlay {
-                                    NavigationLink {
-                                        ProjectDetailView(project: project)
-                                    } label: {
-                                        Color.clear
-                                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                    if isLocked(project) {
+                                        Button {
+                                            activeSheet = .paywall
+                                        } label: {
+                                            ZStack {
+                                                Color.black.opacity(0.45)
+                                                VStack(spacing: 8) {
+                                                    Image(systemName: "lock.fill")
+                                                        .font(.system(size: 26, weight: .semibold))
+                                                    Text("Pro ile aç")
+                                                        .font(Theme.headline(15))
+                                                }
+                                                .foregroundStyle(.white)
+                                            }
                                             .contentShape(Rectangle())
+                                        }
+                                        .buttonStyle(.plain)
+                                        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+                                    } else {
+                                        NavigationLink {
+                                            ProjectDetailView(project: project)
+                                        } label: {
+                                            Color.clear
+                                                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                                .contentShape(Rectangle())
+                                        }
+                                        .buttonStyle(.plain)
                                     }
-                                    .buttonStyle(.plain)
                                 }
                                 .accessibilityElement(children: .combine)
                                 .accessibilityAddTraits(.isButton)
@@ -128,13 +164,17 @@ struct ProjectListView: View {
             case .addProject:
                 AddProjectSheet(repository: ProjectRepository(context: modelContext))
             case .importNew:
-                PhotoImportSheet(mode: .newProject, repository: ProjectRepository(context: modelContext))
+                PhotoImportSheet(
+                    mode: .newProject,
+                    repository: ProjectRepository(context: modelContext),
+                    maxSelection: store.isPro ? nil : FeatureGate.freeEntryLimit
+                )
             case .paywall:
                 PaywallView(store: store)
             }
         }
         .sheet(isPresented: $showQuickPick, onDismiss: presentPendingCapture) {
-            QuickCaptureSheet(projects: liveProjects) { project in
+            QuickCaptureSheet(projects: capturableProjects) { project in
                 pendingCapture = project
                 showQuickPick = false
             }
@@ -146,7 +186,7 @@ struct ProjectListView: View {
             case .project(let project):
                 CameraCaptureView(project: project)
             case .auto:
-                AutoCaptureFlow(projects: liveProjects)
+                AutoCaptureFlow(projects: capturableProjects)
             }
         }
         .confirmationDialog(
@@ -190,7 +230,11 @@ struct ProjectListView: View {
     }
 
     private func importTapped() {
-        activeSheet = store.isPro ? .importNew : .paywall
+        if store.isPro || FeatureGate.canCreateProject(isPro: false, currentProjectCount: liveProjects.count) {
+            activeSheet = .importNew
+        } else {
+            activeSheet = .paywall
+        }
     }
 
     /// Ana ekranda öne çıkan çekim düğmesi: uygulamanın asıl amacı. Tek proje varsa

@@ -75,9 +75,17 @@ final class StoreService: StoreServiceProtocol {
     func loadProducts() async {
         do {
             let products = try await Product.products(for: StoreProduct.allCases.map(\.rawValue))
-            storeProducts = products
-            packages = products.map {
-                StorePackage(id: $0.id, displayName: $0.displayName, displayPrice: $0.displayPrice)
+            let order = StoreProduct.allCases.map(\.rawValue)
+            storeProducts = products.sorted {
+                (order.firstIndex(of: $0.id) ?? .max) < (order.firstIndex(of: $1.id) ?? .max)
+            }
+            packages = storeProducts.map {
+                StorePackage(
+                    id: $0.id,
+                    displayName: $0.displayName,
+                    displayPrice: $0.displayPrice,
+                    hasTrial: $0.subscription?.introductoryOffer?.paymentMode == .freeTrial
+                )
             }
         } catch {
             storeProducts = []

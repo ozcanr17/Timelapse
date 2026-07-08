@@ -10,6 +10,7 @@ struct EntryViewerView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Environment(\.theme) private var theme
+    @Environment(StoreService.self) private var store
 
     @State private var selectedEntryID: UUID
     @State private var isConfirmingDelete = false
@@ -22,7 +23,9 @@ struct EntryViewerView: View {
     }
 
     private var entries: [Entry] {
-        project.sortedEntries.filter { !$0.isDeleted }
+        let live = project.sortedEntries.filter { !$0.isDeleted }
+        guard !store.isPro else { return live }
+        return Array(live.suffix(FeatureGate.freeEntryLimit))
     }
 
     private var selectedEntry: Entry? {

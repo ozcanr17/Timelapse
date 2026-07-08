@@ -2,6 +2,7 @@
 /// dosyasında bu ID'lerle eşleşen abonelikleri tanımlamalısın.
 enum StoreProduct: String, CaseIterable {
     case monthly  = "com.ridvan.timelapse.pro.monthly"    // aylık abonelik
+    case yearly   = "com.ridvan.timelapse.pro.yearly"     // yıllık abonelik
     case lifetime = "com.ridvan.timelapse.pro.lifetime"   // tek seferlik (kalıcı) satın alma
 }
 
@@ -13,6 +14,7 @@ struct StorePackage: Identifiable, Equatable {
     let id: String           // ürün kimliği (productID)
     let displayName: String  // ör. "Pro (Aylık)"
     let displayPrice: String // yerelleştirilmiş fiyat, ör. "₺49,99"
+    var hasTrial: Bool = false  // 1 haftalık ücretsiz deneme sunuyor mu
 }
 
 enum StoreError: Error {

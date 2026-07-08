@@ -16,14 +16,17 @@ struct PhotoImportSheet: View {
     @State private var finished: Project?
 
     private let mode: Mode
+    private let maxSelection: Int?
     private let onFinished: (Project) -> Void
 
     init(
         mode: Mode,
         repository: ProjectRepositoryProtocol,
+        maxSelection: Int? = nil,
         onFinished: @escaping (Project) -> Void = { _ in }
     ) {
         self.mode = mode
+        self.maxSelection = maxSelection
         self.onFinished = onFinished
         _viewModel = State(initialValue: PhotoImportViewModel(repository: repository))
     }
@@ -77,7 +80,7 @@ struct PhotoImportSheet: View {
     private var picker: some View {
         PhotosPicker(
             selection: $selection,
-            maxSelectionCount: nil,
+            maxSelectionCount: maxSelection,
             selectionBehavior: .ordered,
             matching: .images,
             photoLibrary: .shared()
@@ -91,7 +94,7 @@ struct PhotoImportSheet: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(selection.isEmpty ? "Fotoğraf Seç" : "\(selection.count) fotoğraf seçildi")
                         .font(Theme.headline(17)).foregroundStyle(theme.ink)
-                    Text(selection.isEmpty ? "Kütüphanenden yüzlerce kare seçebilirsin" : "Değiştirmek için dokun")
+                    Text(pickerSubtitle)
                         .font(Theme.caption(13)).foregroundStyle(theme.inkMuted)
                 }
                 Spacer()
@@ -173,6 +176,12 @@ struct PhotoImportSheet: View {
         .buttonStyle(.timelapsePrimary)
         .disabled(!canImport)
         .padding(20)
+    }
+
+    private var pickerSubtitle: LocalizedStringKey {
+        if !selection.isEmpty { return "Değiştirmek için dokun" }
+        if let maxSelection { return "En fazla \(maxSelection) fotoğraf seçebilirsin (ücretsiz sınır)" }
+        return "Kütüphanenden yüzlerce kare seçebilirsin"
     }
 
     private var canImport: Bool {
