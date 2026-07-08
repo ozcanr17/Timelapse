@@ -30,8 +30,8 @@ final class ReminderScheduler {
             ) else { continue }
 
             let content = UNMutableNotificationContent()
-            content.title = String(localized: "Çekim zamanı")
-            content.body = String(localized: "\(project.title) için bugünkü kareni ekle.")
+            content.title = String(localized: "Çekim zamanı", bundle: .appLanguage)
+            content.body = String(localized: "\(project.title) için bugünkü kareni ekle.", bundle: .appLanguage)
             content.sound = .default
             if let imageData = project.sortedEntries.last(where: { !$0.isDeleted })?.imageData,
                let attachment = Self.makeAttachment(imageData: imageData, id: project.id) {

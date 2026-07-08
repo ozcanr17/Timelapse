@@ -52,14 +52,14 @@ final class PhotoImportViewModel {
                 self?.progress = value
             }
             guard !entries.isEmpty else {
-                phase = .failed(String(localized: "Seçilen fotoğraflar içe aktarılamadı."))
+                phase = .failed(String(localized: "Seçilen fotoğraflar içe aktarılamadı.", bundle: .appLanguage))
                 return nil
             }
             try repository.addEntries(entries, to: project)
             phase = .done(entries.count)
             return project
         } catch {
-            phase = .failed(String(localized: "İçe aktarma başarısız: \(error.localizedDescription)"))
+            phase = .failed(String(localized: "İçe aktarma başarısız: \(error.localizedDescription)", bundle: .appLanguage))
             return nil
         }
     }

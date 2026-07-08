@@ -23,16 +23,16 @@ enum ProjectCategory: String, Codable, CaseIterable, Identifiable {
     /// Kullanıcıya gösterilecek okunabilir ad. (switch-as-expression: Swift 5.9+)
     var displayName: String {
         switch self {
-        case .selfPortrait: String(localized: "Kendim")
-        case .child:        String(localized: "Çocuk")
-        case .plant:        String(localized: "Bitki")
-        case .hairAndBeard: String(localized: "Saç & Sakal")
-        case .pet:          String(localized: "Evcil hayvan")
-        case .fitness:      String(localized: "Fitness")
-        case .pregnancy:    String(localized: "Hamilelik")
-        case .baby:         String(localized: "Bebek")
-        case .coupleMode:   String(localized: "Çift Modu")
-        case .other:        String(localized: "Diğer")
+        case .selfPortrait: String(localized: "Kendim", bundle: .appLanguage)
+        case .child:        String(localized: "Çocuk", bundle: .appLanguage)
+        case .plant:        String(localized: "Bitki", bundle: .appLanguage)
+        case .hairAndBeard: String(localized: "Saç & Sakal", bundle: .appLanguage)
+        case .pet:          String(localized: "Evcil hayvan", bundle: .appLanguage)
+        case .fitness:      String(localized: "Fitness", bundle: .appLanguage)
+        case .pregnancy:    String(localized: "Hamilelik", bundle: .appLanguage)
+        case .baby:         String(localized: "Bebek", bundle: .appLanguage)
+        case .coupleMode:   String(localized: "Çift Modu", bundle: .appLanguage)
+        case .other:        String(localized: "Diğer", bundle: .appLanguage)
         }
     }
 
@@ -51,9 +51,9 @@ enum CaptureCadence: String, Codable, CaseIterable, Identifiable {
 
     var displayName: String {
         switch self {
-        case .daily:         String(localized: "Her gün")
-        case .everyOtherDay: String(localized: "Gün aşırı")
-        case .weekly:        String(localized: "Haftalık")
+        case .daily:         String(localized: "Her gün", bundle: .appLanguage)
+        case .everyOtherDay: String(localized: "Gün aşırı", bundle: .appLanguage)
+        case .weekly:        String(localized: "Haftalık", bundle: .appLanguage)
         }
     }
 

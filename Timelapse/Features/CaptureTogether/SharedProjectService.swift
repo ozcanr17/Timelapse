@@ -132,7 +132,7 @@ final class SharedProjectService {
 
         return SharedProjectSnapshot(
             shareRecordName: metadata.share.recordID.recordName,
-            title: root["title"] as? String ?? String(localized: "Ortak Proje"),
+            title: root["title"] as? String ?? String(localized: "Ortak Proje", bundle: .appLanguage),
             categoryRaw: root["category"] as? String ?? ProjectCategory.other.rawValue,
             cadenceRaw: root["cadence"] as? String ?? CaptureCadence.daily.rawValue,
             entries: entries

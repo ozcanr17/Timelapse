@@ -22,21 +22,21 @@ enum PremiumFeature {
 
     var title: String {
         switch self {
-        case .unlimitedProjects: String(localized: "Sınırsız proje")
-        case .smartAlignment:    String(localized: "Akıllı hizalama")
-        case .cloudBackup:       String(localized: "iCloud yedekleme")
-        case .coupleMode:        String(localized: "Birlikte Çekim")
-        case .highResExport:     String(localized: "4K, filigransız export")
+        case .unlimitedProjects: String(localized: "Sınırsız proje", bundle: .appLanguage)
+        case .smartAlignment:    String(localized: "Akıllı hizalama", bundle: .appLanguage)
+        case .cloudBackup:       String(localized: "iCloud yedekleme", bundle: .appLanguage)
+        case .coupleMode:        String(localized: "Birlikte Çekim", bundle: .appLanguage)
+        case .highResExport:     String(localized: "4K, filigransız export", bundle: .appLanguage)
         }
     }
 
     var subtitle: String {
         switch self {
-        case .unlimitedProjects: String(localized: "İstediğin kadar hikaye takip et")
-        case .smartAlignment:    String(localized: "Otomatik kare eşleştirme")
-        case .cloudBackup:       String(localized: "Fotoğrafların hep güvende")
-        case .coupleMode:        String(localized: "Davet linkiyle aynı projeye birlikte çekin")
-        case .highResExport:     String(localized: "Paylaşıma hazır video")
+        case .unlimitedProjects: String(localized: "İstediğin kadar hikaye takip et", bundle: .appLanguage)
+        case .smartAlignment:    String(localized: "Otomatik kare eşleştirme", bundle: .appLanguage)
+        case .cloudBackup:       String(localized: "Fotoğrafların hep güvende", bundle: .appLanguage)
+        case .coupleMode:        String(localized: "Davet linkiyle aynı projeye birlikte çekin", bundle: .appLanguage)
+        case .highResExport:     String(localized: "Paylaşıma hazır video", bundle: .appLanguage)
         }
     }
 

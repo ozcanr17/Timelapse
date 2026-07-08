@@ -126,7 +126,7 @@ struct EntryViewerView: View {
                 Text(entry.capturedAt, format: .dateTime.weekday(.wide).day().month().year())
                     .font(Theme.headline(15))
                 HStack(spacing: 16) {
-                    Label(entry.capturedAt.formatted(.dateTime.hour().minute()), systemImage: "clock")
+                    Label(entry.capturedAt.formatted(.dateTime.hour().minute().locale(AppLanguage.currentLocale)), systemImage: "clock")
                     if let place = entry.placeName, !place.isEmpty {
                         Label(place, systemImage: "mappin.and.ellipse").lineLimit(1)
                     }

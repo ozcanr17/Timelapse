@@ -22,15 +22,15 @@ final class PaywallViewModel {
     /// fiyatların GÖRÜNMESİ için gösterilen yedek liste. Ayarladığımız fiyatları yansıtır.
     static let fallbackPackages: [StorePackage] = [
         StorePackage(id: StoreProduct.monthly.rawValue,
-                     displayName: String(localized: "Pro (Aylık)"),
+                     displayName: String(localized: "Pro (Aylık)", bundle: .appLanguage),
                      displayPrice: "$0.99 / ay",
                      hasTrial: true),
         StorePackage(id: StoreProduct.yearly.rawValue,
-                     displayName: String(localized: "Pro (Yıllık)"),
+                     displayName: String(localized: "Pro (Yıllık)", bundle: .appLanguage),
                      displayPrice: "$9.99 / yıl",
                      hasTrial: true),
         StorePackage(id: StoreProduct.lifetime.rawValue,
-                     displayName: String(localized: "Pro (Ömür Boyu)"),
+                     displayName: String(localized: "Pro (Ömür Boyu)", bundle: .appLanguage),
                      displayPrice: "$19.99")
     ]
 
@@ -46,7 +46,7 @@ final class PaywallViewModel {
         do {
             return try await store.purchase(package)
         } catch {
-            errorMessage = String(localized: "Satın alma tamamlanamadı: \(error.localizedDescription)")
+            errorMessage = String(localized: "Satın alma tamamlanamadı: \(error.localizedDescription)", bundle: .appLanguage)
             return false
         }
     }
@@ -56,7 +56,7 @@ final class PaywallViewModel {
         defer { isPurchasing = false }
         await store.restore()
         if !store.isPro {
-            errorMessage = String(localized: "Geri yüklenecek bir abonelik bulunamadı.")
+            errorMessage = String(localized: "Geri yüklenecek bir abonelik bulunamadı.", bundle: .appLanguage)
         }
     }
 }

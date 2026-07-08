@@ -267,7 +267,7 @@ struct PhotoImportSheet: View {
     }
 
     private var navigationTitle: String {
-        if case .existing = mode { return String(localized: "Fotoğraf Ekle") }
-        return String(localized: "Fotoğraflardan Oluştur")
+        if case .existing = mode { return String(localized: "Fotoğraf Ekle", bundle: .appLanguage) }
+        return String(localized: "Fotoğraflardan Oluştur", bundle: .appLanguage)
     }
 }

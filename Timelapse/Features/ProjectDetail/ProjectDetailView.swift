@@ -226,13 +226,16 @@ struct ProjectDetailView: View {
 
     private func toolbarIcon(_ name: String) -> some View {
         Image(systemName: name)
-            .font(.system(size: 17, weight: .medium))
+            .resizable()
+            .scaledToFit()
+            .fontWeight(.medium)
             .foregroundStyle(accent)
+            .frame(width: 21, height: 21)
             .frame(width: 30, height: 30, alignment: .center)
     }
 
     private var inviteText: String {
-        String(localized: "Flapse'te \"\(project.title)\" projesinde birlikte çekim yapalım! Uygulamayı indirip aynı hikayeyi birlikte biriktirelim. 📸")
+        String(localized: "Flapse'te \"\(project.title)\" projesinde birlikte çekim yapalım! Uygulamayı indirip aynı hikayeyi birlikte biriktirelim. 📸", bundle: .appLanguage)
     }
 
     /// Birlikte Çekim: arkadaşları davet edip aynı projeye birlikte katkı yapmak için
@@ -423,7 +426,8 @@ struct ProjectDetailView: View {
             if project.isCaptureDue() {
                 Text("Bugün")
                     .font(Theme.caption(12))
-                    .foregroundStyle(theme.ink)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.black)
                     .padding(.horizontal, 11)
                     .padding(.vertical, 6)
                     .background(.white, in: Capsule())
@@ -529,7 +533,7 @@ struct ProjectDetailView: View {
     private var monthFilterBar: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
-                FilterChip(title: String(localized: "Tümü"), isSelected: monthFilter == nil, accent: accent) {
+                FilterChip(title: String(localized: "Tümü", bundle: .appLanguage), isSelected: monthFilter == nil, accent: accent) {
                     monthFilter = nil
                 }
                 ForEach(availableMonths, id: \.self) { key in
@@ -568,7 +572,7 @@ struct ProjectDetailView: View {
         components.year = key.year
         components.month = key.month
         guard let date = Calendar.current.date(from: components) else { return "" }
-        return date.formatted(.dateTime.month(.abbreviated).year())
+        return date.formatted(.dateTime.month(.abbreviated).year().locale(AppLanguage.currentLocale))
     }
 
     private var emptyState: some View {
@@ -758,7 +762,7 @@ private struct TimelineEntryRow: View {
     }
 
     private var timeStamp: some View {
-        Label(entry.capturedAt.formatted(.dateTime.hour().minute()), systemImage: "clock.fill")
+        Label(entry.capturedAt.formatted(.dateTime.hour().minute().locale(AppLanguage.currentLocale)), systemImage: "clock.fill")
             .font(.system(size: 9.5, weight: .semibold))
             .foregroundStyle(.white)
             .padding(.horizontal, 6)

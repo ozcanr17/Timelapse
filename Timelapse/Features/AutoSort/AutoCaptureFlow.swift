@@ -182,7 +182,7 @@ struct AutoCaptureFlow: View {
     }
 
     private func createAndAssign() {
-        let title = subjectLabel ?? String(localized: "Yeni Proje")
+        let title = subjectLabel ?? String(localized: "Yeni Proje", bundle: .appLanguage)
         let repository = ProjectRepository(context: modelContext)
         if let project = try? repository.createProject(
             title: title,

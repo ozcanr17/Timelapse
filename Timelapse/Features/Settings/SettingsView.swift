@@ -253,7 +253,7 @@ struct SettingsView: View {
         if auth.isSignedIn {
             Label {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(auth.displayName ?? auth.email ?? String(localized: "Apple ID ile girildi"))
+                    Text(auth.displayName ?? auth.email ?? String(localized: "Apple ID ile girildi", bundle: .appLanguage))
                         .font(Theme.headline(15))
                         .foregroundStyle(theme.ink)
                     if let email = auth.email {
@@ -296,12 +296,12 @@ struct SettingsView: View {
         case .success(let authorization):
             if auth.handle(authorization) {
                 store.setAdminUnlocked(true)
-                adminSignInMessage = String(localized: "Admin olarak giriş yapıldı — Pro açıldı. 👑")
+                adminSignInMessage = String(localized: "Admin olarak giriş yapıldı — Pro açıldı. 👑", bundle: .appLanguage)
             } else {
-                adminSignInMessage = String(localized: "Giriş yapıldı. Bu hesap admin değil; Pro açılmadı.")
+                adminSignInMessage = String(localized: "Giriş yapıldı. Bu hesap admin değil; Pro açılmadı.", bundle: .appLanguage)
             }
         case .failure:
-            adminSignInMessage = String(localized: "Apple ile giriş şu an kullanılamıyor (ücretli Apple Developer hesabı gerekir). Test için sürüm numarasına 7 kez dokunup geliştirici arka kapısını kullan.")
+            adminSignInMessage = String(localized: "Apple ile giriş şu an kullanılamıyor (ücretli Apple Developer hesabı gerekir). Test için sürüm numarasına 7 kez dokunup geliştirici arka kapısını kullan.", bundle: .appLanguage)
         }
     }
 

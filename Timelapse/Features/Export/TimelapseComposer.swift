@@ -55,10 +55,10 @@ enum OverlayCorner: String, CaseIterable, Identifiable {
 
     var displayName: String {
         switch self {
-        case .topLeft:     String(localized: "Sol üst")
-        case .topRight:    String(localized: "Sağ üst")
-        case .bottomLeft:  String(localized: "Sol alt")
-        case .bottomRight: String(localized: "Sağ alt")
+        case .topLeft:     String(localized: "Sol üst", bundle: .appLanguage)
+        case .topRight:    String(localized: "Sağ üst", bundle: .appLanguage)
+        case .bottomLeft:  String(localized: "Sol alt", bundle: .appLanguage)
+        case .bottomRight: String(localized: "Sağ alt", bundle: .appLanguage)
         }
     }
 
@@ -363,6 +363,7 @@ struct TimelapseComposer: TimelapseComposing {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
         formatter.timeStyle = .none
+        formatter.locale = AppLanguage.currentLocale
         return formatter
     }()
 

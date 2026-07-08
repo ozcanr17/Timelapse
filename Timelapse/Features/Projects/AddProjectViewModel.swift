@@ -47,7 +47,7 @@ final class AddProjectViewModel {
             )
             return true
         } catch {
-            errorMessage = String(localized: "Proje kaydedilemedi: \(error.localizedDescription)")
+            errorMessage = String(localized: "Proje kaydedilemedi: \(error.localizedDescription)", bundle: .appLanguage)
             return false
         }
     }

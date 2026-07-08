@@ -52,6 +52,19 @@ enum AppLanguage: String, CaseIterable, Identifiable {
     static var current: AppLanguage {
         AppLanguage(rawValue: UserDefaults.standard.string(forKey: storageKey) ?? "") ?? .system
     }
+
+    /// Tarih/sayı biçimlemeleri için seçili dilin Locale'i (sistemde cihaz dili).
+    static var currentLocale: Locale {
+        current.localeIdentifier.map(Locale.init(identifier:)) ?? .autoupdatingCurrent
+    }
+}
+
+extension Bundle {
+    /// `String(localized:bundle:)` çağrılarının seçili uygulama dilini izlemesi için
+    /// kullanılacak paket: dil geçersiz kılınmışsa o dilin .lproj'u, değilse ana paket.
+    static var appLanguage: Bundle {
+        LanguageOverrideBundle.override ?? .main
+    }
 }
 
 /// `String(localized:)` çağrılarının da seçilen dili izlemesi için Bundle.main'in
@@ -59,6 +72,8 @@ enum AppLanguage: String, CaseIterable, Identifiable {
 final class LanguageOverrideBundle: Bundle, @unchecked Sendable {
 
     static let overrideKey = "app.language.bundle"
+
+    nonisolated(unsafe) static var override: Bundle?
 
     static func activate() {
         object_setClass(Bundle.main, LanguageOverrideBundle.self)
@@ -71,9 +86,11 @@ final class LanguageOverrideBundle: Bundle, @unchecked Sendable {
             let path = Bundle.main.path(forResource: code, ofType: "lproj"),
             let bundle = Bundle(path: path)
         else {
+            override = nil
             objc_setAssociatedObject(Bundle.main, &associationKey, nil, .OBJC_ASSOCIATION_RETAIN)
             return
         }
+        override = bundle
         objc_setAssociatedObject(Bundle.main, &associationKey, bundle, .OBJC_ASSOCIATION_RETAIN)
     }
 

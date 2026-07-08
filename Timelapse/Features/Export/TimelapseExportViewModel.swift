@@ -33,7 +33,7 @@ final class TimelapseExportViewModel {
     ) {
         renderTask?.cancel()
         guard frames.count >= 2 else {
-            phase = .failed(String(localized: "Timelapse için en az 2 çekim gerekli."))
+            phase = .failed(String(localized: "Timelapse için en az 2 çekim gerekli.", bundle: .appLanguage))
             return
         }
         let settings = TimelapseExportSettings.current(
@@ -62,7 +62,7 @@ final class TimelapseExportViewModel {
             } catch is CancellationError {
             } catch {
                 guard !Task.isCancelled else { return }
-                self?.phase = .failed(String(localized: "Video oluşturulamadı: \(error.localizedDescription)"))
+                self?.phase = .failed(String(localized: "Video oluşturulamadı: \(error.localizedDescription)", bundle: .appLanguage))
             }
         }
     }

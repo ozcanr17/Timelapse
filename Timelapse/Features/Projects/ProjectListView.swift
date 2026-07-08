@@ -99,6 +99,7 @@ struct ProjectListView: View {
                                                 .contentShape(Rectangle())
                                         }
                                         .buttonStyle(.plain)
+                                        .opacity(0)
                                     }
                                 }
                                 .accessibilityElement(children: .combine)
@@ -514,7 +515,8 @@ private struct ProjectCard: View {
                 if project.isCaptureDue() {
                     Text("Bugün")
                         .font(Theme.caption(12))
-                        .foregroundStyle(theme.ink)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(.black)
                         .padding(.horizontal, 11)
                         .padding(.vertical, 6)
                         .background(.white, in: Capsule())
@@ -603,23 +605,22 @@ private struct FireStreakBorder: View {
             let t = context.date.timeIntervalSinceReferenceDate
             let angle = Angle.degrees((t * 140).truncatingRemainder(dividingBy: 360))
             let flicker = 0.82 + 0.18 * sin(t * 6.3) * sin(t * 2.1)
-            let shape = RoundedRectangle(cornerRadius: cornerRadius - 2, style: .continuous)
+            let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
             ZStack {
                 shape
                     .strokeBorder(
                         AngularGradient(colors: Self.fire, center: .center, angle: angle),
-                        lineWidth: 3.5
+                        lineWidth: 4
                     )
-                    .blur(radius: 3)
+                    .blur(radius: 2.5)
                     .opacity(0.85 * flicker)
                 shape
                     .strokeBorder(
                         AngularGradient(colors: Self.fire, center: .center, angle: angle),
-                        lineWidth: 1.5
+                        lineWidth: 2
                     )
                     .opacity(flicker)
             }
-            .padding(2)
         }
         .allowsHitTesting(false)
     }

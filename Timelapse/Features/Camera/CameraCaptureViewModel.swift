@@ -157,13 +157,13 @@ final class CameraCaptureViewModel {
 
     private func message(for error: Error) -> String {
         guard let cameraError = error as? CameraError else {
-            return String(localized: "Beklenmeyen bir hata oluştu: \(error.localizedDescription)")
+            return String(localized: "Beklenmeyen bir hata oluştu: \(error.localizedDescription)", bundle: .appLanguage)
         }
         switch cameraError {
-        case .notAuthorized:        return String(localized: "Kamera izni verilmedi. Ayarlar’dan açabilirsin.")
-        case .configurationFailed:  return String(localized: "Kamera başlatılamadı.")
-        case .imageDataUnavailable: return String(localized: "Fotoğraf verisi alınamadı.")
-        case .captureInterrupted:   return String(localized: "Çekim yarıda kesildi. Tekrar dene.")
+        case .notAuthorized:        return String(localized: "Kamera izni verilmedi. Ayarlar’dan açabilirsin.", bundle: .appLanguage)
+        case .configurationFailed:  return String(localized: "Kamera başlatılamadı.", bundle: .appLanguage)
+        case .imageDataUnavailable: return String(localized: "Fotoğraf verisi alınamadı.", bundle: .appLanguage)
+        case .captureInterrupted:   return String(localized: "Çekim yarıda kesildi. Tekrar dene.", bundle: .appLanguage)
         }
     }
 }
