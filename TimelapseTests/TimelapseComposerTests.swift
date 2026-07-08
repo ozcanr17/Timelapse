@@ -81,6 +81,51 @@ final class TimelapseComposerTests: XCTestCase {
             XCTAssertEqual(error as? TimelapseComposerError, .frameDecodingFailed)
         }
     }
+    func test_zoomKucultunce_siyahBantYerineBulanikZeminCizilir() async throws {
+        let frames = (0..<3).map(frame)
+        let settings = TimelapseExportSettings.current(isPro: false, zoom: 0.5)
+
+        let url = try await TimelapseComposer().makeVideo(from: frames, settings: settings, onProgress: { _ in })
+        defer { try? FileManager.default.removeItem(at: url) }
+
+        let generator = AVAssetImageGenerator(asset: AVURLAsset(url: url))
+        generator.requestedTimeToleranceBefore = .zero
+        generator.requestedTimeToleranceAfter = .zero
+        let cgImage = try await generator.image(at: CMTime(value: 1, timescale: 30)).image
+
+        let corner = try XCTUnwrap(pixel(in: cgImage, x: 4, y: 4))
+        let brightness = max(corner.r, corner.g, corner.b)
+        XCTAssertGreaterThan(brightness, 0.1, "Köşe simsiyah — bulanık zemin çizilmemiş")
+    }
+
+    func test_outroZemini_sonKareninBulanigi_siyahDegil() async throws {
+        let frames = (0..<3).map(frame)
+        let settings = TimelapseExportSettings.current(isPro: false)
+
+        let url = try await TimelapseComposer().makeVideo(from: frames, settings: settings, onProgress: { _ in })
+        defer { try? FileManager.default.removeItem(at: url) }
+
+        let asset = AVURLAsset(url: url)
+        let duration = try await asset.load(.duration)
+        let generator = AVAssetImageGenerator(asset: asset)
+        generator.requestedTimeToleranceBefore = .zero
+        generator.requestedTimeToleranceAfter = .zero
+        let time = CMTime(seconds: duration.seconds - 0.2, preferredTimescale: 30)
+        let cgImage = try await generator.image(at: time).image
+
+        let corner = try XCTUnwrap(pixel(in: cgImage, x: 4, y: 4))
+        let brightness = max(corner.r, corner.g, corner.b)
+        XCTAssertGreaterThan(brightness, 0.08, "Outro köşesi simsiyah — bulanık zemin yok")
+    }
+
+    private func pixel(in image: CGImage, x: Int, y: Int) -> (r: CGFloat, g: CGFloat, b: CGFloat)? {
+        guard let data = image.dataProvider?.data as Data? else { return nil }
+        let bytesPerRow = image.bytesPerRow
+        let bpp = image.bitsPerPixel / 8
+        let offset = y * bytesPerRow + x * bpp
+        guard offset + 2 < data.count else { return nil }
+        return (CGFloat(data[offset]) / 255, CGFloat(data[offset + 1]) / 255, CGFloat(data[offset + 2]) / 255)
+    }
 }
 
 final class TimelapseExportSettingsTests: XCTestCase {

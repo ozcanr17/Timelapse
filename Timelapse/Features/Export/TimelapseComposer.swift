@@ -1,5 +1,4 @@
 import AVFoundation
-import CoreImage
 import Foundation
 import UIKit
 import SwiftUI
@@ -432,6 +431,14 @@ struct TimelapseComposer: TimelapseComposing {
             UIColor.black.setFill()
             UIRectFill(CGRect(origin: .zero, size: size))
 
+            if let backdrop = blurredBackdrop(image) {
+                context.cgContext.interpolationQuality = .high
+                let fill = aspectFillRect(for: backdrop, canvas: size)
+                backdrop.draw(in: fill.insetBy(dx: -fill.width * 0.08, dy: -fill.height * 0.08))
+                UIColor.black.withAlphaComponent(0.22).setFill()
+                UIRectFillUsingBlendMode(CGRect(origin: .zero, size: size), .normal)
+            }
+
             let zoom = settings.zoom
             if zoom != 1 {
                 context.cgContext.saveGState()
@@ -441,7 +448,15 @@ struct TimelapseComposer: TimelapseComposing {
             }
 
             if let manual = settings.manualAnchor {
+                let ctx = context.cgContext
+                ctx.saveGState()
+                if manual.rotation != 0 {
+                    ctx.translateBy(x: size.width / 2, y: size.height / 2)
+                    ctx.rotate(by: CGFloat(manual.rotation) * .pi / 180)
+                    ctx.translateBy(x: -size.width / 2, y: -size.height / 2)
+                }
                 image.draw(in: manualRect(for: image, manual: manual, canvas: size))
+                ctx.restoreGState()
             } else if settings.smartAlignment, let anchor, let reference {
                 drawAligned(image, anchor: anchor, reference: reference, canvas: size, context: context.cgContext)
             } else if settings.smartAlignment, let offset {
@@ -459,25 +474,27 @@ struct TimelapseComposer: TimelapseComposing {
         return rendered.cgImage
     }
 
-    private static let ciContext = CIContext()
-
-    /// Siyah bantları önlemek için fotoğrafın küçültülüp bulanıklaştırılmış hâli tuvalin
-    /// tamamına zemin olarak serilir.
-    private static func blurredBackdrop(_ image: UIImage, sigma: Double = 14) -> UIImage? {
-        let maxSide: CGFloat = 240
-        let scale = min(1, maxSide / max(image.size.width, image.size.height, 1))
-        let smallSize = CGSize(width: max(image.size.width * scale, 1), height: max(image.size.height * scale, 1))
+    /// Siyah bantları önlemek için fotoğrafın aşırı küçültülmüş hâli zemin olarak serilir;
+    /// büyütülürken yumuşayan pikseller ucuz ve her ortamda çalışan bir "blur" verir.
+    /// `tinyLongSide` küçüldükçe bulanıklık artar.
+    private static func blurredBackdrop(_ image: UIImage, tinyLongSide: CGFloat = 12) -> UIImage? {
+        let long = max(image.size.width, image.size.height, 1)
+        let scale = max(tinyLongSide, 2) / long
+        let tinySize = CGSize(
+            width: max(image.size.width * scale, 2),
+            height: max(image.size.height * scale, 2)
+        )
         let format = UIGraphicsImageRendererFormat()
         format.scale = 1
-        let small = UIGraphicsImageRenderer(size: smallSize, format: format).image { _ in
-            image.draw(in: CGRect(origin: .zero, size: smallSize))
+        let tiny = UIGraphicsImageRenderer(size: tinySize, format: format).image { context in
+            context.cgContext.interpolationQuality = .medium
+            image.draw(in: CGRect(origin: .zero, size: tinySize))
         }
-        guard let ci = CIImage(image: small) else { return nil }
-        let blurred = ci.clampedToExtent()
-            .applyingGaussianBlur(sigma: sigma)
-            .cropped(to: ci.extent)
-        guard let cg = ciContext.createCGImage(blurred, from: blurred.extent) else { return nil }
-        return UIImage(cgImage: cg)
+        let midSize = CGSize(width: tinySize.width * 12, height: tinySize.height * 12)
+        return UIGraphicsImageRenderer(size: midSize, format: format).image { context in
+            context.cgContext.interpolationQuality = .high
+            tiny.draw(in: CGRect(origin: .zero, size: midSize))
+        }
     }
 
     /// Görseli tuvali dolduracak şekilde ortalar (hizalama kapalıyken varsayılan).
@@ -520,13 +537,14 @@ struct TimelapseComposer: TimelapseComposing {
 
             if p < 0.05 {
                 base.draw(in: CGRect(origin: .zero, size: size))
-            } else if let blurred = blurredBackdrop(base, sigma: 4 + 20 * Double(p)) {
+            } else if let blurred = blurredBackdrop(base, tinyLongSide: max(4, 44 - 40 * p)) {
+                ctx.interpolationQuality = .high
                 blurred.draw(in: CGRect(origin: .zero, size: size))
             } else {
                 base.draw(in: CGRect(origin: .zero, size: size))
             }
             UIColor.black.withAlphaComponent(0.38 * p).setFill()
-            UIRectFill(CGRect(origin: .zero, size: size))
+            UIRectFillUsingBlendMode(CGRect(origin: .zero, size: size), .normal)
 
             let logoSize = size.width * 0.30
             let text = "FLAPSE" as NSString
