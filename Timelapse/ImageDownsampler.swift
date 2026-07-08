@@ -22,4 +22,35 @@ enum ImageDownsampler {
             image(from: data, maxPixelSize: maxPixelSize)
         }.value
     }
+
+    /// Bellek içi küçük resim önbelleği: aynı kare tekrar tekrar diskten okunup
+    /// çözülmesin diye. Önbellek isabetinde `load` hiç çağrılmaz (disk erişimi olmaz).
+    static func cachedImage(
+        key: String,
+        maxPixelSize: CGFloat,
+        load: () -> Data?
+    ) async -> UIImage? {
+        let fullKey = "\(ThumbnailCache.generation)-\(key)-\(Int(maxPixelSize))" as NSString
+        if let hit = ThumbnailCache.shared.object(forKey: fullKey) { return hit }
+        guard let data = load() else { return nil }
+        guard let decoded = await image(from: data, maxPixelSize: maxPixelSize) else { return nil }
+        ThumbnailCache.shared.setObject(decoded, forKey: fullKey)
+        return decoded
+    }
+}
+
+enum ThumbnailCache {
+    static let shared: NSCache<NSString, UIImage> = {
+        let cache = NSCache<NSString, UIImage>()
+        cache.countLimit = 500
+        return cache
+    }()
+
+    /// Bir kare yeniden çekildiğinde eski küçük resimlerin görünmemesi için nesil sayacı
+    /// artırılır; tüm eski anahtarlar geçersizleşir.
+    nonisolated(unsafe) static var generation = 0
+
+    static func invalidateAll() {
+        generation += 1
+    }
 }

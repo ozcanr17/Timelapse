@@ -38,7 +38,7 @@ final class AddProjectViewModelTests: XCTestCase {
         viewModel.title = "   "   // sadece boşluk
 
         XCTAssertFalse(viewModel.isValid)
-        XCTAssertFalse(viewModel.save())
+        XCTAssertNil(viewModel.save())
     }
 
     func test_gecerliBaslik_kaydedilir_veKirpilir() {
@@ -46,9 +46,9 @@ final class AddProjectViewModelTests: XCTestCase {
         let viewModel = AddProjectViewModel(repository: repository)
         viewModel.title = "  Sakal  "   // baş/son boşluklar kırpılmalı
 
-        let success = viewModel.save()
+        let created = viewModel.save()
 
-        XCTAssertTrue(success)
+        XCTAssertNotNil(created)
         XCTAssertEqual(repository.createdTitles, ["Sakal"])
     }
 
@@ -58,9 +58,9 @@ final class AddProjectViewModelTests: XCTestCase {
         let viewModel = AddProjectViewModel(repository: repository)
         viewModel.title = "Limon fidanı"
 
-        let success = viewModel.save()
+        let created = viewModel.save()
 
-        XCTAssertFalse(success)
+        XCTAssertNil(created)
         XCTAssertNotNil(viewModel.errorMessage)
     }
 }

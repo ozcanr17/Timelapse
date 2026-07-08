@@ -494,7 +494,10 @@ private struct ContributionGrid: View {
 
         var thumbs: [Date: UIImage] = [:]
         for (day, entry) in latestByDay {
-            thumbs[day] = await ImageDownsampler.image(from: entry.imageData, maxPixelSize: cell * displayScale * 2)
+            thumbs[day] = await ImageDownsampler.cachedImage(
+                key: "grid-\(entry.id)",
+                maxPixelSize: cell * displayScale * 2
+            ) { entry.imageData }
         }
         thumbnails = thumbs
     }
@@ -581,8 +584,9 @@ private struct ProjectCard: View {
         }
         .contentShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .shadow(color: .black.opacity(0.12), radius: 12, x: 0, y: 6)
-        .task(id: project.sortedEntries.last?.imageData?.count) {
-            photo = await ImageDownsampler.image(from: project.sortedEntries.last?.imageData, maxPixelSize: 800)
+        .task(id: project.sortedEntries.last?.id) {
+            guard let last = project.sortedEntries.last else { return }
+            photo = await ImageDownsampler.cachedImage(key: "card-\(last.id)", maxPixelSize: 800) { last.imageData }
         }
     }
 
@@ -615,7 +619,7 @@ private struct FireStreakBorder: View {
     ]
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 30)) { context in
+        TimelineView(.animation(minimumInterval: 1.0 / 24)) { context in
             let t = context.date.timeIntervalSinceReferenceDate
             let angle = Angle.degrees((t * 140).truncatingRemainder(dividingBy: 360))
             let flicker = 0.82 + 0.18 * sin(t * 6.3) * sin(t * 2.1)

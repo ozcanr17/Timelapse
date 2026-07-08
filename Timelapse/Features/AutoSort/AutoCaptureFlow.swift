@@ -12,6 +12,7 @@ struct AutoCaptureFlow: View {
     @State private var phase: Phase = .capturing
     @State private var lastData: Data?
     @State private var signature: SubjectSignature = .empty
+    @State private var isCreatingProject = false
 
     private let classifier: SubjectClassifying = SubjectClassifier()
     @State private var locationService = LocationService()
@@ -47,10 +48,24 @@ struct AutoCaptureFlow: View {
                 suggestedID: suggestedID,
                 subjectLabel: subjectLabel,
                 onSelect: assign(to:),
-                onCreate: createAndAssign
+                onCreate: {
+                    withAnimation { phase = .capturing }
+                    Task {
+                        try? await Task.sleep(for: .milliseconds(500))
+                        isCreatingProject = true
+                    }
+                }
             )
             .presentationDetents([.medium, .large])
             .presentationDragIndicator(.visible)
+        }
+        .sheet(isPresented: $isCreatingProject) {
+            AddProjectSheet(
+                repository: ProjectRepository(context: modelContext),
+                suggestedCategory: signature.kind.suggestedCategory
+            ) { project in
+                assign(to: project)
+            }
         }
     }
 
@@ -178,18 +193,6 @@ struct AutoCaptureFlow: View {
         Task {
             try? await Task.sleep(for: .seconds(1.3))
             dismiss()
-        }
-    }
-
-    private func createAndAssign() {
-        let title = subjectLabel ?? String(localized: "Yeni Proje", bundle: .appLanguage)
-        let repository = ProjectRepository(context: modelContext)
-        if let project = try? repository.createProject(
-            title: title,
-            category: signature.kind.suggestedCategory,
-            cadence: .daily
-        ) {
-            assign(to: project)
         }
     }
 

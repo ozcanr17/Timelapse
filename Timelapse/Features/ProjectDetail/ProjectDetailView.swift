@@ -26,7 +26,7 @@ struct ProjectDetailView: View {
     }
 
     private enum DetailSheet: Identifiable {
-        case export, paywall, invite, importPhotos, cloudShare
+        case export, paywall, invite, importPhotos, cloudShare, editProject, shareCard
         var id: Int { hashValue }
     }
 
@@ -91,19 +91,25 @@ struct ProjectDetailView: View {
         .background(theme.canvas.ignoresSafeArea())
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            if let shareCardURL {
+            if !liveEntries.isEmpty {
                 ToolbarItem(placement: .primaryAction) {
-                    ShareLink(
-                        item: shareCardURL,
-                        preview: SharePreview(
-                            "\(project.title) — Flapse",
-                            image: Image(systemName: "camera.aperture")
-                        )
-                    ) {
+                    Button {
+                        if shareCardURL == nil { shareCardURL = renderShareCard() }
+                        if shareCardURL != nil { activeSheet = .shareCard }
+                    } label: {
                         toolbarIcon("square.and.arrow.up", yOffset: -1.5)
                     }
                     .accessibilityLabel(Text("Projeyi paylaş"))
                 }
+            }
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    activeSheet = .editProject
+                } label: {
+                    toolbarIcon("pencil")
+                }
+                .accessibilityIdentifier("editButton")
+                .accessibilityLabel(Text("Projeyi düzenle"))
             }
             ToolbarItem(placement: .primaryAction) {
                 Button {
@@ -139,6 +145,12 @@ struct ProjectDetailView: View {
                 PaywallView(store: store)
             case .invite:
                 ActivityView(activityItems: [inviteText])
+            case .editProject:
+                EditProjectSheet(project: project)
+            case .shareCard:
+                if let shareCardURL {
+                    ActivityView(activityItems: [shareCardURL])
+                }
             case .importPhotos:
                 PhotoImportSheet(
                     mode: .existing(project),
@@ -164,9 +176,6 @@ struct ProjectDetailView: View {
                         EntryViewerView(project: project, initialEntry: entry)
                     }
                 }
-        }
-        .task(id: liveEntries.count) {
-            shareCardURL = renderShareCard()
         }
     }
 
@@ -437,8 +446,9 @@ struct ProjectDetailView: View {
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .shadow(color: .black.opacity(0.12), radius: 12, x: 0, y: 6)
         .accessibilityElement(children: .combine)
-        .task(id: liveEntries.last?.imageData?.count) {
-            heroImage = await ImageDownsampler.image(from: liveEntries.last?.imageData, maxPixelSize: 1000)
+        .task(id: liveEntries.last?.id) {
+            guard let last = liveEntries.last else { return }
+            heroImage = await ImageDownsampler.cachedImage(key: "hero-\(last.id)", maxPixelSize: 1000) { last.imageData }
         }
     }
 
@@ -741,8 +751,8 @@ private struct TimelineEntryRow: View {
         .buttonStyle(.plain)
         .padding(.bottom, rowGap)
         .accessibilityIdentifier("timelineCard")
-        .task(id: entry.imageData?.count) {
-            photo = await ImageDownsampler.image(from: entry.imageData, maxPixelSize: 700)
+        .task(id: entry.id) {
+            photo = await ImageDownsampler.cachedImage(key: "row-\(entry.id)", maxPixelSize: 700) { entry.imageData }
             await resolvePlaceIfNeeded()
         }
     }

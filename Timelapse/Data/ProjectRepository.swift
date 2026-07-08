@@ -64,6 +64,7 @@ final class ProjectRepository: ProjectRepositoryProtocol {
     func replaceImage(for entry: Entry, with data: Data) throws {
         entry.imageData = data
         try context.save()
+        ThumbnailCache.invalidateAll()
     }
 
     func deleteEntry(_ entry: Entry) throws {

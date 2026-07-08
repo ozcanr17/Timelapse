@@ -37,18 +37,18 @@ final class AddProjectViewModel {
 
     /// Projeyi oluşturur. Başarılıysa true döner (görünüm o zaman kapanır), aksi halde
     /// errorMessage'i doldurur ve false döner.
-    func save() -> Bool {
-        guard isValid else { return false }
+    @discardableResult
+    func save() -> Project? {
+        guard isValid else { return nil }
         do {
-            _ = try repository.createProject(
+            return try repository.createProject(
                 title: sanitizedTitle,
                 category: category,
                 cadence: cadence
             )
-            return true
         } catch {
             errorMessage = String(localized: "Proje kaydedilemedi: \(error.localizedDescription)", bundle: .appLanguage)
-            return false
+            return nil
         }
     }
 }

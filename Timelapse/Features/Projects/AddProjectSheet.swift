@@ -11,8 +11,19 @@ struct AddProjectSheet: View {
     @State private var viewModel: AddProjectViewModel
     @State private var showPaywall = false
 
-    init(repository: ProjectRepositoryProtocol) {
-        _viewModel = State(initialValue: AddProjectViewModel(repository: repository))
+    var onCreated: ((Project) -> Void)? = nil
+
+    init(
+        repository: ProjectRepositoryProtocol,
+        suggestedCategory: ProjectCategory? = nil,
+        onCreated: ((Project) -> Void)? = nil
+    ) {
+        self.onCreated = onCreated
+        let viewModel = AddProjectViewModel(repository: repository)
+        if let suggestedCategory, !suggestedCategory.isPro {
+            viewModel.category = suggestedCategory
+        }
+        _viewModel = State(initialValue: viewModel)
     }
 
     var body: some View {
@@ -33,7 +44,7 @@ struct AddProjectSheet: View {
                     Button("İptal") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Kaydet") { if viewModel.save() { dismiss() } }
+                    Button("Kaydet") { if let project = viewModel.save() { dismiss(); onCreated?(project) } }
                         .disabled(!viewModel.isValid)
                         .fontWeight(.bold)
                 }
