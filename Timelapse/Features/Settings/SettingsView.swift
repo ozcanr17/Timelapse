@@ -296,6 +296,9 @@ struct SettingsView: View {
         case .success(let authorization):
             if auth.handle(authorization) {
                 store.setAdminUnlocked(true)
+                if let key = PremiumFeature.cloudBackup.preferenceKey {
+                    UserDefaults.standard.set(true, forKey: key)
+                }
                 adminSignInMessage = String(localized: "Admin olarak giriş yapıldı — Pro açıldı. 👑", bundle: .appLanguage)
             } else {
                 adminSignInMessage = String(localized: "Giriş yapıldı. Bu hesap admin değil; Pro açılmadı.", bundle: .appLanguage)

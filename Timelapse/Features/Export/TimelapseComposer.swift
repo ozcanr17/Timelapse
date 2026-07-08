@@ -44,6 +44,52 @@ enum TimelapseSpeed: String, CaseIterable, Identifiable {
     }
 }
 
+/// Videonun en-boy oranı. Dikey oranlar hikaye/paylaşım, yataylar YouTube tarzı için.
+enum TimelapseAspect: String, CaseIterable, Identifiable {
+    case threeFour
+    case nineSixteen
+    case nineEighteen
+    case square
+    case fourThree
+    case sixteenNine
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .threeFour:    "3:4"
+        case .nineSixteen:  "9:16"
+        case .nineEighteen: "9:18"
+        case .square:       "1:1"
+        case .fourThree:    "4:3"
+        case .sixteenNine:  "16:9"
+        }
+    }
+
+    /// Genişlik / yükseklik oranı.
+    var ratio: CGFloat {
+        switch self {
+        case .threeFour:    3.0 / 4.0
+        case .nineSixteen:  9.0 / 16.0
+        case .nineEighteen: 9.0 / 18.0
+        case .square:       1
+        case .fourThree:    4.0 / 3.0
+        case .sixteenNine:  16.0 / 9.0
+        }
+    }
+
+    /// Uzun kenar sabit tutulur (Pro 2880, ücretsiz 960); kısa kenar orandan türetilir
+    /// ve encoder uyumu için 16'nın katına yuvarlanır.
+    func renderSize(isPro: Bool) -> CGSize {
+        let long: CGFloat = isPro ? 2880 : 960
+        func snap(_ value: CGFloat) -> CGFloat { (value / 16).rounded() * 16 }
+        if ratio <= 1 {
+            return CGSize(width: snap(long * ratio), height: long)
+        }
+        return CGSize(width: long, height: snap(long / ratio))
+    }
+}
+
 /// Bir bindirmenin (tarih/not/uygulama etiketi) videonun hangi köşesine yerleşeceği.
 enum OverlayCorner: String, CaseIterable, Identifiable {
     case topLeft
@@ -137,35 +183,24 @@ struct TimelapseExportSettings: Equatable {
     static func current(
         isPro: Bool,
         speed: TimelapseSpeed = .normal,
+        aspect: TimelapseAspect = .threeFour,
         overlay: TimelapseOverlayOptions = TimelapseOverlayOptions(),
         smartAlignment: Bool = false,
         manualAnchor: ManualAlignment? = nil,
         transition: TimelapseTransition = .cut,
         alignmentSubject: AlignmentSubject = .auto
     ) -> TimelapseExportSettings {
-        if FeatureGate.isUnlocked(.highResExport, isPro: isPro) {
-            TimelapseExportSettings(
-                renderSize: CGSize(width: 2160, height: 2880),
-                framesPerSecond: speed.framesPerSecond,
-                includesWatermark: false,
-                overlay: overlay,
-                smartAlignment: smartAlignment,
-                manualAnchor: manualAnchor,
-                transition: transition,
-                alignmentSubject: alignmentSubject
-            )
-        } else {
-            TimelapseExportSettings(
-                renderSize: CGSize(width: 720, height: 960),
-                framesPerSecond: speed.framesPerSecond,
-                includesWatermark: true,
-                overlay: overlay,
-                smartAlignment: smartAlignment,
-                manualAnchor: manualAnchor,
-                transition: transition,
-                alignmentSubject: alignmentSubject
-            )
-        }
+        let unlocked = FeatureGate.isUnlocked(.highResExport, isPro: isPro)
+        return TimelapseExportSettings(
+            renderSize: aspect.renderSize(isPro: unlocked),
+            framesPerSecond: speed.framesPerSecond,
+            includesWatermark: !unlocked,
+            overlay: overlay,
+            smartAlignment: smartAlignment,
+            manualAnchor: manualAnchor,
+            transition: transition,
+            alignmentSubject: alignmentSubject
+        )
     }
 }
 

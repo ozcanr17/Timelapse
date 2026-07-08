@@ -85,12 +85,11 @@ struct ProjectDetailView: View {
         .background(theme.canvas.ignoresSafeArea())
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .principal) {
+            ToolbarItem(placement: .topBarLeading) {
                 Text(project.title)
                     .font(Theme.headline(17))
                     .foregroundStyle(theme.ink)
                     .lineLimit(1)
-                    .frame(maxWidth: .infinity, alignment: .leading)
             }
             if let shareCardURL {
                 ToolbarItem(placement: .primaryAction) {
@@ -101,7 +100,7 @@ struct ProjectDetailView: View {
                             image: Image(systemName: "camera.aperture")
                         )
                     ) {
-                        toolbarIcon("square.and.arrow.up")
+                        toolbarIcon("square.and.arrow.up", yOffset: -1.5)
                     }
                     .accessibilityLabel(Text("Projeyi paylaş"))
                 }
@@ -224,13 +223,14 @@ struct ProjectDetailView: View {
         .background(theme.surface, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 
-    private func toolbarIcon(_ name: String) -> some View {
+    private func toolbarIcon(_ name: String, yOffset: CGFloat = 0) -> some View {
         Image(systemName: name)
             .resizable()
             .scaledToFit()
             .fontWeight(.medium)
             .foregroundStyle(accent)
             .frame(width: 21, height: 21)
+            .offset(y: yOffset)
             .frame(width: 30, height: 30, alignment: .center)
     }
 

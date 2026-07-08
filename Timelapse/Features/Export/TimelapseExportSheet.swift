@@ -14,6 +14,7 @@ struct TimelapseExportSheet: View {
     @State private var viewModel = TimelapseExportViewModel()
     @State private var showPaywall = false
     @State private var speed: TimelapseSpeed = .normal
+    @State private var aspect: TimelapseAspect = .threeFour
     @State private var overlay = TimelapseOverlayOptions()
     @State private var noteDraft = ""
     @State private var lastRenderedURL: URL?
@@ -74,6 +75,7 @@ struct TimelapseExportSheet: View {
 
                 VStack(spacing: 18) {
                     speedControl
+                    aspectControl
                     transitionControl
                     alignmentControl
                     overlayControls
@@ -232,6 +234,27 @@ struct TimelapseExportSheet: View {
             .pickerStyle(.segmented)
             .disabled(viewModel.phase == .rendering)
             .onChange(of: speed) {
+                isStale = true
+            }
+        }
+    }
+
+    private var aspectControl: some View {
+        VStack(spacing: 8) {
+            HStack {
+                Label("Oran", systemImage: "aspectratio")
+                    .font(Theme.caption(13))
+                    .foregroundStyle(theme.inkMuted)
+                Spacer()
+            }
+            Picker("Oran", selection: $aspect) {
+                ForEach(TimelapseAspect.allCases) { option in
+                    Text(option.displayName).tag(option)
+                }
+            }
+            .pickerStyle(.segmented)
+            .disabled(viewModel.phase == .rendering)
+            .onChange(of: aspect) {
                 isStale = true
             }
         }
@@ -415,6 +438,7 @@ struct TimelapseExportSheet: View {
             frames: frames,
             isPro: store.isPro,
             speed: speed,
+            aspect: aspect,
             overlay: effectiveOverlay,
             smartAlignment: proAlign && alignMode == .smart,
             manualAnchor: (proAlign && alignMode == .manual) ? manual : nil,

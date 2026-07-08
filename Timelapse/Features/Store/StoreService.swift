@@ -34,14 +34,13 @@ final class StoreService: StoreServiceProtocol {
 
     /// Uygulamanın her yerinde okunan tek doğruluk kaynağı.
     ///
-    /// YAYIN (Release/App Store) sürümünde Pro YALNIZCA gerçek satın almayla açılır.
-    /// Test arka kapısı ve admin kilidi SADECE DEBUG derlemelerinde etkindir — böylece
-    /// App Store'a gizli/ödemesiz Pro açan bir mekanizma gitmez (Yönerge 2.3.1 & 3.1.1).
+    /// YAYIN (Release/App Store) sürümünde Pro gerçek satın alma VEYA admin (Apple ile
+    /// giriş yapan, listedeki e-posta) ile açılır. Test arka kapısı SADECE DEBUG'dadır.
     var isPro: Bool {
         #if DEBUG
         entitlementActive || debugUnlocked || adminUnlocked
         #else
-        entitlementActive
+        entitlementActive || adminUnlocked
         #endif
     }
 

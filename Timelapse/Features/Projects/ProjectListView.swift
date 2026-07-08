@@ -16,11 +16,13 @@ struct ProjectListView: View {
     @State private var showQuickPick = false
     @State private var captureRoute: CaptureRoute?
     @State private var pendingCapture: Project?
+    @State private var auth = AuthService()
 
     private enum ActiveSheet: Identifiable {
         case addProject
         case importNew
         case paywall
+        case signIn
         var id: Int { hashValue }
     }
 
@@ -172,6 +174,10 @@ struct ProjectListView: View {
                 )
             case .paywall:
                 PaywallView(store: store)
+            case .signIn:
+                SignInGateSheet {
+                    auth = AuthService()
+                }
             }
         }
         .sheet(isPresented: $showQuickPick, onDismiss: presentPendingCapture) {
@@ -219,7 +225,11 @@ struct ProjectListView: View {
     }
 
     private func addProjectTapped() {
-        if FeatureGate.canCreateProject(isPro: store.isPro, currentProjectCount: projects.count) {
+        guard auth.isSignedIn else {
+            activeSheet = .signIn
+            return
+        }
+        if FeatureGate.canCreateProject(isPro: store.isPro, currentProjectCount: liveProjects.count) {
             activeSheet = .addProject
         } else {
             activeSheet = .paywall
@@ -227,6 +237,10 @@ struct ProjectListView: View {
     }
 
     private func importTapped() {
+        guard auth.isSignedIn else {
+            activeSheet = .signIn
+            return
+        }
         if store.isPro || FeatureGate.canCreateProject(isPro: false, currentProjectCount: liveProjects.count) {
             activeSheet = .importNew
         } else {

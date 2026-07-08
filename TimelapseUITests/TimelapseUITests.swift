@@ -9,7 +9,7 @@ final class TimelapseUITests: XCTestCase {
     @MainActor
     func testFullJourney() throws {
         let app = XCUIApplication()
-        app.launchArguments += ["--uitests", "-AppleLanguages", "(tr)", "-AppleLocale", "tr_TR"]
+        app.launchArguments += ["--uitests", "-auth.appleUserID", "uitest-user", "-AppleLanguages", "(tr)", "-AppleLocale", "tr_TR"]
         app.launch()
 
         let startButton = app.buttons["Başla"]
@@ -68,7 +68,7 @@ final class TimelapseUITests: XCTestCase {
     @MainActor
     func testInviteButtonDoesNotCrash() throws {
         let app = XCUIApplication()
-        app.launchArguments += ["--uitests", "-override.debugPro", "YES", "-AppleLanguages", "(tr)", "-AppleLocale", "tr_TR"]
+        app.launchArguments += ["--uitests", "-auth.appleUserID", "uitest-user", "-override.debugPro", "YES", "-AppleLanguages", "(tr)", "-AppleLocale", "tr_TR"]
         app.launch()
 
         let startButton = app.buttons["Başla"]
