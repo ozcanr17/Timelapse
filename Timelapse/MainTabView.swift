@@ -22,12 +22,11 @@ struct MainTabView: View {
     @State private var highlightX: CGFloat = 0
     @State private var highlightWidth: CGFloat = 0
     @State private var isDraggingBar = false
+    @State private var projectsResetToken = 0
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    private static let barTint = Color(light: "F5F5F7", dark: "0B0B0D").opacity(0.32)
+    private static let barTint = Color(light: "F5F5F7", dark: "1B1B1F").opacity(0.26)
     private static let highlightTint = Color(light: "3C3C43", dark: "FFFFFF").opacity(0.13)
-    private static let activeIconColor = Color(light: "1C1C1E", dark: "FFFFFF")
-    private static let idleIconColor = Color(light: "1C1C1E", dark: "FFFFFF").opacity(0.55)
 
     private enum CaptureRoute: Identifiable {
         case project(Project)
@@ -61,6 +60,7 @@ struct MainTabView: View {
             theme.canvas.ignoresSafeArea()
             pane(.home) { HomeView() }
             pane(.projects) { ProjectListView() }
+                .id(projectsResetToken)
             pane(.saved) { SavedTimelapsesView() }
             pane(.settings) { SettingsView() }
         }
@@ -126,20 +126,23 @@ struct MainTabView: View {
 
     @ViewBuilder
     private var tabBar: some View {
-        Group {
-            if #available(iOS 26.0, *) {
-                GlassEffectContainer(spacing: 18) { tabBarContent }
-            } else {
-                tabBarContent
-            }
-        }
-        .padding(.horizontal, 24)
-        .padding(.top, 4)
-        .offset(y: 12)
+        tabBarContent
+            .padding(.horizontal, 24)
+            .padding(.top, 4)
+            .offset(y: 12)
     }
 
     private var tabBarContent: some View {
-        ZStack(alignment: .topLeading) {
+        HStack(spacing: 0) {
+            ForEach(Array(barItems.enumerated()), id: \.element.identifier) { index, item in
+                barItemView(item, index: index)
+            }
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 6)
+        .coordinateSpace(name: "tabBarSpace")
+        .liquidGlassCapsule(tint: Self.barTint)
+        .overlay(alignment: .topLeading) {
             if highlightWidth > 0 {
                 Capsule()
                     .fill(.clear)
@@ -153,18 +156,9 @@ struct MainTabView: View {
                             : .spring(response: 0.4, dampingFraction: 0.62),
                         value: highlightX
                     )
+                    .allowsHitTesting(false)
             }
-
-            HStack(spacing: 0) {
-                ForEach(Array(barItems.enumerated()), id: \.element.identifier) { index, item in
-                    barItemView(item, index: index)
-                }
-            }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 6)
         }
-        .coordinateSpace(name: "tabBarSpace")
-        .liquidGlassCapsule(tint: Self.barTint)
         .contentShape(Capsule())
         .onPreferenceChange(ItemFramePreference.self) { frames in
             itemFrames = frames
@@ -219,6 +213,9 @@ struct MainTabView: View {
 
     private func activate(_ item: BarItem) {
         if let target = item.tab {
+            if target == .projects {
+                projectsResetToken += 1
+            }
             tab = target
             if let index = barItems.firstIndex(where: { $0.identifier == item.identifier }),
                let frame = itemFrames[index] {
@@ -237,24 +234,16 @@ struct MainTabView: View {
 
         return Image(systemName: isActive || isCamera ? item.activeIcon : item.icon)
             .font(.system(size: isCamera ? 23 : 21, weight: isCamera ? .semibold : .medium))
-            .foregroundStyle(isCamera || isActive ? Self.activeIconColor : Self.idleIconColor)
+            .foregroundStyle(isActive ? theme.accent : .white)
             .shadow(color: .black.opacity(0.35), radius: 1, x: 0, y: 0.5)
             .frame(maxWidth: .infinity, minHeight: 46)
             .scaleEffect(isPreviewed && !reduceMotion ? 1.08 : 1)
             .background {
-                ZStack {
-                    if isCamera {
-                        Circle()
-                            .fill(.clear)
-                            .frame(width: 44, height: 44)
-                            .liquidGlassCircle(tint: Self.highlightTint, interactive: true)
-                    }
-                    GeometryReader { proxy in
-                        Color.clear.preference(
-                            key: ItemFramePreference.self,
-                            value: [index: proxy.frame(in: .named("tabBarSpace"))]
-                        )
-                    }
+                GeometryReader { proxy in
+                    Color.clear.preference(
+                        key: ItemFramePreference.self,
+                        value: [index: proxy.frame(in: .named("tabBarSpace"))]
+                    )
                 }
             }
             .accessibilityIdentifier(item.identifier)

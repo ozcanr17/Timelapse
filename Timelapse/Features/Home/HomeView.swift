@@ -68,7 +68,7 @@ struct HomeView: View {
             Text(greeting)
                 .font(.system(size: 28, weight: .bold, design: .default))
                 .foregroundStyle(theme.ink)
-            Text(Date.now.formatted(.dateTime.weekday(.wide).day().month(.wide)))
+            Text(Date.now.formatted(.dateTime.weekday(.wide).day().month(.wide).locale(AppLanguage.currentLocale)))
                 .font(Theme.caption(14))
                 .foregroundStyle(theme.inkMuted)
         }

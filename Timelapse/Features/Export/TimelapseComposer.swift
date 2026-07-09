@@ -154,9 +154,9 @@ enum TimelapseTransition: String, CaseIterable, Identifiable {
 
     var displayName: String {
         switch self {
-        case .cut:    "Efekt yok"
-        case .smooth: "Yumuşak"
-        case .morph:  "Akışkan"
+        case .cut:    String(localized: "Efekt yok", bundle: .appLanguage)
+        case .smooth: String(localized: "Yumuşak", bundle: .appLanguage)
+        case .morph:  String(localized: "Akışkan", bundle: .appLanguage)
         }
     }
 }

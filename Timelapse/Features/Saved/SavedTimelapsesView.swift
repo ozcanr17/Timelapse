@@ -186,7 +186,7 @@ struct SavedTimelapsesView: View {
                         .font(Theme.headline(14))
                         .foregroundStyle(theme.ink)
                         .lineLimit(1)
-                    Text(item.createdAt.formatted(date: .abbreviated, time: .omitted))
+                    Text(item.createdAt.formatted(.dateTime.day().month(.abbreviated).year().locale(AppLanguage.currentLocale)))
                         .font(Theme.caption(11))
                         .foregroundStyle(theme.inkMuted)
                 }

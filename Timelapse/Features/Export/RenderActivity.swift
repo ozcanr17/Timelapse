@@ -39,8 +39,8 @@ enum RenderActivityCenter {
                 await activity.update(
                     content,
                     alertConfiguration: AlertConfiguration(
-                        title: "Timelapse hazır",
-                        body: "Videon oluşturuldu, kaydetmeyi unutma.",
+                        title: "\(String(localized: "Timelapse hazır", bundle: .appLanguage))",
+                        body: "\(String(localized: "Videon oluşturuldu, kaydetmeyi unutma.", bundle: .appLanguage))",
                         sound: .default
                     )
                 )

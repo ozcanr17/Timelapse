@@ -677,9 +677,9 @@ private enum AlignMode: String, CaseIterable, Identifiable {
     var id: String { rawValue }
     var displayName: String {
         switch self {
-        case .off:    "Kapalı"
-        case .smart:  "Akıllı"
-        case .manual: "Manuel"
+        case .off:    String(localized: "Kapalı", bundle: .appLanguage)
+        case .smart:  String(localized: "Akıllı", bundle: .appLanguage)
+        case .manual: String(localized: "Manuel", bundle: .appLanguage)
         }
     }
 }
