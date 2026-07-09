@@ -146,33 +146,32 @@ struct MainTabView: View {
     }
 
     private var tabBarContent: some View {
-        HStack(spacing: 0) {
-            ForEach(Array(barItems.enumerated()), id: \.element.identifier) { index, item in
-                barItemView(item, index: index)
+        iconRow(reportsFrames: true)
+            .coordinateSpace(name: "tabBarSpace")
+            .liquidGlassCapsule(tint: Self.barTint)
+            .overlay(alignment: .topLeading) {
+                if highlightWidth > 0 {
+                    Capsule()
+                        .fill(.clear)
+                        .frame(width: highlightWidth, height: 46)
+                        .liquidGlassCapsule(tint: Self.highlightTint, interactive: true)
+                        .offset(x: highlightX, y: 6)
+                        .animation(
+                            reduceMotion ? nil :
+                                isDraggingBar
+                                ? .spring(response: 0.24, dampingFraction: 0.82)
+                                : .spring(response: 0.4, dampingFraction: 0.62),
+                            value: highlightX
+                        )
+                        .allowsHitTesting(false)
+                }
             }
-        }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 6)
-        .background(alignment: .topLeading) {
-            if highlightWidth > 0 {
-                Capsule()
-                    .fill(.clear)
-                    .frame(width: highlightWidth, height: 46)
-                    .liquidGlassCapsule(tint: Self.highlightTint, interactive: true)
-                    .offset(x: highlightX, y: 6)
-                    .animation(
-                        reduceMotion ? nil :
-                            isDraggingBar
-                            ? .spring(response: 0.24, dampingFraction: 0.82)
-                            : .spring(response: 0.4, dampingFraction: 0.62),
-                        value: highlightX
-                    )
+            .overlay {
+                iconRow(reportsFrames: false)
                     .allowsHitTesting(false)
+                    .accessibilityHidden(true)
             }
-        }
-        .coordinateSpace(name: "tabBarSpace")
-        .liquidGlassCapsule(tint: Self.barTint)
-        .contentShape(Capsule())
+            .contentShape(Capsule())
         .onPreferenceChange(ItemFramePreference.self) { frames in
             itemFrames = frames
             if !isDraggingBar, let frame = frames[currentIndex] {
@@ -240,7 +239,17 @@ struct MainTabView: View {
         }
     }
 
-    private func barItemView(_ item: BarItem, index: Int) -> some View {
+    private func iconRow(reportsFrames: Bool) -> some View {
+        HStack(spacing: 0) {
+            ForEach(Array(barItems.enumerated()), id: \.element.identifier) { index, item in
+                barItemView(item, index: index, reportsFrame: reportsFrames)
+            }
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 6)
+    }
+
+    private func barItemView(_ item: BarItem, index: Int, reportsFrame: Bool = true) -> some View {
         let isCamera = item.tab == nil
         let isActive = item.tab != nil && item.tab == tab
         let isPreviewed = previewIndex == index
@@ -252,11 +261,13 @@ struct MainTabView: View {
             .frame(maxWidth: .infinity, minHeight: 46)
             .scaleEffect(isPreviewed && !reduceMotion ? 1.08 : 1)
             .background {
-                GeometryReader { proxy in
-                    Color.clear.preference(
-                        key: ItemFramePreference.self,
-                        value: [index: proxy.frame(in: .named("tabBarSpace"))]
-                    )
+                if reportsFrame {
+                    GeometryReader { proxy in
+                        Color.clear.preference(
+                            key: ItemFramePreference.self,
+                            value: [index: proxy.frame(in: .named("tabBarSpace"))]
+                        )
+                    }
                 }
             }
             .accessibilityIdentifier(item.identifier)
