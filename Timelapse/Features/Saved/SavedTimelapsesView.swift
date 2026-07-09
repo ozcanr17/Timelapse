@@ -5,7 +5,7 @@ import SwiftData
 
 struct SavedTimelapsesView: View {
 
-    @Query(sort: \SavedTimelapse.createdAt, order: .reverse)
+    @Query(filter: #Predicate<SavedTimelapse> { $0.deletedAt == nil }, sort: \SavedTimelapse.createdAt, order: .reverse)
     private var items: [SavedTimelapse]
     @Environment(\.modelContext) private var modelContext
     @Environment(\.theme) private var theme
@@ -41,13 +41,13 @@ struct SavedTimelapsesView: View {
             SavedPlayerSheet(item: item)
         }
         .confirmationDialog(
-            "Bu timelapse kalıcı olarak silinsin mi?",
+            "Bu timelapse Son Silinenler'e taşınsın mı? 7 gün sonra kalıcı olarak silinir.",
             isPresented: Binding(get: { pendingDeletion != nil }, set: { if !$0 { pendingDeletion = nil } }),
             titleVisibility: .visible
         ) {
             Button("Sil", role: .destructive) {
                 if let pendingDeletion {
-                    TimelapseLibrary.delete(pendingDeletion, context: modelContext)
+                    TimelapseLibrary.softDelete(pendingDeletion, context: modelContext)
                 }
                 pendingDeletion = nil
             }

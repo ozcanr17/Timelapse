@@ -8,6 +8,7 @@ import SwiftData
 /// olarak gösterebiliriz.
 enum ProjectCategory: String, Codable, CaseIterable, Identifiable {
     case selfPortrait = "self"
+    case person
     case child
     case plant
     case hairAndBeard = "hair_beard"
@@ -25,6 +26,7 @@ enum ProjectCategory: String, Codable, CaseIterable, Identifiable {
     var displayName: String {
         switch self {
         case .selfPortrait: String(localized: "Kendim", bundle: .appLanguage)
+        case .person:       String(localized: "Kişi", bundle: .appLanguage)
         case .child:        String(localized: "Çocuk", bundle: .appLanguage)
         case .plant:        String(localized: "Bitki", bundle: .appLanguage)
         case .hairAndBeard: String(localized: "Saç & Sakal", bundle: .appLanguage)

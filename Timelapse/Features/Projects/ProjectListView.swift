@@ -111,33 +111,14 @@ struct ProjectListView: View {
         }
         .navigationTitle("Projeler")
         .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Button {
-                    importTapped()
-                } label: {
-                    Image(systemName: "photo.on.rectangle.angled")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(theme.accent)
-                        .frame(width: 38, height: 38)
-                        .liquidGlassCircle(interactive: true)
-                }
-                .buttonStyle(.plain)
-                .accessibilityIdentifier("importProjectButton")
-                .accessibilityLabel(Text("Fotoğraflardan proje oluştur"))
-            }
-            ToolbarItem(placement: .primaryAction) {
-                Button {
-                    addProjectTapped()
-                } label: {
-                    Image(systemName: "plus")
-                        .font(.system(size: 17, weight: .semibold))
-                        .foregroundStyle(theme.accent)
-                        .frame(width: 38, height: 38)
-                        .liquidGlassCircle(interactive: true)
-                }
-                .buttonStyle(.plain)
-                .accessibilityIdentifier("addProjectButton")
-                .accessibilityLabel(Text("Yeni proje"))
+            if #available(iOS 26.0, *) {
+                ToolbarItem(placement: .primaryAction) { importButton }
+                    .sharedBackgroundVisibility(.hidden)
+                ToolbarItem(placement: .primaryAction) { addButton }
+                    .sharedBackgroundVisibility(.hidden)
+            } else {
+                ToolbarItem(placement: .primaryAction) { importButton }
+                ToolbarItem(placement: .primaryAction) { addButton }
             }
         }
         .sheet(item: $activeSheet) { sheet in
@@ -167,6 +148,36 @@ struct ProjectListView: View {
         .sheet(item: $resumeExportProject, onDismiss: discardCheckedJob) { project in
             TimelapseExportSheet(project: project)
         }
+    }
+
+    private var importButton: some View {
+        Button {
+            importTapped()
+        } label: {
+            Image(systemName: "photo.on.rectangle.angled")
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(theme.accent)
+                .frame(width: 38, height: 38)
+                .liquidGlassCircle(interactive: true, clear: true)
+        }
+        .buttonStyle(.glassIcon)
+        .accessibilityIdentifier("importProjectButton")
+        .accessibilityLabel(Text("Fotoğraflardan proje oluştur"))
+    }
+
+    private var addButton: some View {
+        Button {
+            addProjectTapped()
+        } label: {
+            Image(systemName: "plus")
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundStyle(theme.accent)
+                .frame(width: 38, height: 38)
+                .liquidGlassCircle(interactive: true, clear: true)
+        }
+        .buttonStyle(.glassIcon)
+        .accessibilityIdentifier("addProjectButton")
+        .accessibilityLabel(Text("Yeni proje"))
     }
 
     private var visibleJobs: [TimelapseRenderService.Job] {

@@ -1349,6 +1349,7 @@
       }
     },
     "🎬 Timelapse hazır" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -11177,6 +11178,9 @@
         }
       }
     },
+    "Hayalet hizalamayla özneyi hep aynı yerde tut." : {
+
+    },
     "Hazır — kaydetmeyi unutma" : {
       "localizations" : {
         "ar" : {
@@ -11456,6 +11460,9 @@
           }
         }
       }
+    },
+    "Her gün aynı ışıkta çekersen geçişler daha pürüzsüz olur." : {
+
     },
     "Her gün, gün aşırı ya da haftalık — zamanı gelince hatırla" : {
       "extractionState" : "stale",
@@ -16581,6 +16588,7 @@
       }
     },
     "Oluşturuluyor…" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -21768,6 +21776,9 @@
         }
       }
     },
+    "Timelapse hazır" : {
+
+    },
     "Timelapse hazır, dokun" : {
       "localizations" : {
         "ar" : {
@@ -24088,6 +24099,9 @@
           }
         }
       }
+    },
+    "Videon oluşturuldu, kaydetmeyi unutma." : {
+
     },
     "Videoyu Paylaş" : {
       "localizations" : {

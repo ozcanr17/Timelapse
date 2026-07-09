@@ -14,10 +14,13 @@ struct RecentlyDeletedView: View {
     }
 
     @Query(filter: #Predicate<Project> { $0.deletedAt != nil }) private var projects: [Project]
+    @Query(filter: #Predicate<SavedTimelapse> { $0.deletedAt != nil }, sort: \SavedTimelapse.deletedAt, order: .reverse)
+    private var deletedTimelapses: [SavedTimelapse]
     @Environment(\.modelContext) private var modelContext
     @Environment(\.theme) private var theme
 
     @State private var pendingEraseID: UUID?
+    @State private var pendingTimelapseEraseID: UUID?
 
     private var deletedItems: [DeletedItem] {
         projects
@@ -38,13 +41,13 @@ struct RecentlyDeletedView: View {
 
     var body: some View {
         List {
-            if deletedItems.isEmpty {
+            if deletedItems.isEmpty && deletedTimelapses.isEmpty {
                 Section {
                     VStack(spacing: 10) {
                         Image(systemName: "trash")
                             .font(.system(size: 30))
                             .foregroundStyle(theme.inkMuted)
-                        Text("Silinen proje yok")
+                        Text("Silinen öğe yok")
                             .font(Theme.headline(15))
                             .foregroundStyle(theme.inkMuted)
                     }
@@ -52,13 +55,27 @@ struct RecentlyDeletedView: View {
                     .padding(.vertical, 28)
                     .listRowBackground(Color.clear)
                 }
-            } else {
+            }
+            if !deletedItems.isEmpty {
                 Section {
                     ForEach(deletedItems) { item in
                         row(item)
                     }
+                } header: {
+                    Text("Projeler")
                 } footer: {
                     Text("Silinen projeler 30 gün saklanır, sonra kalıcı olarak silinir. iCloud yedekleme açıksa bu süre boyunca iCloud'da da saklanırlar.")
+                }
+            }
+            if !deletedTimelapses.isEmpty {
+                Section {
+                    ForEach(deletedTimelapses) { item in
+                        timelapseRow(item)
+                    }
+                } header: {
+                    Text("Timelapse'ler")
+                } footer: {
+                    Text("Silinen timelapse'ler 7 gün saklanır, sonra kalıcı olarak silinir.")
                 }
             }
         }
@@ -72,6 +89,62 @@ struct RecentlyDeletedView: View {
             Button("Kalıcı Olarak Sil", role: .destructive) { confirmErase() }
             Button("Vazgeç", role: .cancel) { pendingEraseID = nil }
         }
+        .confirmationDialog(
+            "Bu timelapse kalıcı olarak silinsin mi?",
+            isPresented: timelapseEraseBinding,
+            titleVisibility: .visible
+        ) {
+            Button("Kalıcı Olarak Sil", role: .destructive) { confirmTimelapseErase() }
+            Button("Vazgeç", role: .cancel) { pendingTimelapseEraseID = nil }
+        }
+    }
+
+    private func timelapseRow(_ item: SavedTimelapse) -> some View {
+        let elapsed = Calendar.current.dateComponents(
+            [.day], from: item.deletedAt ?? Date(), to: Date()
+        ).day ?? 0
+        let daysRemaining = max(0, TimelapseLibrary.retentionDays - elapsed)
+        return HStack(spacing: 12) {
+            Image(systemName: "film.stack")
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(theme.accent)
+                .frame(width: 38, height: 38)
+                .background(theme.accent.opacity(0.12), in: Circle())
+            VStack(alignment: .leading, spacing: 2) {
+                Text(item.title)
+                    .font(Theme.headline(15))
+                    .foregroundStyle(theme.ink)
+                Text("\(daysRemaining) gün sonra kalıcı olarak silinecek")
+                    .font(Theme.caption(12))
+                    .foregroundStyle(theme.inkMuted)
+            }
+            Spacer()
+            Button("Geri Al") { TimelapseLibrary.restore(item, context: modelContext) }
+                .font(Theme.caption(13))
+                .buttonStyle(.bordered)
+                .tint(theme.accent)
+        }
+        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+            Button(role: .destructive) {
+                pendingTimelapseEraseID = item.id
+            } label: {
+                Label("Kalıcı Olarak Sil", systemImage: "trash.fill")
+            }
+        }
+    }
+
+    private var timelapseEraseBinding: Binding<Bool> {
+        Binding(
+            get: { pendingTimelapseEraseID != nil },
+            set: { if !$0 { pendingTimelapseEraseID = nil } }
+        )
+    }
+
+    private func confirmTimelapseErase() {
+        guard let id = pendingTimelapseEraseID else { return }
+        pendingTimelapseEraseID = nil
+        guard let item = deletedTimelapses.first(where: { $0.id == id }) else { return }
+        TimelapseLibrary.delete(item, context: modelContext)
     }
 
     private func row(_ item: DeletedItem) -> some View {

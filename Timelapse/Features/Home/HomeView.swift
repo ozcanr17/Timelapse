@@ -48,10 +48,10 @@ struct HomeView: View {
                 VStack(alignment: .leading, spacing: 18) {
                     header
                     ActivityHeroCard(projects: projects)
-                    flashcardDeck
                     if !dueProjects.isEmpty {
                         dueSection
                     }
+                    flashcardDeck
                     if !recentEntries.isEmpty {
                         recentSection
                     }

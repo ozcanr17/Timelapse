@@ -88,7 +88,7 @@ struct MainTabView: View {
             content()
                 .toolbarBackground(.hidden, for: .navigationBar)
         }
-        .contentMargins(.bottom, 36, for: .scrollContent)
+        .contentMargins(.bottom, 40, for: .scrollContent)
         .opacity(tab == target ? 1 : 0)
         .allowsHitTesting(tab == target)
         .accessibilityHidden(tab != target)
@@ -139,7 +139,7 @@ struct MainTabView: View {
                 Capsule()
                     .fill(.clear)
                     .frame(width: highlightWidth, height: 46)
-                    .liquidGlassCapsule(tint: .white.opacity(0.22), interactive: true)
+                    .liquidGlassCapsule(tint: .white.opacity(0.12), interactive: true, clear: true)
                     .offset(x: highlightX, y: 6)
                     .animation(
                         reduceMotion ? nil :
@@ -159,7 +159,7 @@ struct MainTabView: View {
             .padding(.vertical, 6)
         }
         .coordinateSpace(name: "tabBarSpace")
-        .liquidGlassCapsule()
+        .liquidGlassCapsule(clear: true)
         .contentShape(Capsule())
         .onPreferenceChange(ItemFramePreference.self) { frames in
             itemFrames = frames
@@ -241,7 +241,7 @@ struct MainTabView: View {
                         Circle()
                             .fill(.clear)
                             .frame(width: 44, height: 44)
-                            .liquidGlassCircle(tint: theme.accent.opacity(0.16), interactive: true)
+                            .liquidGlassCircle(tint: theme.accent.opacity(0.14), interactive: true, clear: true)
                     }
                     GeometryReader { proxy in
                         Color.clear.preference(

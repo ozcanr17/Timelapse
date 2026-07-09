@@ -17,14 +17,50 @@ private struct FlapseIslandLogo: View {
     var size: CGFloat = 24
 
     var body: some View {
-        RoundedRectangle(cornerRadius: size * 0.28, style: .continuous)
-            .fill(flapseGreen)
-            .frame(width: size, height: size)
-            .overlay {
-                Image(systemName: "camera.aperture")
-                    .font(.system(size: size * 0.62, weight: .medium))
-                    .foregroundStyle(.white)
-            }
+        ZStack {
+            RoundedRectangle(cornerRadius: size * 0.24, style: .continuous)
+                .fill(LinearGradient(
+                    colors: [flapseGreen.opacity(0.85), flapseGreen],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                ))
+            Circle()
+                .strokeBorder(.white.opacity(0.9), lineWidth: size * 0.032)
+                .padding(size * 0.14)
+            WidgetApertureShape()
+                .stroke(.white, style: StrokeStyle(lineWidth: size * 0.052, lineCap: .round))
+                .padding(size * 0.25)
+        }
+        .frame(width: size, height: size)
+    }
+}
+
+private struct WidgetApertureShape: Shape {
+    func path(in rect: CGRect) -> Path {
+        let radius = min(rect.width, rect.height) / 2
+        let innerRadius = radius / sqrt(3)
+        let center = CGPoint(x: rect.midX, y: rect.midY)
+        let trim = 0.72
+        var path = Path()
+        for i in 0..<6 {
+            let startAngle = Double(i) * 60 - 90
+            let targetAngle = Double(i) * 60
+            let start = CGPoint(
+                x: center.x + radius * cos(startAngle * .pi / 180),
+                y: center.y + radius * sin(startAngle * .pi / 180)
+            )
+            let target = CGPoint(
+                x: center.x + innerRadius * cos(targetAngle * .pi / 180),
+                y: center.y + innerRadius * sin(targetAngle * .pi / 180)
+            )
+            let end = CGPoint(
+                x: start.x + (target.x - start.x) * trim,
+                y: start.y + (target.y - start.y) * trim
+            )
+            path.move(to: start)
+            path.addLine(to: end)
+        }
+        return path
     }
 }
 
@@ -83,9 +119,9 @@ struct FlapseRenderLiveActivity: Widget {
             } compactLeading: {
                 FlapseIslandLogo(size: 22)
             } compactTrailing: {
-                ProgressRing(progress: context.state.progress, isFinished: context.state.isFinished)
+                ProgressRing(progress: context.state.progress, isFinished: context.state.isFinished, size: 17, lineWidth: 2)
             } minimal: {
-                ProgressRing(progress: context.state.progress, isFinished: context.state.isFinished, size: 20)
+                ProgressRing(progress: context.state.progress, isFinished: context.state.isFinished, size: 17, lineWidth: 2)
             }
         }
     }

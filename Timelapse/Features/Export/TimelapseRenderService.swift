@@ -34,11 +34,37 @@ enum TimelapseLibrary {
         return item
     }
 
+    static let retentionDays = 7
+
+    @MainActor
+    static func softDelete(_ item: SavedTimelapse, context: ModelContext) {
+        item.deletedAt = Date.now
+        try? context.save()
+    }
+
+    @MainActor
+    static func restore(_ item: SavedTimelapse, context: ModelContext) {
+        item.deletedAt = nil
+        try? context.save()
+    }
+
     @MainActor
     static func delete(_ item: SavedTimelapse, context: ModelContext) {
         try? FileManager.default.removeItem(at: item.fileURL)
         context.delete(item)
         try? context.save()
+    }
+
+    @MainActor
+    static func purgeExpired(context: ModelContext, now: Date = Date.now) {
+        guard let cutoff = Calendar.current.date(byAdding: .day, value: -retentionDays, to: now) else { return }
+        let descriptor = FetchDescriptor<SavedTimelapse>(
+            predicate: #Predicate { $0.deletedAt != nil }
+        )
+        guard let deleted = try? context.fetch(descriptor) else { return }
+        for item in deleted where (item.deletedAt ?? now) < cutoff {
+            delete(item, context: context)
+        }
     }
 }
 
@@ -53,6 +79,7 @@ final class TimelapseRenderService {
         let title: String
         let startedAt: Date
         let viewModel: TimelapseExportViewModel
+        var isSaved = false
     }
 
     private(set) var jobs: [Job] = []
@@ -64,6 +91,7 @@ final class TimelapseRenderService {
 
     var finishedJobs: [Job] {
         jobs.filter {
+            guard !$0.isSaved else { return false }
             if case .finished = $0.viewModel.phase { return true }
             return false
         }
@@ -117,7 +145,11 @@ final class TimelapseRenderService {
     func saveToLibrary(projectID: UUID, context: ModelContext) async -> SavedTimelapse? {
         guard let job = jobs.first(where: { $0.id == projectID }),
               case .finished(let url) = job.viewModel.phase else { return nil }
-        return try? await TimelapseLibrary.save(videoURL: url, title: job.title, context: context)
+        let saved = try? await TimelapseLibrary.save(videoURL: url, title: job.title, context: context)
+        if saved != nil, let index = jobs.firstIndex(where: { $0.id == projectID }) {
+            jobs[index].isSaved = true
+        }
+        return saved
     }
 
     private func endBackgroundTask(for id: UUID) {

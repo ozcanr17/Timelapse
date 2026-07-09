@@ -125,6 +125,7 @@ enum Theme {
     static func accent(for category: ProjectCategory) -> Color {
         switch category {
         case .selfPortrait: Color(light: "2E8B57", dark: "5FD98A")
+        case .person:       Color(light: "5E5CE6", dark: "9D9BF5")
         case .child:        Color(light: "B8637A", dark: "E79CAE")
         case .plant:        Color(light: "4C7A52", dark: "8FC79A")
         case .hairAndBeard: Color(light: "8A6A4E", dark: "C9A97D")
@@ -141,6 +142,7 @@ enum Theme {
     static func icon(for category: ProjectCategory) -> String {
         switch category {
         case .selfPortrait: "person.crop.circle"
+        case .person:       "person.fill"
         case .child:        "figure.child"
         case .plant:        "leaf.fill"
         case .hairAndBeard: "scissors"
@@ -209,6 +211,7 @@ struct LiquidGlassStyle<S: InsettableShape>: ViewModifier {
     var tint: Color? = nil
     var interactive: Bool = false
     var scrimOpacity: Double = 0
+    var clear: Bool = false
     @Environment(\.theme) private var theme
 
     func body(content: Content) -> some View {
@@ -235,7 +238,15 @@ struct LiquidGlassStyle<S: InsettableShape>: ViewModifier {
                                 shape.fill(theme.surface.opacity(scrimOpacity))
                             }
                         }
-                        .overlay(shape.strokeBorder(theme.ink.opacity(0.08), lineWidth: 0.5))
+                        .overlay {
+                            shape.strokeBorder(
+                                LinearGradient(
+                                    colors: [.white.opacity(0.28), .white.opacity(0.05), .white.opacity(0.16)],
+                                    startPoint: .topLeading, endPoint: .bottomTrailing
+                                ),
+                                lineWidth: 0.8
+                            )
+                        }
                     }
                 }
                 .clipShape(shape)
@@ -245,7 +256,7 @@ struct LiquidGlassStyle<S: InsettableShape>: ViewModifier {
 
     @available(iOS 26.0, *)
     private var glass: Glass {
-        var glass: Glass = .regular
+        var glass: Glass = clear ? .clear : .regular
         if let tint {
             glass = glass.tint(tint)
         } else if scrimOpacity > 0 {
@@ -267,24 +278,26 @@ extension View {
         cornerRadius: CGFloat = Theme.cornerRadius,
         tint: Color? = nil,
         interactive: Bool = false,
-        scrimOpacity: Double = 0
+        scrimOpacity: Double = 0,
+        clear: Bool = false
     ) -> some View {
         modifier(
             LiquidGlassStyle(
                 shape: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous),
                 tint: tint,
                 interactive: interactive,
-                scrimOpacity: scrimOpacity
+                scrimOpacity: scrimOpacity,
+                clear: clear
             )
         )
     }
 
-    func liquidGlassCapsule(tint: Color? = nil, interactive: Bool = false, scrimOpacity: Double = 0) -> some View {
-        modifier(LiquidGlassStyle(shape: Capsule(), tint: tint, interactive: interactive, scrimOpacity: scrimOpacity))
+    func liquidGlassCapsule(tint: Color? = nil, interactive: Bool = false, scrimOpacity: Double = 0, clear: Bool = false) -> some View {
+        modifier(LiquidGlassStyle(shape: Capsule(), tint: tint, interactive: interactive, scrimOpacity: scrimOpacity, clear: clear))
     }
 
-    func liquidGlassCircle(tint: Color? = nil, interactive: Bool = false, scrimOpacity: Double = 0) -> some View {
-        modifier(LiquidGlassStyle(shape: Circle(), tint: tint, interactive: interactive, scrimOpacity: scrimOpacity))
+    func liquidGlassCircle(tint: Color? = nil, interactive: Bool = false, scrimOpacity: Double = 0, clear: Bool = false) -> some View {
+        modifier(LiquidGlassStyle(shape: Circle(), tint: tint, interactive: interactive, scrimOpacity: scrimOpacity, clear: clear))
     }
 
     func liquidGlassBar(cornerRadius: CGFloat = Theme.cornerRadius, interactive: Bool = false) -> some View {
@@ -345,4 +358,17 @@ struct PrimaryButtonStyle: ButtonStyle {
 
 extension ButtonStyle where Self == PrimaryButtonStyle {
     static var timelapsePrimary: PrimaryButtonStyle { PrimaryButtonStyle() }
+}
+
+struct GlassIconButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.88 : 1)
+            .opacity(configuration.isPressed ? 0.75 : 1)
+            .animation(.spring(response: 0.28, dampingFraction: 0.75), value: configuration.isPressed)
+    }
+}
+
+extension ButtonStyle where Self == GlassIconButtonStyle {
+    static var glassIcon: GlassIconButtonStyle { GlassIconButtonStyle() }
 }
