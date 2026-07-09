@@ -88,15 +88,28 @@ struct MainTabView: View {
         }
     }
 
+    private func paneIndex(_ target: Tab) -> Int {
+        switch target {
+        case .home: 0
+        case .projects: 1
+        case .saved: 2
+        case .settings: 3
+        }
+    }
+
     private func pane<Content: View>(_ target: Tab, @ViewBuilder content: () -> Content) -> some View {
-        NavigationStack {
+        let isActive = tab == target
+        let direction: CGFloat = paneIndex(target) < paneIndex(tab) ? -1 : 1
+        return NavigationStack {
             content()
                 .toolbarBackground(.hidden, for: .navigationBar)
         }
         .contentMargins(.bottom, 40, for: .scrollContent)
-        .opacity(tab == target ? 1 : 0)
-        .allowsHitTesting(tab == target)
-        .accessibilityHidden(tab != target)
+        .opacity(isActive ? 1 : 0)
+        .offset(x: isActive ? 0 : 32 * direction)
+        .animation(reduceMotion ? nil : .spring(response: 0.38, dampingFraction: 0.86), value: tab)
+        .allowsHitTesting(isActive)
+        .accessibilityHidden(!isActive)
     }
 
     private struct BarItem {
@@ -140,9 +153,7 @@ struct MainTabView: View {
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 6)
-        .coordinateSpace(name: "tabBarSpace")
-        .liquidGlassCapsule(tint: Self.barTint)
-        .overlay(alignment: .topLeading) {
+        .background(alignment: .topLeading) {
             if highlightWidth > 0 {
                 Capsule()
                     .fill(.clear)
@@ -159,6 +170,8 @@ struct MainTabView: View {
                     .allowsHitTesting(false)
             }
         }
+        .coordinateSpace(name: "tabBarSpace")
+        .liquidGlassCapsule(tint: Self.barTint)
         .contentShape(Capsule())
         .onPreferenceChange(ItemFramePreference.self) { frames in
             itemFrames = frames
