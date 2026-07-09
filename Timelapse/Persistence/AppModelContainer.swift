@@ -7,7 +7,7 @@ enum AppModelContainer {
 
     /// Hangi modellerin saklanacağını tanımlayan şema. Yeni @Model eklersek
     /// buraya da eklemeyi unutmamamız gerekir.
-    private static let schema = Schema([Project.self, Entry.self])
+    private static let schema = Schema([Project.self, Entry.self, SavedTimelapse.self])
 
     /// iCloud yedekleme, kullanıcının açık tercihine bağlı bir Pro özelliğidir. Anahtar
     /// PremiumFeature.cloudBackup.preferenceKey ile aynıdır; tercih yalnızca Pro

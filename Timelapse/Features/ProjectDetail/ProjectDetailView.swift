@@ -471,7 +471,7 @@ struct ProjectDetailView: View {
                 .foregroundStyle(.white)
                 .padding(.horizontal, 11)
                 .padding(.vertical, 6)
-                .background(.ultraThinMaterial, in: Capsule())
+                .liquidGlassBarCapsule()
                 .padding(16)
         }
         .overlay(alignment: .topTrailing) {

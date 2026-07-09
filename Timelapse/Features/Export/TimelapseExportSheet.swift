@@ -6,12 +6,19 @@ import Photos
 struct TimelapseExportSheet: View {
 
     let project: Project
+    private let viewModel: TimelapseExportViewModel
+
+    @MainActor
+    init(project: Project) {
+        self.project = project
+        self.viewModel = TimelapseRenderService.shared.viewModel(for: project)
+    }
 
     @Environment(StoreService.self) private var store
     @Environment(\.dismiss) private var dismiss
     @Environment(\.theme) private var theme
+    @Environment(\.modelContext) private var modelContext
     @AppStorage(PremiumFeature.smartAlignment.preferenceKey!) private var smartAlignmentEnabled = false
-    @State private var viewModel = TimelapseExportViewModel()
     @State private var showPaywall = false
     @State private var speedX: Double = 1.0
     @State private var zoomX: Double = 1.0
@@ -35,6 +42,7 @@ struct TimelapseExportSheet: View {
     @State private var isStale = true
     @State private var poster: UIImage?
     @State private var savedToPhotos = false
+    @State private var savedToLibrary = false
 
     private var captionDayCount: Int {
         guard let first = frames.first?.capturedAt, let last = frames.last?.capturedAt else { return frames.count }
@@ -66,7 +74,6 @@ struct TimelapseExportSheet: View {
                     if store.isPro && smartAlignmentEnabled { alignMode = .smart }
                 }
             }
-            .onDisappear { viewModel.cancel() }
             .sheet(isPresented: $showPaywall) {
                 PaywallView(store: store)
             }
@@ -98,6 +105,8 @@ struct TimelapseExportSheet: View {
                 previewArea
                     .id("previewArea")
 
+                actionArea
+
                 VStack(spacing: 18) {
                     speedControl
                     zoomControl
@@ -108,8 +117,8 @@ struct TimelapseExportSheet: View {
                     overlayControls
                 }
                 .disabled(isRendering)
-
-                actionArea
+                .opacity(isRendering ? 0.45 : 1)
+                .animation(.smooth(duration: 0.25), value: isRendering)
 
                 if !store.isPro {
                     Button {
@@ -123,6 +132,7 @@ struct TimelapseExportSheet: View {
             }
             .padding(20)
         }
+        .contentMargins(.bottom, 40, for: .scrollContent)
         .onChange(of: overlay) { isStale = true }
         .onChange(of: viewModel.phase) {
             if case .finished(let url) = viewModel.phase {
@@ -203,15 +213,24 @@ struct TimelapseExportSheet: View {
     @ViewBuilder
     private var actionArea: some View {
         if isRendering {
-            Button {} label: {
-                HStack(spacing: 10) {
-                    ProgressView().tint(.white)
-                    Text("Oluşturuluyor…")
+            VStack(spacing: 10) {
+                Button(role: .destructive) {
+                    TimelapseRenderService.shared.cancel(projectID: project.id)
+                } label: {
+                    Label("İptal Et", systemImage: "xmark.circle.fill")
+                        .font(Theme.headline(17))
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 15)
                 }
-                .frame(maxWidth: .infinity)
+                .buttonStyle(.plain)
+                .liquidGlassStyle(cornerRadius: 14, tint: Color(red: 0.86, green: 0.22, blue: 0.2), interactive: true)
+                .accessibilityIdentifier("cancelRenderButton")
+                Text("Uygulamadan çıksan da oluşturma sürer; biten video Kaydedilenler'e düşer.")
+                    .font(Theme.caption(11))
+                    .foregroundStyle(theme.inkMuted)
+                    .multilineTextAlignment(.center)
             }
-            .buttonStyle(.timelapsePrimary)
-            .disabled(true)
         } else if case .finished(let url) = viewModel.phase, !isStale {
             VStack(spacing: 10) {
                 ShareLink(item: url) {
@@ -231,6 +250,22 @@ struct TimelapseExportSheet: View {
                 }
                 .buttonStyle(.plain)
                 .disabled(savedToPhotos)
+                Button {
+                    Task {
+                        savedToLibrary = await TimelapseRenderService.shared.saveToLibrary(projectID: project.id, context: modelContext) != nil
+                        if savedToLibrary { UINotificationFeedbackGenerator().notificationOccurred(.success) }
+                    }
+                } label: {
+                    Label(savedToLibrary ? "Kaydedilenler'e eklendi" : "Uygulamada sakla",
+                          systemImage: savedToLibrary ? "checkmark.circle.fill" : "film.stack")
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .foregroundStyle(theme.accent)
+                        .background(theme.accent.opacity(0.12), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                }
+                .buttonStyle(.plain)
+                .disabled(savedToLibrary)
+                .accessibilityIdentifier("saveToLibraryButton")
                 if CaptionWriter.isAvailable {
                     if let aiCaption {
                         VStack(spacing: 6) {
@@ -248,7 +283,7 @@ struct TimelapseExportSheet: View {
                         }
                         .padding(12)
                         .frame(maxWidth: .infinity)
-                        .background(theme.surface, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        .liquidGlassStyle(cornerRadius: 14)
                     } else {
                         Button {
                             isWritingCaption = true
@@ -408,7 +443,11 @@ struct TimelapseExportSheet: View {
                 .appendingPathComponent("soundtrack-\(UUID().uuidString)")
                 .appendingPathExtension(url.pathExtension.isEmpty ? "m4a" : url.pathExtension)
             if (try? FileManager.default.copyItem(at: url, to: local)) != nil {
-                setSoundtrack(local, title: url.deletingPathExtension().lastPathComponent)
+                let title = url.deletingPathExtension().lastPathComponent
+                Task {
+                    let prepared = await SoundtrackTranscoder.aacFile(from: local)
+                    setSoundtrack(prepared, title: title)
+                }
             }
         }
     }
@@ -551,7 +590,7 @@ struct TimelapseExportSheet: View {
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(theme.surface, in: RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
+        .liquidGlassStyle()
     }
 
     /// Köşe seçici. Sağ alt (uygulama etiketi) ve `exclude`'daki köşeler seçenek dışıdır;
@@ -609,6 +648,7 @@ struct TimelapseExportSheet: View {
 
     private func export() {
         savedToPhotos = false
+        savedToLibrary = false
         var effectiveOverlay = overlay
         if !store.isPro { effectiveOverlay.showAppMark = true }
         let proAlign = store.isPro
@@ -628,6 +668,7 @@ struct TimelapseExportSheet: View {
             transition: transition,
             alignmentSubject: alignmentSubject
         )
+        TimelapseRenderService.shared.didStartRender(for: project)
     }
 }
 
@@ -841,7 +882,7 @@ private struct ThirdsReticle: View {
 
 /// Video render edilirken gösterilen sevimli, sürekli dönen logo animasyonu
 /// (uygulama açılışındaki dönüşle aynı ruhta). Sıkıcı ilerleme çubuğunun yerini alır.
-private struct SpinningLogo: View {
+struct SpinningLogo: View {
     let size: CGFloat
     @State private var spinning = false
 
@@ -863,7 +904,7 @@ private struct ExportedVideoPlayer: View {
     }
 
     var body: some View {
-        VideoPlayer(player: player)
+        InlineVideoPlayer(player: player)
             .onDisappear { player.pause() }
     }
 }

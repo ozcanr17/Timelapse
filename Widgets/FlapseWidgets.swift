@@ -311,5 +311,6 @@ struct FlapseWidgetBundle: WidgetBundle {
         FlapseStreakWidget()
         FlapseGridWidget()
         FlapseProjectsWidget()
+        FlapseRenderLiveActivity()
     }
 }

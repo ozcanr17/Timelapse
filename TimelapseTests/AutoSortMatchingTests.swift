@@ -52,6 +52,35 @@ final class AutoSortMatchingTests: XCTestCase {
         XCTAssertEqual(ProjectMatcher.decide(for: .empty, among: sets), .chooseManually)
     }
 
+    func test_decide_unknownKind_neverAutoAssigns() {
+        let id = UUID()
+        let signature = SubjectSignature(kind: .unknown, vector: [1, 0], labels: [])
+        let sets = [ProjectSignatureSet(projectID: id, kind: .person, vectors: [[1, 0]])]
+        XCTAssertEqual(ProjectMatcher.decide(for: signature, among: sets), .suggest(id))
+    }
+
+    func test_decide_ambiguousProjects_downgradesToSuggest() {
+        let first = UUID()
+        let second = UUID()
+        let signature = SubjectSignature(kind: .person, vector: [1, 0], labels: [])
+        let sets = [
+            ProjectSignatureSet(projectID: first, kind: .person, vectors: [[1, 0.3]]),
+            ProjectSignatureSet(projectID: second, kind: .person, vectors: [[1, 0.33]])
+        ]
+        XCTAssertEqual(ProjectMatcher.decide(for: signature, among: sets), .suggest(first))
+    }
+
+    func test_decide_clearWinner_stillAutoAssigns() {
+        let near = UUID()
+        let far = UUID()
+        let signature = SubjectSignature(kind: .person, vector: [1, 0], labels: [])
+        let sets = [
+            ProjectSignatureSet(projectID: near, kind: .person, vectors: [[1, 0.1]]),
+            ProjectSignatureSet(projectID: far, kind: .person, vectors: [[1, 0.9]])
+        ]
+        XCTAssertEqual(ProjectMatcher.decide(for: signature, among: sets), .autoAssign(near))
+    }
+
     func test_nearest_picksClosestAcrossProjects() {
         let near = UUID()
         let far = UUID()

@@ -15,6 +15,7 @@ enum ProjectMatcher {
 
     static let autoAssignDistance: Float = 0.65
     static let suggestDistance: Float = 0.95
+    static let ambiguityMargin: Float = 0.08
 
     enum Decision: Equatable {
         case autoAssign(UUID)
@@ -39,9 +40,24 @@ enum ProjectMatcher {
 
     static func decide(for signature: SubjectSignature, among sets: [ProjectSignatureSet]) -> Decision {
         guard let match = nearest(for: signature, among: sets) else { return .chooseManually }
-        if match.distance <= autoAssignDistance { return .autoAssign(match.projectID) }
+        if match.distance <= autoAssignDistance,
+           signature.kind != .unknown,
+           isUnambiguous(match, for: signature, among: sets) {
+            return .autoAssign(match.projectID)
+        }
         if match.distance <= suggestDistance { return .suggest(match.projectID) }
         return .chooseManually
+    }
+
+    static func isUnambiguous(_ match: ProjectMatch, for signature: SubjectSignature, among sets: [ProjectSignatureSet]) -> Bool {
+        let runnerUp = sets
+            .filter { $0.projectID != match.projectID && kindCompatible(signature.kind, $0.kind) }
+            .compactMap { set in
+                set.vectors.map { FeatureVector.distance(signature.vector, $0) }.min()
+            }
+            .min()
+        guard let runnerUp else { return true }
+        return runnerUp - match.distance >= ambiguityMargin
     }
 
     static func kindCompatible(_ a: SubjectKind, _ b: SubjectKind) -> Bool {

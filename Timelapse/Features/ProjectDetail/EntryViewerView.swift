@@ -105,7 +105,7 @@ struct EntryViewerView: View {
             .font(.system(size: 17, weight: .semibold))
             .foregroundStyle(.white)
             .frame(width: 42, height: 42)
-            .background(.ultraThinMaterial, in: Circle())
+            .liquidGlassBarCircle()
     }
 
     private func saveToPhotos() {

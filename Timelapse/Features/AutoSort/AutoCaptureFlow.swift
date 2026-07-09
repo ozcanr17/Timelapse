@@ -160,7 +160,13 @@ struct AutoCaptureFlow: View {
             signature = computed
             let sets = projects.compactMap(signatureSet(for:))
             switch ProjectMatcher.decide(for: computed, among: sets) {
-            case .autoAssign(let id), .suggest(let id):
+            case .autoAssign(let id):
+                if let project = projects.first(where: { $0.id == id }) {
+                    assign(to: project)
+                } else {
+                    withAnimation { phase = .choosing(nil) }
+                }
+            case .suggest(let id):
                 if projects.contains(where: { $0.id == id }) {
                     withAnimation { phase = .confirming(id) }
                 } else {

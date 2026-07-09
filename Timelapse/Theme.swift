@@ -204,22 +204,101 @@ private extension UIColor {
     }
 }
 
-struct CardBackground: ViewModifier {
+struct LiquidGlassStyle<S: InsettableShape>: ViewModifier {
+    var shape: S
+    var tint: Color? = nil
+    var interactive: Bool = false
+    var scrimOpacity: Double = 0
     @Environment(\.theme) private var theme
 
     func body(content: Content) -> some View {
-        content
-            .background(theme.surface)
-            .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
-                    .strokeBorder(theme.ink.opacity(0.06), lineWidth: 0.5)
-            )
-            .shadow(color: .black.opacity(0.05), radius: 10, x: 0, y: 4)
+        if #available(iOS 26.0, *) {
+            content
+                .clipShape(shape)
+                .glassEffect(glass, in: shape)
+        } else {
+            content
+                .background {
+                    if let tint {
+                        shape.fill(tint)
+                            .overlay {
+                                LinearGradient(
+                                    colors: [.white.opacity(0.06), .clear],
+                                    startPoint: .top, endPoint: .bottom
+                                )
+                                .clipShape(shape)
+                            }
+                    } else {
+                        ZStack {
+                            shape.fill(.ultraThinMaterial)
+                            if scrimOpacity > 0 {
+                                shape.fill(theme.surface.opacity(scrimOpacity))
+                            }
+                        }
+                        .overlay(shape.strokeBorder(theme.ink.opacity(0.08), lineWidth: 0.5))
+                    }
+                }
+                .clipShape(shape)
+                .shadow(color: .black.opacity(0.08), radius: 12, x: 0, y: 4)
+        }
+    }
+
+    @available(iOS 26.0, *)
+    private var glass: Glass {
+        var glass: Glass = .regular
+        if let tint {
+            glass = glass.tint(tint)
+        } else if scrimOpacity > 0 {
+            glass = glass.tint(theme.surface.opacity(scrimOpacity))
+        }
+        if interactive { glass = glass.interactive() }
+        return glass
+    }
+}
+
+struct CardBackground: ViewModifier {
+    func body(content: Content) -> some View {
+        content.liquidGlassStyle()
     }
 }
 
 extension View {
+    func liquidGlassStyle(
+        cornerRadius: CGFloat = Theme.cornerRadius,
+        tint: Color? = nil,
+        interactive: Bool = false,
+        scrimOpacity: Double = 0
+    ) -> some View {
+        modifier(
+            LiquidGlassStyle(
+                shape: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous),
+                tint: tint,
+                interactive: interactive,
+                scrimOpacity: scrimOpacity
+            )
+        )
+    }
+
+    func liquidGlassCapsule(tint: Color? = nil, interactive: Bool = false, scrimOpacity: Double = 0) -> some View {
+        modifier(LiquidGlassStyle(shape: Capsule(), tint: tint, interactive: interactive, scrimOpacity: scrimOpacity))
+    }
+
+    func liquidGlassCircle(tint: Color? = nil, interactive: Bool = false, scrimOpacity: Double = 0) -> some View {
+        modifier(LiquidGlassStyle(shape: Circle(), tint: tint, interactive: interactive, scrimOpacity: scrimOpacity))
+    }
+
+    func liquidGlassBar(cornerRadius: CGFloat = Theme.cornerRadius, interactive: Bool = false) -> some View {
+        liquidGlassStyle(cornerRadius: cornerRadius, interactive: interactive, scrimOpacity: 0.08)
+    }
+
+    func liquidGlassBarCapsule(interactive: Bool = false) -> some View {
+        liquidGlassCapsule(interactive: interactive, scrimOpacity: 0.08)
+    }
+
+    func liquidGlassBarCircle(interactive: Bool = false) -> some View {
+        liquidGlassCircle(interactive: interactive, scrimOpacity: 0.08)
+    }
+
     func cardStyle() -> some View { modifier(CardBackground()) }
     func glassSurface(cornerRadius: CGFloat = 18, tint: Color) -> some View {
         modifier(GlassSurface(cornerRadius: cornerRadius, tint: tint))
@@ -256,7 +335,7 @@ struct PrimaryButtonStyle: ButtonStyle {
             .foregroundStyle(.white)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 15)
-            .glassSurface(cornerRadius: 14, tint: theme.accent)
+            .liquidGlassStyle(cornerRadius: 14, tint: theme.accent, interactive: true)
             .shadow(color: .black.opacity(0.12), radius: 8, x: 0, y: 3)
             .opacity(configuration.isPressed ? 0.85 : 1)
             .scaleEffect(configuration.isPressed ? 0.98 : 1)

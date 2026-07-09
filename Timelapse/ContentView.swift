@@ -22,9 +22,7 @@ struct ContentView: View {
 
     var body: some View {
         ZStack {
-            NavigationStack {
-                ProjectListView()
-            }
+            MainTabView()
 
             if isShowingSplash && hasSeenWelcome {
                 LaunchSplashView()

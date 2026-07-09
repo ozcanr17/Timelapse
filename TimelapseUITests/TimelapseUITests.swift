@@ -18,6 +18,10 @@ final class TimelapseUITests: XCTestCase {
             startButton.tap()
         }
 
+        let projectsTab = app.buttons["projectsTab"]
+        XCTAssertTrue(projectsTab.waitForExistence(timeout: 5))
+        projectsTab.tap()
+
         let addButton = app.buttons["addProjectButton"]
         XCTAssertTrue(addButton.waitForExistence(timeout: 5))
         addButton.tap()
@@ -54,7 +58,7 @@ final class TimelapseUITests: XCTestCase {
         XCTAssertTrue(darkroomTheme.waitForExistence(timeout: 5))
         darkroomTheme.tap()
         attachScreenshot(of: app, named: "settings-darkroom-theme")
-        app.navigationBars.buttons.firstMatch.tap()
+        projectsTab.tap()
 
         XCTAssertTrue(card.waitForExistence(timeout: 5))
         attachScreenshot(of: app, named: "project-list-darkroom-theme")
@@ -63,6 +67,25 @@ final class TimelapseUITests: XCTestCase {
         addButton.tap()
         XCTAssertTrue(app.staticTexts["Flapse Pro"].waitForExistence(timeout: 5))
         attachScreenshot(of: app, named: "paywall")
+    }
+
+    @MainActor
+    func testSavedTabShowsEmptyState() throws {
+        let app = XCUIApplication()
+        app.launchArguments += ["--uitests", "-auth.appleUserID", "uitest-user", "-AppleLanguages", "(tr)", "-AppleLocale", "tr_TR"]
+        app.launch()
+
+        let startButton = app.buttons["Başla"]
+        if startButton.waitForExistence(timeout: 5) {
+            startButton.tap()
+        }
+
+        let savedTab = app.buttons["savedTab"]
+        XCTAssertTrue(savedTab.waitForExistence(timeout: 5))
+        savedTab.tap()
+
+        XCTAssertTrue(app.staticTexts["Henüz kayıtlı timelapse yok"].waitForExistence(timeout: 5))
+        attachScreenshot(of: app, named: "saved-empty")
     }
 
     @MainActor
@@ -75,6 +98,10 @@ final class TimelapseUITests: XCTestCase {
         if startButton.waitForExistence(timeout: 5) {
             startButton.tap()
         }
+
+        let projectsTab = app.buttons["projectsTab"]
+        XCTAssertTrue(projectsTab.waitForExistence(timeout: 5))
+        projectsTab.tap()
 
         let addButton = app.buttons["addProjectButton"]
         XCTAssertTrue(addButton.waitForExistence(timeout: 5))

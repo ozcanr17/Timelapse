@@ -93,6 +93,10 @@ final class TimelapseExportViewModel {
 
     func cancel() {
         renderTask?.cancel()
+        if phase == .rendering {
+            phase = .idle
+            progress = 0
+        }
     }
 
     /// Vuruş ızgarasını kare sayısına uzatır ve parça "drop"u biliniyorsa EN BÜYÜK

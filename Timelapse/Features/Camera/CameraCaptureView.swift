@@ -142,9 +142,17 @@ private struct CameraSessionView: View {
         .padding(.top, 16)
         .padding(.bottom, 10)
         .background {
-            Rectangle()
-                .fill(.ultraThinMaterial)
+            if #available(iOS 26.0, *) {
+                Rectangle().fill(.clear)
+                    .glassEffect(.regular.tint(.black.opacity(0.35)), in: Rectangle())
+                    .ignoresSafeArea(edges: .bottom)
+            } else {
+                ZStack {
+                    Rectangle().fill(.ultraThinMaterial)
+                    Rectangle().fill(.black.opacity(0.3))
+                }
                 .ignoresSafeArea(edges: .bottom)
+            }
         }
     }
 
@@ -162,7 +170,7 @@ private struct CameraSessionView: View {
             .foregroundStyle(.white)
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
-            .background(.ultraThinMaterial, in: Capsule())
+            .liquidGlassBarCapsule()
             .overlay(Capsule().strokeBorder(.white.opacity(0.25), lineWidth: 1))
     }
 
@@ -289,7 +297,7 @@ struct CameraControlButton: View {
                 .font(.system(size: size * 0.4, weight: .semibold))
                 .foregroundStyle(.white)
                 .frame(width: size, height: size)
-                .background(.ultraThinMaterial, in: Circle())
+                .liquidGlassBarCircle()
         }
         .accessibilityLabel(Text(label))
     }
