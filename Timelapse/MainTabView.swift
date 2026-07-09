@@ -225,8 +225,13 @@ struct MainTabView: View {
 
     private func activate(_ item: BarItem) {
         if let target = item.tab {
-            if target == .projects {
+            if target == .projects && tab == .projects {
                 projectsResetToken += 1
+            } else if target != .projects && tab == .projects {
+                Task {
+                    try? await Task.sleep(for: .seconds(0.5))
+                    if tab != .projects { projectsResetToken += 1 }
+                }
             }
             tab = target
             if let index = barItems.firstIndex(where: { $0.identifier == item.identifier }),
