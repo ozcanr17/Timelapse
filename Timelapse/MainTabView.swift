@@ -24,8 +24,10 @@ struct MainTabView: View {
     @State private var isDraggingBar = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    private static let activeIconColor = Color(light: "4F46E5", dark: "8B85F4")
-    private static let idleIconColor = Color(light: "3A3A3C", dark: "F2F2F7")
+    private static let barTint = Color(light: "F5F5F7", dark: "0B0B0D").opacity(0.32)
+    private static let highlightTint = Color(light: "3C3C43", dark: "FFFFFF").opacity(0.13)
+    private static let activeIconColor = Color(light: "1C1C1E", dark: "FFFFFF")
+    private static let idleIconColor = Color(light: "1C1C1E", dark: "FFFFFF").opacity(0.55)
 
     private enum CaptureRoute: Identifiable {
         case project(Project)
@@ -142,7 +144,7 @@ struct MainTabView: View {
                 Capsule()
                     .fill(.clear)
                     .frame(width: highlightWidth, height: 46)
-                    .liquidGlassCapsule(interactive: true)
+                    .liquidGlassCapsule(tint: Self.highlightTint, interactive: true)
                     .offset(x: highlightX, y: 6)
                     .animation(
                         reduceMotion ? nil :
@@ -162,7 +164,7 @@ struct MainTabView: View {
             .padding(.vertical, 6)
         }
         .coordinateSpace(name: "tabBarSpace")
-        .liquidGlassCapsule(clear: true)
+        .liquidGlassCapsule(tint: Self.barTint)
         .contentShape(Capsule())
         .onPreferenceChange(ItemFramePreference.self) { frames in
             itemFrames = frames
@@ -236,6 +238,7 @@ struct MainTabView: View {
         return Image(systemName: isActive || isCamera ? item.activeIcon : item.icon)
             .font(.system(size: isCamera ? 23 : 21, weight: isCamera ? .semibold : .medium))
             .foregroundStyle(isCamera || isActive ? Self.activeIconColor : Self.idleIconColor)
+            .shadow(color: .black.opacity(0.35), radius: 1, x: 0, y: 0.5)
             .frame(maxWidth: .infinity, minHeight: 46)
             .scaleEffect(isPreviewed && !reduceMotion ? 1.08 : 1)
             .background {
@@ -244,7 +247,7 @@ struct MainTabView: View {
                         Circle()
                             .fill(.clear)
                             .frame(width: 44, height: 44)
-                            .liquidGlassCircle(interactive: true)
+                            .liquidGlassCircle(tint: Self.highlightTint, interactive: true)
                     }
                     GeometryReader { proxy in
                         Color.clear.preference(

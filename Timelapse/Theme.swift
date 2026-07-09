@@ -223,14 +223,17 @@ struct LiquidGlassStyle<S: InsettableShape>: ViewModifier {
             content
                 .background {
                     if let tint {
-                        shape.fill(tint)
-                            .overlay {
-                                LinearGradient(
-                                    colors: [.white.opacity(0.06), .clear],
-                                    startPoint: .top, endPoint: .bottom
-                                )
-                                .clipShape(shape)
-                            }
+                        ZStack {
+                            shape.fill(.ultraThinMaterial)
+                            shape.fill(tint)
+                        }
+                        .overlay {
+                            LinearGradient(
+                                colors: [.white.opacity(0.06), .clear],
+                                startPoint: .top, endPoint: .bottom
+                            )
+                            .clipShape(shape)
+                        }
                     } else {
                         ZStack {
                             shape.fill(.ultraThinMaterial)
