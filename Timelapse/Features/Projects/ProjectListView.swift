@@ -111,15 +111,8 @@ struct ProjectListView: View {
         }
         .navigationTitle("Projeler")
         .toolbar {
-            if #available(iOS 26.0, *) {
-                ToolbarItem(placement: .primaryAction) { importButton }
-                    .sharedBackgroundVisibility(.hidden)
-                ToolbarItem(placement: .primaryAction) { addButton }
-                    .sharedBackgroundVisibility(.hidden)
-            } else {
-                ToolbarItem(placement: .primaryAction) { importButton }
-                ToolbarItem(placement: .primaryAction) { addButton }
-            }
+            ToolbarItem(placement: .primaryAction) { importButton }
+            ToolbarItem(placement: .primaryAction) { addButton }
         }
         .sheet(item: $activeSheet) { sheet in
             switch sheet {
@@ -154,13 +147,8 @@ struct ProjectListView: View {
         Button {
             importTapped()
         } label: {
-            Image(systemName: "photo.on.rectangle.angled")
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(theme.accent)
-                .frame(width: 38, height: 38)
-                .liquidGlassCircle(interactive: true, clear: true)
+            toolbarIcon("photo.on.rectangle.angled")
         }
-        .buttonStyle(.glassIcon)
         .accessibilityIdentifier("importProjectButton")
         .accessibilityLabel(Text("Fotoğraflardan proje oluştur"))
     }
@@ -169,15 +157,20 @@ struct ProjectListView: View {
         Button {
             addProjectTapped()
         } label: {
-            Image(systemName: "plus")
-                .font(.system(size: 17, weight: .semibold))
-                .foregroundStyle(theme.accent)
-                .frame(width: 38, height: 38)
-                .liquidGlassCircle(interactive: true, clear: true)
+            toolbarIcon("plus")
         }
-        .buttonStyle(.glassIcon)
         .accessibilityIdentifier("addProjectButton")
         .accessibilityLabel(Text("Yeni proje"))
+    }
+
+    private func toolbarIcon(_ name: String) -> some View {
+        Image(systemName: name)
+            .resizable()
+            .scaledToFit()
+            .fontWeight(.medium)
+            .foregroundStyle(theme.accent)
+            .frame(width: 21, height: 21)
+            .frame(width: 30, height: 30, alignment: .center)
     }
 
     private var visibleJobs: [TimelapseRenderService.Job] {

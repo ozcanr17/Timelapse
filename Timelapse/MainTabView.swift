@@ -24,6 +24,9 @@ struct MainTabView: View {
     @State private var isDraggingBar = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
+    private static let activeIconColor = Color(light: "4F46E5", dark: "8B85F4")
+    private static let idleIconColor = Color(light: "3A3A3C", dark: "F2F2F7")
+
     private enum CaptureRoute: Identifiable {
         case project(Project)
         case auto
@@ -139,7 +142,7 @@ struct MainTabView: View {
                 Capsule()
                     .fill(.clear)
                     .frame(width: highlightWidth, height: 46)
-                    .liquidGlassCapsule(tint: .white.opacity(0.12), interactive: true, clear: true)
+                    .liquidGlassCapsule(interactive: true)
                     .offset(x: highlightX, y: 6)
                     .animation(
                         reduceMotion ? nil :
@@ -232,7 +235,7 @@ struct MainTabView: View {
 
         return Image(systemName: isActive || isCamera ? item.activeIcon : item.icon)
             .font(.system(size: isCamera ? 23 : 21, weight: isCamera ? .semibold : .medium))
-            .foregroundStyle(isCamera || isActive ? theme.accent : theme.inkMuted)
+            .foregroundStyle(isCamera || isActive ? Self.activeIconColor : Self.idleIconColor)
             .frame(maxWidth: .infinity, minHeight: 46)
             .scaleEffect(isPreviewed && !reduceMotion ? 1.08 : 1)
             .background {
@@ -241,7 +244,7 @@ struct MainTabView: View {
                         Circle()
                             .fill(.clear)
                             .frame(width: 44, height: 44)
-                            .liquidGlassCircle(tint: theme.accent.opacity(0.14), interactive: true, clear: true)
+                            .liquidGlassCircle(interactive: true)
                     }
                     GeometryReader { proxy in
                         Color.clear.preference(

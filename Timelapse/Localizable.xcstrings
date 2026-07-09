@@ -4651,6 +4651,9 @@
         }
       }
     },
+    "Bu timelapse Son Silinenler'e taşınsın mı? 7 gün sonra kalıcı olarak silinir." : {
+
+    },
     "Bugün" : {
       "localizations" : {
         "ar" : {
@@ -15324,6 +15327,9 @@
         }
       }
     },
+    "Kişi" : {
+
+    },
     "Kitaplık" : {
       "localizations" : {
         "ar" : {
@@ -19954,7 +19960,11 @@
         }
       }
     },
+    "Silinen öğe yok" : {
+
+    },
     "Silinen proje yok" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -20093,6 +20103,9 @@
           }
         }
       }
+    },
+    "Silinen timelapse'ler 7 gün saklanır, sonra kalıcı olarak silinir." : {
+
     },
     "Sinematik" : {
       "localizations" : {
@@ -22480,6 +22493,9 @@
           }
         }
       }
+    },
+    "Timelapse'ler" : {
+
     },
     "Toplam çekim" : {
       "localizations" : {

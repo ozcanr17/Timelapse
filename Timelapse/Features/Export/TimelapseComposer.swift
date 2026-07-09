@@ -338,7 +338,7 @@ struct TimelapseComposer: TimelapseComposing {
         // her zaman kısa kalır (hızlı hızlarda otomatik daha da kısalır).
         let outputFPS: Int32 = 30
         let holdFrames = max(1, Int((Double(outputFPS) / Double(settings.framesPerSecond)).rounded()))
-        let baseTransition = max(1, Int((0.14 * Double(outputFPS)).rounded()))
+        let baseTransition = max(2, Int((0.2 * Double(outputFPS)).rounded()))
 
         var holds = Array(repeating: holdFrames, count: frames.count)
         if let beats = settings.beatTimes, beats.count >= 2 {
@@ -426,7 +426,8 @@ struct TimelapseComposer: TimelapseComposing {
                 } else {
                     for step in 1...transitionFrames {
                         try autoreleasepool {
-                            let progress = CGFloat(step) / CGFloat(transitionFrames)
+                            let t = CGFloat(step) / CGFloat(transitionFrames)
+                            let progress = t * t * (3 - 2 * t)
                             if let blended = blend(current, next, progress: progress, size: settings.renderSize) {
                                 try append(blended)
                             }

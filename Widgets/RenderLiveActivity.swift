@@ -119,9 +119,12 @@ struct FlapseRenderLiveActivity: Widget {
             } compactLeading: {
                 FlapseIslandLogo(size: 22)
             } compactTrailing: {
-                ProgressRing(progress: context.state.progress, isFinished: context.state.isFinished, size: 17, lineWidth: 2)
+                ProgressRing(progress: context.state.progress, isFinished: context.state.isFinished, size: 15, lineWidth: 2)
+                    .padding(.leading, 4)
+                    .padding(.trailing, 2)
             } minimal: {
-                ProgressRing(progress: context.state.progress, isFinished: context.state.isFinished, size: 17, lineWidth: 2)
+                ProgressRing(progress: context.state.progress, isFinished: context.state.isFinished, size: 15, lineWidth: 2)
+                    .padding(2)
             }
         }
     }
