@@ -69,71 +69,26 @@ enum AudioBeatAnalyzer {
 
     static func beats(in url: URL) async throws -> [Double] {
         try await Task.detached(priority: .userInitiated) {
-            try analyze(url).beats
+            try analyze(url)
         }.value
-    }
-
-    /// Vuruşlara ek olarak parçanın "drop"unu (sessiz/alçak bölümden sonra gelen en
-    /// büyük enerji sıçraması — nakarat girişi) bulur.
-    static func structure(in url: URL) async throws -> (beats: [Double], dropTime: Double?) {
-        try await Task.detached(priority: .userInitiated) {
-            let result = try analyze(url)
-            return (result.beats, dropTime(energies: result.energies, hopDuration: result.hopDuration))
-        }.value
-    }
-
-    private static func dropTime(energies: [Double], hopDuration: Double) -> Double? {
-        let window = max(4, Int(1.0 / hopDuration))
-        guard energies.count > window * 4 else { return nil }
-        var rms: [Double] = []
-        var stride_i = 0
-        while stride_i + window <= energies.count {
-            let mean = energies[stride_i..<(stride_i + window)].reduce(0, +) / Double(window)
-            rms.append(mean)
-            stride_i += window / 2
-        }
-        guard rms.count > 4 else { return nil }
-        let sorted = rms.sorted()
-        let median = sorted[sorted.count / 2]
-        var best: (index: Int, jump: Double)?
-        for i in 1..<rms.count {
-            let jump = rms[i] - rms[i - 1]
-            if rms[i - 1] <= median, jump > (best?.jump ?? 0) {
-                best = (i, jump)
-            }
-        }
-        guard let best, best.jump > median * 0.5 else { return nil }
-        return Double(best.index) * Double(window / 2) * hopDuration
     }
 
     private static let sampleRate = 22050.0
     private static let hop = 512
 
-    private static func analyze(_ url: URL) throws -> (beats: [Double], energies: [Double], hopDuration: Double) {
+    private static func analyze(_ url: URL) throws -> [Double] {
         let hopDuration = Double(hop) / sampleRate
         let samples = try decodeSamples(url)
-        guard samples.count >= hop * 16 else { return ([], [], hopDuration) }
-
-        var energies: [Double] = []
-        var offset = 0
-        while offset + hop <= samples.count {
-            var sum: Float = 0
-            samples.withUnsafeBufferPointer { buf in
-                vDSP_svesq(buf.baseAddress! + offset, 1, &sum, vDSP_Length(hop))
-            }
-            energies.append(Double(sum) / Double(hop))
-            offset += hop
-        }
+        guard samples.count >= hop * 16 else { return [] }
 
         let envelope = onsetEnvelope(samples: samples)
-        guard envelope.count > 32 else { return ([], energies, hopDuration) }
+        guard envelope.count > 32 else { return [] }
         let period = tempoPeriod(envelope: envelope, hopDuration: hopDuration)
         let beats = trackBeats(envelope: envelope, period: period, hopDuration: hopDuration)
-        if beats.count >= 2 { return (beats, energies, hopDuration) }
+        if beats.count >= 2 { return beats }
 
         let total = Double(envelope.count) * hopDuration
-        let grid = stride(from: period, through: total, by: period).map { $0 }
-        return (grid, energies, hopDuration)
+        return stride(from: period, through: total, by: period).map { $0 }
     }
 
     private static func decodeSamples(_ url: URL) throws -> [Float] {

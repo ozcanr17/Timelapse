@@ -76,4 +76,22 @@ final class TimelapseExportViewModelTests: XCTestCase {
             return XCTFail("Durum .failed olmalıydı, ama \(viewModel.phase) bulundu")
         }
     }
+
+    func test_loopedCutTimes_herKesimBirVurusaDenkGelir() {
+        let beats = [0.5, 1.0, 1.5, 2.0]
+        let cuts = TimelapseExportViewModel.loopedCutTimes(beats: beats, frameCount: 3, audioDuration: 10)
+        XCTAssertEqual(cuts, [0.5, 1.0, 1.5])
+    }
+
+    func test_loopedCutTimes_sarkiBitinceIzgaraDonguyleKayar() {
+        let beats = [0.5, 1.5]
+        let cuts = TimelapseExportViewModel.loopedCutTimes(beats: beats, frameCount: 5, audioDuration: 2.0)
+        XCTAssertEqual(cuts, [0.5, 1.5, 2.5, 3.5, 4.5])
+    }
+
+    func test_loopedCutTimes_sureBilinmiyorsaAralikTekrarlanir() {
+        let beats = [1.0, 2.0]
+        let cuts = TimelapseExportViewModel.loopedCutTimes(beats: beats, frameCount: 4, audioDuration: 0)
+        XCTAssertEqual(cuts, [1.0, 2.0, 3.0, 4.0])
+    }
 }

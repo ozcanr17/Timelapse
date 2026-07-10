@@ -1,3 +1,4 @@
+import AVFoundation
 import Foundation
 import UIKit
 
@@ -63,16 +64,15 @@ final class TimelapseExportViewModel {
             do {
                 var beats: [Double]? = nil
                 if beatSync, let soundtrackURL {
-                    var dropTime: Double?
                     if let bundledBeats {
                         beats = bundledBeats
-                    } else if let structure = try? await AudioBeatAnalyzer.structure(in: soundtrackURL) {
-                        beats = structure.beats
-                        dropTime = structure.dropTime
+                    } else {
+                        beats = try? await AudioBeatAnalyzer.beats(in: soundtrackURL)
                     }
                     if beats?.count ?? 0 < 2 { beats = nil }
                     if let raw = beats {
-                        beats = await Self.alignedCutTimes(beats: raw, frames: frames, dropTime: dropTime)
+                        let audioDuration = (try? await AVURLAsset(url: soundtrackURL).load(.duration).seconds) ?? 0
+                        beats = Self.loopedCutTimes(beats: raw, frameCount: frames.count, audioDuration: audioDuration)
                     }
                 }
                 let settings = TimelapseExportSettings.current(
@@ -114,76 +114,25 @@ final class TimelapseExportViewModel {
         }
     }
 
-    /// Vuruş ızgarasını kare sayısına uzatır ve parça "drop"u biliniyorsa EN BÜYÜK
-    /// görsel değişimin yaşandığı kesimi tam drop vuruşuna denk getirir: drop'tan önceki
-    /// karelere fazladan vuruş dağıtılır, kronoloji bozulmaz.
-    static func alignedCutTimes(beats: [Double], frames: [TimelapseFrame], dropTime: Double?) async -> [Double] {
-        guard beats.count >= 2, frames.count >= 2 else { return beats }
-        var gaps: [Double] = []
-        for i in 1..<beats.count { gaps.append(beats[i] - beats[i - 1]) }
-
+    static func loopedCutTimes(beats: [Double], frameCount: Int, audioDuration: Double) -> [Double] {
+        guard beats.count >= 2, frameCount >= 2 else { return beats }
         var extended = beats
-        while extended.count < frames.count * 3 {
-            extended.append((extended.last ?? 0) + gaps[(extended.count - 1) % gaps.count])
-        }
-
-        var allocation = Array(repeating: 1, count: frames.count)
-
-        if let dropTime {
-            let scores = await changeScores(frames: frames)
-            if let bestCut = scores.indices.max(by: { scores[$0] < scores[$1] }) {
-                let dropBeat = extended.enumerated().min(by: { abs($0.element - dropTime) < abs($1.element - dropTime) })?.offset ?? bestCut
-                var extras = dropBeat - bestCut
-                var cursor = 0
-                while extras > 0, bestCut > 0 {
-                    if allocation[cursor % bestCut] < 4 {
-                        allocation[cursor % bestCut] += 1
-                        extras -= 1
-                    }
-                    cursor += 1
-                    if cursor > bestCut * 4 { break }
+        if audioDuration > 0 {
+            var offset = audioDuration
+            while extended.count < frameCount {
+                for beat in beats where extended.count < frameCount {
+                    extended.append(beat + offset)
                 }
+                offset += audioDuration
+            }
+        } else {
+            var gaps: [Double] = []
+            for i in 1..<beats.count { gaps.append(beats[i] - beats[i - 1]) }
+            while extended.count < frameCount {
+                extended.append((extended.last ?? 0) + gaps[(extended.count - 1) % gaps.count])
             }
         }
-
-        var cutTimes: [Double] = []
-        var beatCursor = 0
-        for count in allocation {
-            beatCursor += count
-            cutTimes.append(extended[min(beatCursor - 1, extended.count - 1)])
-        }
-        return cutTimes
-    }
-
-    /// Ardışık kareler arasındaki görsel farkın kaba skoru (küçük gri örneklem farkı).
-    private static func changeScores(frames: [TimelapseFrame]) async -> [Double] {
-        await Task.detached(priority: .userInitiated) {
-            var grays: [[Float]] = []
-            for frame in frames {
-                guard let image = ImageDownsampler.image(from: frame.imageData, maxPixelSize: 24)?.cgImage,
-                      let data = image.dataProvider?.data as Data? else {
-                    grays.append([])
-                    continue
-                }
-                let bpp = max(image.bitsPerPixel / 8, 1)
-                var values: [Float] = []
-                var offset = 0
-                while offset + 2 < data.count {
-                    values.append((Float(data[offset]) + Float(data[offset + 1]) + Float(data[offset + 2])) / 3)
-                    offset += bpp
-                }
-                grays.append(values)
-            }
-            var scores: [Double] = []
-            for i in 0..<(grays.count - 1) {
-                let a = grays[i], b = grays[i + 1]
-                guard !a.isEmpty, a.count == b.count else { scores.append(0); continue }
-                var sum: Float = 0
-                for j in a.indices { sum += abs(a[j] - b[j]) }
-                scores.append(Double(sum) / Double(a.count))
-            }
-            return scores
-        }.value
+        return Array(extended.prefix(frameCount))
     }
 
     func waitForRender() async {
