@@ -1,263 +1,275 @@
 {
-  "sourceLanguage": "tr",
-  "strings": {
-    "CFBundleDisplayName": {
-      "comment": "Bundle display name",
-      "extractionState": "extracted_with_value",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "new",
-            "value": "Flapse"
+  "sourceLanguage" : "tr",
+  "strings" : {
+    "CFBundleDisplayName" : {
+      "comment" : "Bundle display name",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Flapse"
           }
         }
       }
     },
-    "CFBundleName": {
-      "comment": "Bundle name",
-      "extractionState": "extracted_with_value",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "new",
-            "value": "Timelapse"
+    "CFBundleName" : {
+      "comment" : "Bundle name",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Timelapse"
           }
         }
       }
     },
-    "NSCameraUsageDescription": {
-      "comment": "Privacy - Camera Usage Description",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Camera access is needed to take your progress photos."
+    "NSCameraUsageDescription" : {
+      "comment" : "Privacy - Camera Usage Description",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يلزم الوصول إلى الكاميرا لالتقاط صور تقدّمك."
           }
         },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Gelişim fotoğraflarını çekmek için kameraya erişim gerekir."
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Kamerazugriff wird benötigt, um deine Fortschrittsfotos aufzunehmen."
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Der Kamerazugriff wird benötigt, um deine Fortschrittsfotos aufzunehmen."
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Camera access is needed to take your progress photos."
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Se necesita acceso a la cámara para tomar tus fotos de progreso."
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se necesita acceso a la cámara para tomar tus fotos de progreso."
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "L'accès à la caméra est nécessaire pour prendre tes photos de progression."
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L'accès à la caméra est nécessaire pour prendre tes photos de progression."
           }
         },
-        "pt": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "O acesso à câmera é necessário para tirar suas fotos de progresso."
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आपकी प्रगति की फ़ोटो लेने के लिए कैमरा एक्सेस चाहिए।"
           }
         },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "आपकी प्रगति की फ़ोटो लेने के लिए कैमरा एक्सेस चाहिए।"
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "進捗写真を撮影するためにカメラへのアクセスが必要です。"
           }
         },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "需要访问相机来拍摄你的进度照片。"
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "진행 사진을 찍으려면 카메라 접근이 필요합니다."
           }
         },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "進捗写真を撮影するためにカメラへのアクセスが必要です。"
+        "pt" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O acesso à câmera é necessário para tirar suas fotos de progresso."
           }
         },
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "يلزم الوصول إلى الكاميرا لالتقاط صور تقدّمك."
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Доступ к камере нужен, чтобы снимать фото вашего прогресса."
           }
         },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Доступ к камере нужен, чтобы снимать фото вашего прогресса."
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gelişim fotoğraflarını çekmek için kameraya erişim gerekir."
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "진행 사진을 찍으려면 카메라 접근이 필요합니다."
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "需要访问相机来拍摄你的进度照片。"
           }
         }
       }
     },
-    "NSLocationWhenInUseUsageDescription": {
-      "comment": "Privacy - Location When In Use Usage Description",
-      "extractionState": "extracted_with_value",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "new",
-            "value": "Çekimlerinize yer bilgisi eklemek için konuma erişim gerekir."
+    "NSLocationWhenInUseUsageDescription" : {
+      "comment" : "Privacy - Location When In Use Usage Description",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يُستخدم موقعك لوسم صورك بالمكان الذي التُقطت فيه."
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your location is used to tag your captures with the place they were taken."
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dein Standort wird verwendet, um Aufnahmen mit dem Ort zu versehen."
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dein Standort wird verwendet, um Aufnahmen mit dem Ort zu versehen."
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your location is used to tag your captures with the place they were taken."
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tu ubicación se usa para etiquetar tus capturas con el lugar donde se tomaron."
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tu ubicación se usa para etiquetar tus capturas con el lugar donde se tomaron."
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ta position sert à associer tes prises au lieu où elles ont été faites."
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ta position sert à associer tes prises au lieu où elles ont été faites."
           }
         },
-        "pt": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sua localização é usada para marcar suas capturas com o local onde foram tiradas."
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आपकी लोकेशन का उपयोग फ़ोटो में जगह जोड़ने के लिए होता है।"
           }
         },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "आपकी लोकेशन का उपयोग फ़ोटो में जगह जोड़ने के लिए होता है।"
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "撮影場所を写真に記録するために位置情報を使用します。"
           }
         },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "你的位置用于为照片标注拍摄地点。"
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "사진에 촬영 장소를 기록하기 위해 위치 정보를 사용합니다."
           }
         },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "撮影場所を写真に記録するために位置情報を使用します。"
+        "pt" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sua localização é usada para marcar suas capturas com o local onde foram tiradas."
           }
         },
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "يُستخدم موقعك لوسم صورك بالمكان الذي التُقطت فيه."
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ваше местоположение используется, чтобы отмечать место съёмки на кадрах."
           }
         },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ваше местоположение используется, чтобы отмечать место съёмки на кадрах."
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Çekimlerinize yer bilgisi eklemek için konuma erişim gerekir."
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "사진에 촬영 장소를 기록하기 위해 위치 정보를 사용합니다."
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你的位置用于为照片标注拍摄地点。"
           }
         }
       }
     },
-    "NSPhotoLibraryAddUsageDescription": {
-      "comment": "Privacy - Photo Library Additions Usage Description",
-      "extractionState": "extracted_with_value",
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "new",
-            "value": "Kareleri ve timelapse videolarını fotoğraflarına kaydetmek için erişim gerekir."
+    "NSPhotoLibraryAddUsageDescription" : {
+      "comment" : "Privacy - Photo Library Additions Usage Description",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يلزم الوصول لحفظ صورك وفيديوهات التايم لابس في مكتبة الصور."
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Access is needed to save your frames and timelapse videos to your photo library."
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Zugriff wird benötigt, um Bilder und Zeitraffer-Videos in deiner Fotomediathek zu sichern."
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Der Zugriff wird benötigt, um Bilder und Zeitraffer-Videos in deiner Fotomediathek zu sichern."
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Access is needed to save your frames and timelapse videos to your photo library."
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Se necesita acceso para guardar tus fotos y vídeos timelapse en tu biblioteca."
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se necesita acceso para guardar tus fotos y vídeos timelapse en tu biblioteca."
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "L'accès est nécessaire pour enregistrer tes photos et vidéos timelapse dans ta photothèque."
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L'accès est nécessaire pour enregistrer tes photos et vidéos timelapse dans ta photothèque."
           }
         },
-        "pt": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "O acesso é necessário para salvar suas fotos e vídeos timelapse na sua biblioteca."
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "फ़ोटो और टाइमलैप्स वीडियो आपकी लाइब्रेरी में सहेजने के लिए एक्सेस चाहिए।"
           }
         },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "फ़ोटो और टाइमलैप्स वीडियो आपकी लाइब्रेरी में सहेजने के लिए एक्सेस चाहिए।"
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "写真やタイムラプス動画をフォトライブラリに保存するためにアクセスが必要です。"
           }
         },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "需要访问权限以将照片和延时视频存储到你的照片图库。"
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "사진과 타임랩스 영상을 사진 보관함에 저장하려면 접근 권한이 필요합니다."
           }
         },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "写真やタイムラプス動画をフォトライブラリに保存するためにアクセスが必要です。"
+        "pt" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O acesso é necessário para salvar suas fotos e vídeos timelapse na sua biblioteca."
           }
         },
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "يلزم الوصول لحفظ صورك وفيديوهات التايم لابس في مكتبة الصور."
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Доступ нужен, чтобы сохранять кадры и таймлапс-видео в вашу медиатеку."
           }
         },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Доступ нужен, чтобы сохранять кадры и таймлапс-видео в вашу медиатеку."
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Kareleri ve timelapse videolarını fotoğraflarına kaydetmek için erişim gerekir."
           }
         },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "사진과 타임랩스 영상을 사진 보관함에 저장하려면 접근 권한이 필요합니다."
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "需要访问权限以将照片和延时视频存储到你的照片图库。"
+          }
+        }
+      }
+    },
+    "NSPhotoLibraryUsageDescription" : {
+      "comment" : "Privacy - Photo Library Usage Description",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Fotoğraflardan içe aktarırken çekim tarihi ve konum bilgisini okumak için erişim gerekir."
           }
         }
       }
     }
   },
-  "version": "1.0"
+  "version" : "1.0"
 }

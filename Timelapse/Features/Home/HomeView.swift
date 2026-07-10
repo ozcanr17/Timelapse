@@ -142,13 +142,8 @@ struct HomeView: View {
     }
 
     private func dueRow(_ project: Project) -> some View {
-        let accent = Theme.accent(for: project.category)
-        return HStack(spacing: 12) {
-            Image(systemName: Theme.icon(for: project.category))
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(accent)
-                .frame(width: 38, height: 38)
-                .background(accent.opacity(0.14), in: Circle())
+        HStack(spacing: 12) {
+            DueRowThumb(project: project)
             VStack(alignment: .leading, spacing: 2) {
                 Text(project.title)
                     .font(Theme.headline(15))
@@ -229,6 +224,35 @@ private struct Flashcard: View {
         )
         .rotationEffect(.degrees(tilt))
         .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 5)
+    }
+}
+
+private struct DueRowThumb: View {
+    let project: Project
+
+    @State private var photo: UIImage?
+
+    private var accent: Color { Theme.accent(for: project.category) }
+
+    var body: some View {
+        ZStack {
+            if let photo {
+                Image(uiImage: photo)
+                    .resizable()
+                    .scaledToFill()
+            } else {
+                accent.opacity(0.14)
+                Image(systemName: Theme.icon(for: project.category))
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(accent)
+            }
+        }
+        .frame(width: 38, height: 38)
+        .clipShape(Circle())
+        .task(id: project.sortedEntries.last?.id) {
+            guard let last = project.sortedEntries.last(where: { !$0.isDeleted }) else { return }
+            photo = await ImageDownsampler.cachedImage(key: "due-\(last.id)", maxPixelSize: 150) { last.imageData }
+        }
     }
 }
 

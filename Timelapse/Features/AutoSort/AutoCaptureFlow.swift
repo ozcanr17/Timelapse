@@ -90,7 +90,7 @@ struct AutoCaptureFlow: View {
                     .foregroundStyle(.white)
                 VStack(spacing: 10) {
                     Button {
-                        startClassification()
+                        chooseProject()
                     } label: {
                         Label("Kullan", systemImage: "checkmark")
                             .font(Theme.headline(16))
@@ -178,6 +178,24 @@ struct AutoCaptureFlow: View {
                             .background(.white.opacity(0.18), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                             .foregroundStyle(.white)
                     }
+                    HStack(spacing: 22) {
+                        Button {
+                            lastData = nil
+                            withAnimation { phase = .capturing }
+                        } label: {
+                            Label("Tekrar Çek", systemImage: "arrow.counterclockwise")
+                                .font(Theme.headline(14))
+                                .foregroundStyle(.white.opacity(0.85))
+                        }
+                        Button {
+                            dismiss()
+                        } label: {
+                            Text("Vazgeç")
+                                .font(Theme.headline(14))
+                                .foregroundStyle(.white.opacity(0.6))
+                        }
+                    }
+                    .padding(.top, 4)
                 }
             }
             .padding(28)
@@ -220,11 +238,6 @@ struct AutoCaptureFlow: View {
 
     private func handleCaptured(_ data: Data) {
         lastData = data
-        withAnimation { phase = .reviewing }
-    }
-
-    private func startClassification() {
-        guard let data = lastData else { return }
         withAnimation { phase = .classifying }
         Task {
             await migrateSignaturesIfNeeded()
@@ -236,12 +249,16 @@ struct AutoCaptureFlow: View {
                 if projects.contains(where: { $0.id == id }) {
                     withAnimation { phase = .confirming(id) }
                 } else {
-                    withAnimation { phase = .choosing(nil) }
+                    withAnimation { phase = .reviewing }
                 }
             case .chooseManually:
-                withAnimation { phase = .choosing(nil) }
+                withAnimation { phase = .reviewing }
             }
         }
+    }
+
+    private func chooseProject() {
+        withAnimation { phase = .choosing(nil) }
     }
 
     private func assign(to project: Project) {
