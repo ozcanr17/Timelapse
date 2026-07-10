@@ -17,12 +17,22 @@ protocol CameraServiceProtocol: AnyObject {
 
 final class CameraService: NSObject, CameraServiceProtocol, @unchecked Sendable {
 
+    static let shared = CameraService()
+
     let session = AVCaptureSession()
 
     private let photoOutput = AVCapturePhotoOutput()
     private let sessionQueue = DispatchQueue(label: "camera.session.queue")
     private var currentInput: AVCaptureDeviceInput?
     private var captureContinuation: CheckedContinuation<Data, Error>?
+
+    func prewarm(position: AVCaptureDevice.Position = .back) {
+        guard AVCaptureDevice.authorizationStatus(for: .video) == .authorized else { return }
+        sessionQueue.async {
+            try? self.configure(position: position)
+            if !self.session.isRunning { self.session.startRunning() }
+        }
+    }
 
     func start(position: AVCaptureDevice.Position) async throws {
         guard await Self.isAuthorized() else { throw CameraError.notAuthorized }
@@ -85,6 +95,9 @@ final class CameraService: NSObject, CameraServiceProtocol, @unchecked Sendable 
     }
 
     private func configure(position: AVCaptureDevice.Position) throws {
+        if let currentInput, currentInput.device.position == position, !session.outputs.isEmpty {
+            return
+        }
         session.beginConfiguration()
         defer { session.commitConfiguration() }
 

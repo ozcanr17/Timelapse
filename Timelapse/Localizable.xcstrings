@@ -1,9 +1,7 @@
 {
   "sourceLanguage" : "tr",
   "strings" : {
-    "" : {
-
-    },
+    "" : {},
     " çekim" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -285,9 +283,7 @@
         }
       }
     },
-    "%@" : {
-
-    },
+    "%@" : {},
     "%@ — Flapse" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -11673,6 +11669,7 @@
       }
     },
     "Hazır — kaydetmeyi unutma" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -13426,6 +13423,7 @@
       }
     },
     "İptal et" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -16722,9 +16720,7 @@
         }
       }
     },
-    "Made with Flapse" : {
-
-    },
+    "Made with Flapse" : {},
     "Mağaza şu an kullanılamıyor. İnternet bağlantını kontrol edip tekrar dene." : {
       "extractionState" : "stale",
       "localizations" : {
@@ -17499,6 +17495,7 @@
       }
     },
     "Oluşturuluyor" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -25361,6 +25358,7 @@
       }
     },
     "Video hazır" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -26478,6 +26476,216 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "时间线"
+          }
+        }
+      }
+    },
+    "Fotoğraflara erişim izni yok" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لا يوجد إذن للوصول إلى الصور"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein Zugriff auf Fotos erlaubt"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No access to Photos"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sin permiso para acceder a Fotos"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pas d'accès à Photos"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Photos तक पहुँच की अनुमति नहीं"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "写真へのアクセス権がありません"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "사진 접근 권한 없음"
+          }
+        },
+        "pt" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sem permissão para acessar Fotos"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нет доступа к Фото"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无照片访问权限"
+          }
+        }
+      }
+    },
+    "Ayarları Aç" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "افتح الإعدادات"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einstellungen öffnen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Settings"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir Ajustes"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ouvrir Réglages"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "सेटिंग्स खोलें"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "設定を開く"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "설정 열기"
+          }
+        },
+        "pt" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir Ajustes"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Открыть настройки"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开设置"
+          }
+        }
+      }
+    },
+    "Videoyu kaydetmek için Ayarlar'dan Flapse'e Fotoğraflara ekleme izni ver." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "للحفظ، امنح Flapse إذن الإضافة إلى الصور من الإعدادات."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erlaube Flapse in den Einstellungen, Fotos hinzuzufügen, um das Video zu sichern."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To save the video, allow Flapse to add to Photos in Settings."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Para guardar el vídeo, permite que Flapse añada a Fotos en Ajustes."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pour enregistrer la vidéo, autorisez Flapse à ajouter à Photos dans Réglages."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "वीडियो सहेजने के लिए सेटिंग्स में Flapse को Photos में जोड़ने की अनुमति दें।"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "動画を保存するには、設定でFlapseに写真への追加を許可してください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "동영상을 저장하려면 설정에서 Flapse의 사진 추가 권한을 허용하세요."
+          }
+        },
+        "pt" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Para salvar o vídeo, permita que o Flapse adicione a Fotos nos Ajustes."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Чтобы сохранить видео, разрешите Flapse добавлять в Фото в настройках."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "要保存视频，请在设置中允许 Flapse 添加到照片。"
           }
         }
       }

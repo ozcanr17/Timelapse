@@ -16,6 +16,7 @@ struct EntryViewerView: View {
     @State private var isConfirmingDelete = false
     @State private var retakeTarget: Entry?
     @State private var shareImage: UIImage?
+    @State private var showPhotosDenied = false
 
     init(project: Project, initialEntry: Entry) {
         self.project = project
@@ -68,6 +69,7 @@ struct EntryViewerView: View {
         .fullScreenCover(item: $retakeTarget) { entry in
             CameraCaptureView(project: project, retakeEntry: entry)
         }
+        .photosDeniedAlert(isPresented: $showPhotosDenied)
     }
 
     private var topBar: some View {
@@ -110,12 +112,12 @@ struct EntryViewerView: View {
 
     private func saveToPhotos() {
         guard let image = shareImage else { return }
-        PHPhotoLibrary.shared().performChanges {
-            PHAssetChangeRequest.creationRequestForAsset(from: image)
-        } completionHandler: { success, _ in
-            Task { @MainActor in
-                UINotificationFeedbackGenerator().notificationOccurred(success ? .success : .error)
+        Task {
+            let outcome = await PhotoLibrarySaver.saveImage(image)
+            if outcome == .denied {
+                showPhotosDenied = true
             }
+            UINotificationFeedbackGenerator().notificationOccurred(outcome == .saved ? .success : .error)
         }
     }
 

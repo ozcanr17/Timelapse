@@ -23,7 +23,7 @@ struct CameraCaptureView: View {
         .task {
             guard viewModel == nil else { return }
             let model = CameraCaptureViewModel(
-                camera: CameraService(),
+                camera: CameraService.shared,
                 repository: ProjectRepository(context: modelContext),
                 project: project,
                 retakeEntry: retakeEntry,

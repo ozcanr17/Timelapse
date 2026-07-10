@@ -217,6 +217,7 @@ struct ProjectListView: View {
         }
         .padding(14)
         .liquidGlassStyle(cornerRadius: 18)
+        .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .accessibilityIdentifier("resumeExportBanner-\(job.title)")
     }
 

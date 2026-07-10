@@ -11,14 +11,20 @@ struct TimelapseExportSheet: View {
     @MainActor
     init(project: Project) {
         self.project = project
-        self.viewModel = TimelapseRenderService.shared.viewModel(for: project)
+        let viewModel = TimelapseRenderService.shared.viewModel(for: project)
+        self.viewModel = viewModel
+        let smartOn = UserDefaults.standard.object(forKey: PremiumFeature.smartAlignment.preferenceKey!) as? Bool ?? true
+        _alignMode = State(initialValue: smartOn ? .smart : .off)
+        if case .finished(let url) = viewModel.phase {
+            _lastRenderedURL = State(initialValue: url)
+            _isStale = State(initialValue: false)
+        }
     }
 
     @Environment(StoreService.self) private var store
     @Environment(\.dismiss) private var dismiss
     @Environment(\.theme) private var theme
     @Environment(\.modelContext) private var modelContext
-    @AppStorage(PremiumFeature.smartAlignment.preferenceKey!) private var smartAlignmentEnabled = true
     @State private var showPaywall = false
     @State private var speedX: Double = 1.0
     @State private var zoomX: Double = 1.0
@@ -38,11 +44,11 @@ struct TimelapseExportSheet: View {
     @State private var manuals: [ManualAlignment] = []
     @State private var transition: TimelapseTransition = .cut
     @State private var showManualAlign = false
-    @State private var didInitAlign = false
     @State private var isStale = true
     @State private var poster: UIImage?
     @State private var savedToPhotos = false
     @State private var savedToLibrary = false
+    @State private var showPhotosDenied = false
 
     private var captionDayCount: Int {
         guard let first = frames.first?.capturedAt, let last = frames.last?.capturedAt else { return frames.count }
@@ -78,14 +84,6 @@ struct TimelapseExportSheet: View {
                 }
             }
             .task {
-                if !didInitAlign {
-                    didInitAlign = true
-                    if smartAlignmentEnabled { alignMode = .smart }
-                    if case .finished(let url) = viewModel.phase {
-                        lastRenderedURL = url
-                        isStale = false
-                    }
-                }
                 if !framesLoaded {
                     await loadFrames()
                 }
@@ -93,6 +91,7 @@ struct TimelapseExportSheet: View {
             .sheet(isPresented: $showPaywall) {
                 PaywallView(store: store)
             }
+            .photosDeniedAlert(isPresented: $showPhotosDenied)
             .sheet(isPresented: $showManualAlign) {
                 if !frames.isEmpty {
                     ManualAlignView(
@@ -652,13 +651,13 @@ struct TimelapseExportSheet: View {
     }
 
     private func saveVideoToPhotos(_ url: URL) {
-        PHPhotoLibrary.shared().performChanges {
-            PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: url)
-        } completionHandler: { success, _ in
-            Task { @MainActor in
-                savedToPhotos = success
-                UINotificationFeedbackGenerator().notificationOccurred(success ? .success : .error)
+        Task {
+            let outcome = await PhotoLibrarySaver.saveVideo(at: url)
+            savedToPhotos = outcome == .saved
+            if outcome == .denied {
+                showPhotosDenied = true
             }
+            UINotificationFeedbackGenerator().notificationOccurred(outcome == .saved ? .success : .error)
         }
     }
 

@@ -11,6 +11,7 @@ struct SavedTimelapsesView: View {
     @Environment(\.theme) private var theme
     @State private var playing: SavedTimelapse?
     @State private var pendingDeletion: SavedTimelapse?
+    @State private var showPhotosDenied = false
 
     var body: some View {
         ZStack {
@@ -43,6 +44,7 @@ struct SavedTimelapsesView: View {
             }
             Button("Vazgeç", role: .cancel) { pendingDeletion = nil }
         }
+        .photosDeniedAlert(isPresented: $showPhotosDenied)
     }
 
     private var emptyState: some View {
@@ -142,12 +144,12 @@ struct SavedTimelapsesView: View {
     }
 
     private func saveToPhotos(_ item: SavedTimelapse) {
-        PHPhotoLibrary.shared().performChanges {
-            PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: item.fileURL)
-        } completionHandler: { success, _ in
-            Task { @MainActor in
-                UINotificationFeedbackGenerator().notificationOccurred(success ? .success : .error)
+        Task {
+            let outcome = await PhotoLibrarySaver.saveVideo(at: item.fileURL)
+            if outcome == .denied {
+                showPhotosDenied = true
             }
+            UINotificationFeedbackGenerator().notificationOccurred(outcome == .saved ? .success : .error)
         }
     }
 }
