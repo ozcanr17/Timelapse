@@ -86,6 +86,15 @@ struct MainTabView: View {
         .sheet(isPresented: $showPaywall) {
             PaywallView(store: store)
         }
+        .onOpenURL { url in
+            guard url.scheme == "flapse", url.host == "capture" else { return }
+            captureRoute = nil
+            if let due = capturableProjects.first(where: { $0.isCaptureDue() }) {
+                captureRoute = .project(due)
+            } else {
+                captureTapped()
+            }
+        }
     }
 
     private func paneIndex(_ target: Tab) -> Int {

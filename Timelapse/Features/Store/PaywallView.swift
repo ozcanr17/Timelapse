@@ -70,7 +70,7 @@ struct PaywallView: View {
     private var featureList: some View {
         VStack(spacing: 12) {
             ProFeatureRow(icon: "infinity", title: "Sınırsız proje", subtitle: "İstediğin kadar hikaye takip et")
-            ProFeatureRow(icon: "wand.and.stars", title: "Akıllı hizalama", subtitle: "Otomatik kare eşleştirme")
+            ProFeatureRow(icon: "scope", title: "Manuel hizalama", subtitle: "Her kareyi elle hizala, döndür ve yakınlaştır")
             ProFeatureRow(icon: "icloud.fill", title: "iCloud yedekleme", subtitle: "Fotoğrafların hep güvende")
             ProFeatureRow(icon: "person.2.fill", title: "Birlikte Çekim", subtitle: "Arkadaşını davet et; aynı projeye ikiniz de kare ekleyin, önceki kareleri birlikte görün")
             ProFeatureRow(icon: "photo.on.rectangle.angled", title: "Sınırsız fotoğraf aktarımı", subtitle: "14 kare sınırı olmadan içe aktar")

@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import UIKit
 
 struct AutoCaptureFlow: View {
 
@@ -19,6 +20,7 @@ struct AutoCaptureFlow: View {
 
     enum Phase: Equatable {
         case capturing
+        case reviewing
         case classifying
         case confirming(UUID)
         case choosing(UUID?)
@@ -30,6 +32,8 @@ struct AutoCaptureFlow: View {
             CameraCaptureView(onAutoCaptured: handleCaptured)
 
             switch phase {
+            case .reviewing:
+                reviewOverlay
             case .classifying:
                 classifyingOverlay
             case .confirming(let id):
@@ -69,6 +73,61 @@ struct AutoCaptureFlow: View {
         }
     }
 
+    private var reviewOverlay: some View {
+        ZStack {
+            Color.black.opacity(0.85).ignoresSafeArea()
+            VStack(spacing: 20) {
+                if let data = lastData, let image = UIImage(data: data) {
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFit()
+                        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+                        .frame(maxHeight: 460)
+                        .shadow(color: .black.opacity(0.4), radius: 18, y: 8)
+                }
+                Text("Bu kare kullanılsın mı?")
+                    .font(Theme.headline(18))
+                    .foregroundStyle(.white)
+                VStack(spacing: 10) {
+                    Button {
+                        startClassification()
+                    } label: {
+                        Label("Kullan", systemImage: "checkmark")
+                            .font(Theme.headline(16))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .background(.white, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                            .foregroundStyle(.black)
+                    }
+                    .accessibilityIdentifier("usePhotoButton")
+                    Button {
+                        lastData = nil
+                        withAnimation { phase = .capturing }
+                    } label: {
+                        Label("Tekrar Çek", systemImage: "arrow.counterclockwise")
+                            .font(Theme.headline(15))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 13)
+                            .background(.white.opacity(0.18), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                            .foregroundStyle(.white)
+                    }
+                    .accessibilityIdentifier("retakePhotoButton")
+                    Button {
+                        dismiss()
+                    } label: {
+                        Text("Vazgeç")
+                            .font(Theme.headline(15))
+                            .foregroundStyle(.white.opacity(0.75))
+                            .padding(.vertical, 8)
+                    }
+                }
+            }
+            .padding(24)
+            .frame(maxWidth: 380)
+        }
+        .transition(.opacity)
+    }
+
     private var classifyingOverlay: some View {
         ZStack {
             Color.black.opacity(0.55).ignoresSafeArea()
@@ -84,8 +143,16 @@ struct AutoCaptureFlow: View {
         ZStack {
             Color.black.opacity(0.7).ignoresSafeArea()
             VStack(spacing: 18) {
+                if let data = lastData, let image = UIImage(data: data) {
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: 120, height: 150)
+                        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                        .shadow(color: .black.opacity(0.35), radius: 12, y: 5)
+                }
                 Image(systemName: Theme.icon(for: project.category))
-                    .font(.system(size: 40, weight: .semibold))
+                    .font(.system(size: 32, weight: .semibold))
                     .foregroundStyle(.white)
                 Text("\"\(project.title)\" projesine eklensin mi?")
                     .font(Theme.headline(19)).foregroundStyle(.white)
@@ -153,6 +220,11 @@ struct AutoCaptureFlow: View {
 
     private func handleCaptured(_ data: Data) {
         lastData = data
+        withAnimation { phase = .reviewing }
+    }
+
+    private func startClassification() {
+        guard let data = lastData else { return }
         withAnimation { phase = .classifying }
         Task {
             await migrateSignaturesIfNeeded()
@@ -160,13 +232,7 @@ struct AutoCaptureFlow: View {
             signature = computed
             let sets = projects.compactMap(signatureSet(for:))
             switch ProjectMatcher.decide(for: computed, among: sets) {
-            case .autoAssign(let id):
-                if let project = projects.first(where: { $0.id == id }) {
-                    assign(to: project)
-                } else {
-                    withAnimation { phase = .choosing(nil) }
-                }
-            case .suggest(let id):
+            case .autoAssign(let id), .suggest(let id):
                 if projects.contains(where: { $0.id == id }) {
                     withAnimation { phase = .confirming(id) }
                 } else {

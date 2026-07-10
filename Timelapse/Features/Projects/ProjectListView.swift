@@ -395,6 +395,7 @@ private struct FireStreakBorder: View {
             rotatingGradient
                 .mask(shape.strokeBorder(lineWidth: 2))
         }
+        .drawingGroup()
         .opacity(spinning ? 0.8 : 1)
         .animation(.easeInOut(duration: 0.9).repeatForever(autoreverses: true), value: spinning)
         .allowsHitTesting(false)

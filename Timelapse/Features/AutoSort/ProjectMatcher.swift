@@ -23,16 +23,22 @@ enum ProjectMatcher {
         case chooseManually
     }
 
+    static func score(for signature: SubjectSignature, in set: ProjectSignatureSet) -> Float? {
+        guard kindCompatible(signature.kind, set.kind), !set.vectors.isEmpty else { return nil }
+        let distances = set.vectors
+            .map { FeatureVector.distance(signature.vector, $0) }
+            .sorted()
+        let k = min(3, distances.count)
+        return distances.prefix(k).reduce(0, +) / Float(k)
+    }
+
     static func nearest(for signature: SubjectSignature, among sets: [ProjectSignatureSet]) -> ProjectMatch? {
         guard !signature.isEmpty else { return nil }
         var best: ProjectMatch?
         for set in sets {
-            guard kindCompatible(signature.kind, set.kind) else { continue }
-            for vector in set.vectors {
-                let distance = FeatureVector.distance(signature.vector, vector)
-                if best == nil || distance < best!.distance {
-                    best = ProjectMatch(projectID: set.projectID, distance: distance)
-                }
+            guard let score = score(for: signature, in: set) else { continue }
+            if best == nil || score < best!.distance {
+                best = ProjectMatch(projectID: set.projectID, distance: score)
             }
         }
         return best
@@ -51,10 +57,8 @@ enum ProjectMatcher {
 
     static func isUnambiguous(_ match: ProjectMatch, for signature: SubjectSignature, among sets: [ProjectSignatureSet]) -> Bool {
         let runnerUp = sets
-            .filter { $0.projectID != match.projectID && kindCompatible(signature.kind, $0.kind) }
-            .compactMap { set in
-                set.vectors.map { FeatureVector.distance(signature.vector, $0) }.min()
-            }
+            .filter { $0.projectID != match.projectID }
+            .compactMap { score(for: signature, in: $0) }
             .min()
         guard let runnerUp else { return true }
         return runnerUp - match.distance >= ambiguityMargin

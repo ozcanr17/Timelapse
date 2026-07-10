@@ -265,6 +265,16 @@ struct TimelapseComposer: TimelapseComposing {
         let logo: CGImage?
         let canvas: UIColor
         let ink: UIColor
+        let qr: CGImage?
+    }
+
+    private static func qrCode(for url: URL) -> CGImage? {
+        guard let filter = CIFilter(name: "CIQRCodeGenerator") else { return nil }
+        filter.setValue(Data(url.absoluteString.utf8), forKey: "inputMessage")
+        filter.setValue("M", forKey: "inputCorrectionLevel")
+        guard let output = filter.outputImage else { return nil }
+        let scaled = output.transformed(by: CGAffineTransform(scaleX: 12, y: 12))
+        return CIContext().createCGImage(scaled, from: scaled.extent)
     }
 
     /// Kapanış kartı, uygulama açılışıyla birebir aynı görünsün: gerçek LogoMark ve
@@ -279,7 +289,8 @@ struct TimelapseComposer: TimelapseComposing {
         return OutroAssets(
             logo: renderer.cgImage,
             canvas: UIColor(theme.palette.canvas).resolvedColor(with: traits),
-            ink: UIColor(theme.palette.ink).resolvedColor(with: traits)
+            ink: UIColor(theme.palette.ink).resolvedColor(with: traits),
+            qr: qrCode(for: LegalLinks.appSite)
         )
     }
 
@@ -442,6 +453,10 @@ struct TimelapseComposer: TimelapseComposing {
 
         let outroFrames = Int(Double(outputFPS) * 3.0)
         let lastComposed = UIImage(cgImage: current)
+        let journeyDays: Int = {
+            guard let first = frames.first?.capturedAt, let last = frames.last?.capturedAt else { return frames.count }
+            return max(1, (Calendar.current.dateComponents([.day], from: first, to: last).day ?? 0) + 1)
+        }()
         var finalOutro: CGImage?
         for step in 0..<outroFrames {
             try abortIfCancelled()
@@ -451,7 +466,7 @@ struct TimelapseComposer: TimelapseComposing {
                 continue
             }
             try autoreleasepool {
-                if let frame = outroFrame(base: lastComposed, t: t, assets: outroAssets, size: settings.renderSize) {
+                if let frame = outroFrame(base: lastComposed, t: t, assets: outroAssets, size: settings.renderSize, days: journeyDays) {
                     if t >= 0.65 { finalOutro = frame }
                     try append(frame)
                 }
@@ -623,7 +638,7 @@ struct TimelapseComposer: TimelapseComposing {
     /// Video kapanışı: son kare tema zeminine yumuşakça karışır, ardından logo uygulama
     /// açılışındaki gibi dönerek ve yaylanarak belirir; "Flapse" yazısı altına gelir.
     /// Toplam süre ~3 sn; logo ekranın en fazla dörtte biri kadar yer kaplar.
-    private static func outroFrame(base: UIImage, t: CGFloat, assets: OutroAssets, size: CGSize) -> CGImage? {
+    private static func outroFrame(base: UIImage, t: CGFloat, assets: OutroAssets, size: CGSize, days: Int) -> CGImage? {
         let fadeP = min(1, max(0, t / 0.2))
         let animP = min(1, max(0, (t - 0.16) / 0.34))
         let textP = min(1, max(0, (t - 0.4) / 0.18))
@@ -682,13 +697,59 @@ struct TimelapseComposer: TimelapseComposing {
             ctx.restoreGState()
 
             if textP > 0 {
-                text.draw(
-                    at: CGPoint(
-                        x: (size.width - textSize.width) / 2,
-                        y: logoCenter.y + logoSize / 2 + spacing
-                    ),
-                    withAttributes: attributes
+                let titleOrigin = CGPoint(
+                    x: (size.width - textSize.width) / 2,
+                    y: logoCenter.y + logoSize / 2 + spacing
                 )
+                text.draw(at: titleOrigin, withAttributes: attributes)
+
+                let subtitle = String(localized: "\(days) günlük değişim", bundle: .appLanguage) as NSString
+                let subtitleAttributes: [NSAttributedString.Key: Any] = [
+                    .font: UIFont.systemFont(ofSize: fontSize * 0.62, weight: .medium),
+                    .foregroundColor: assets.ink.withAlphaComponent(0.65 * textP)
+                ]
+                let subtitleSize = subtitle.size(withAttributes: subtitleAttributes)
+                subtitle.draw(
+                    at: CGPoint(
+                        x: (size.width - subtitleSize.width) / 2,
+                        y: titleOrigin.y + textSize.height + fontSize * 0.35
+                    ),
+                    withAttributes: subtitleAttributes
+                )
+
+                if let qr = assets.qr {
+                    let qrSide = shortSide * 0.115
+                    let padding = qrSide * 0.12
+                    let boxSide = qrSide + padding * 2
+                    let boxRect = CGRect(
+                        x: (size.width - boxSide) / 2,
+                        y: size.height - boxSide - shortSide * 0.085,
+                        width: boxSide,
+                        height: boxSide
+                    )
+                    ctx.saveGState()
+                    ctx.setAlpha(textP)
+                    let boxPath = UIBezierPath(roundedRect: boxRect, cornerRadius: boxSide * 0.18)
+                    UIColor.white.setFill()
+                    boxPath.fill()
+                    ctx.interpolationQuality = .none
+                    UIImage(cgImage: qr).draw(in: boxRect.insetBy(dx: padding, dy: padding))
+                    ctx.restoreGState()
+
+                    let caption = "Made with Flapse" as NSString
+                    let captionAttributes: [NSAttributedString.Key: Any] = [
+                        .font: UIFont.systemFont(ofSize: fontSize * 0.5, weight: .semibold),
+                        .foregroundColor: assets.ink.withAlphaComponent(0.55 * textP)
+                    ]
+                    let captionSize = caption.size(withAttributes: captionAttributes)
+                    caption.draw(
+                        at: CGPoint(
+                            x: (size.width - captionSize.width) / 2,
+                            y: boxRect.minY - captionSize.height - qrSide * 0.18
+                        ),
+                        withAttributes: captionAttributes
+                    )
+                }
             }
         }
         return image.cgImage

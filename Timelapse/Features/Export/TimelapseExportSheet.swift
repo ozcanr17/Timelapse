@@ -18,7 +18,7 @@ struct TimelapseExportSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.theme) private var theme
     @Environment(\.modelContext) private var modelContext
-    @AppStorage(PremiumFeature.smartAlignment.preferenceKey!) private var smartAlignmentEnabled = false
+    @AppStorage(PremiumFeature.smartAlignment.preferenceKey!) private var smartAlignmentEnabled = true
     @State private var showPaywall = false
     @State private var speedX: Double = 1.0
     @State private var zoomX: Double = 1.0
@@ -71,7 +71,7 @@ struct TimelapseExportSheet: View {
             .task {
                 if !didInitAlign {
                     didInitAlign = true
-                    if store.isPro && smartAlignmentEnabled { alignMode = .smart }
+                    if smartAlignmentEnabled { alignMode = .smart }
                 }
             }
             .sheet(isPresented: $showPaywall) {
@@ -510,12 +510,12 @@ struct TimelapseExportSheet: View {
             .pickerStyle(.segmented)
             .disabled(viewModel.phase == .rendering)
             .onChange(of: alignMode) { _, mode in
-                if !store.isPro {
-                    alignMode = .off
-                    showPaywall = true
-                    return
-                }
                 if mode == .manual {
+                    if !store.isPro {
+                        alignMode = .smart
+                        showPaywall = true
+                        return
+                    }
                     if manuals.count != frames.count {
                         manuals = Array(repeating: manual, count: frames.count)
                     }
@@ -662,7 +662,7 @@ struct TimelapseExportSheet: View {
             bundledBeats: bundledBeats,
             beatSync: beatSync,
             overlay: effectiveOverlay,
-            smartAlignment: proAlign && alignMode == .smart,
+            smartAlignment: alignMode == .smart,
             manualAnchor: (proAlign && alignMode == .manual) ? manual : nil,
             manualAnchors: (proAlign && alignMode == .manual && manuals.count == frames.count) ? manuals : nil,
             transition: transition,

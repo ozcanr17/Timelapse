@@ -37,9 +37,9 @@ struct WelcomeView: View {
 
                     VStack(alignment: .leading, spacing: 18) {
                         WelcomeFeatureRow(
-                            icon: "camera.viewfinder",
-                            title: "Hayalet hizalama",
-                            subtitle: "Önceki karen kameranın üzerinde silik görünür; her fotoğraf aynı açıdan çekilir"
+                            icon: "wand.and.stars",
+                            title: "Akıllı hizalama",
+                            subtitle: "Önceki karen kameranın üzerinde silik görünür; videoda kareler otomatik hizalanır"
                         )
                         WelcomeFeatureRow(
                             icon: "calendar.badge.clock",

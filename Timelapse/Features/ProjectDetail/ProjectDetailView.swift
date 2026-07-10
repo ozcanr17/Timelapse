@@ -149,6 +149,12 @@ struct ProjectDetailView: View {
                         if shareCardURL != nil { activeSheet = .shareCard }
                     }
                 }
+                Button("Hikaye Kartı (9:16)") {
+                    Task {
+                        shareCardURL = await renderStoryCard()
+                        if shareCardURL != nil { activeSheet = .shareCard }
+                    }
+                }
             }
             Button("Vazgeç", role: .cancel) {}
         }
@@ -388,6 +394,30 @@ struct ProjectDetailView: View {
         guard let uiImage = renderer.uiImage, let data = uiImage.pngData() else { return nil }
         let url = FileManager.default.temporaryDirectory
             .appendingPathComponent("flapse-compare-\(project.id.uuidString)")
+            .appendingPathExtension("png")
+        try? data.write(to: url)
+        return url
+    }
+
+    private func renderStoryCard() async -> URL? {
+        let sorted = liveEntries.sorted { $0.capturedAt < $1.capturedAt }
+        guard let first = sorted.first, let last = sorted.last, first.id != last.id else { return nil }
+        guard
+            let firstImage = await ImageDownsampler.cachedImage(key: "story-\(first.id)", maxPixelSize: 1200, load: { first.imageData }),
+            let lastImage = await ImageDownsampler.cachedImage(key: "story-\(last.id)", maxPixelSize: 1200, load: { last.imageData })
+        else { return nil }
+        let renderer = ImageRenderer(content: StoryShareCard(
+            title: project.title,
+            firstImage: firstImage,
+            lastImage: lastImage,
+            firstDate: first.capturedAt,
+            lastDate: last.capturedAt,
+            theme: theme
+        ))
+        renderer.scale = 1
+        guard let uiImage = renderer.uiImage, let data = uiImage.pngData() else { return nil }
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent("flapse-story-\(project.id.uuidString)")
             .appendingPathExtension("png")
         try? data.write(to: url)
         return url

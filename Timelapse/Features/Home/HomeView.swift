@@ -37,7 +37,8 @@ struct HomeView: View {
         switch Calendar.current.component(.hour, from: Date()) {
         case 5..<12:  "Günaydın"
         case 12..<18: "İyi günler"
-        default:      "İyi akşamlar"
+        case 18..<23: "İyi akşamlar"
+        default:      "İyi geceler"
         }
     }
 
@@ -112,8 +113,8 @@ struct HomeView: View {
                     tilt: -2
                 )
                 Flashcard(
-                    icon: "person.crop.rectangle",
-                    message: "Hayalet hizalamayla özneyi hep aynı yerde tut.",
+                    icon: "wand.and.stars",
+                    message: "Akıllı hizalama özneyi her karede aynı yerde tutar.",
                     tint: Color(light: "9A5BA6", dark: "C99BD6"),
                     tilt: 1.5
                 )

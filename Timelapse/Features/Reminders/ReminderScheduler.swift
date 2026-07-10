@@ -30,7 +30,10 @@ final class ReminderScheduler {
             ) else { continue }
 
             let content = UNMutableNotificationContent()
-            content.title = String(localized: "Çekim zamanı", bundle: .appLanguage)
+            let entryCount = project.sortedEntries.filter { !$0.isDeleted }.count
+            content.title = entryCount > 0
+                ? String(localized: "Gün \(entryCount + 1) — devam et", bundle: .appLanguage)
+                : String(localized: "Çekim zamanı", bundle: .appLanguage)
             content.body = String(localized: "\(project.title) için bugünkü kareni ekle.", bundle: .appLanguage)
             content.sound = .default
             if let imageData = project.sortedEntries.last(where: { !$0.isDeleted })?.imageData,

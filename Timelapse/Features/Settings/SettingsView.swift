@@ -17,7 +17,7 @@ struct SettingsView: View {
     @AppStorage(AppLanguage.storageKey) private var languageID = AppLanguage.system.rawValue
     @AppStorage(ReminderScheduler.enabledKey) private var remindersEnabled = false
     @AppStorage(ReminderScheduler.hourKey) private var reminderHour = 19
-    @AppStorage(PremiumFeature.smartAlignment.preferenceKey!) private var smartAlignmentEnabled = false
+    @AppStorage(PremiumFeature.smartAlignment.preferenceKey!) private var smartAlignmentEnabled = true
     @AppStorage(PremiumFeature.cloudBackup.preferenceKey!) private var cloudBackupEnabled = false
 
     @State private var auth = AuthService()
@@ -84,8 +84,8 @@ struct SettingsView: View {
                 ProToggleRow(
                     feature: .smartAlignment,
                     isOn: $smartAlignmentEnabled,
-                    isPro: store.isPro
-                ) { showPaywall = true }
+                    isPro: true
+                ) {}
                 ProToggleRow(
                     feature: .cloudBackup,
                     isOn: $cloudBackupEnabled,

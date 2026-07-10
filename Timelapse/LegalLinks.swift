@@ -16,4 +16,8 @@ enum LegalLinks {
 
     /// Destek / iletişim adresi (App Store Connect'te de istenir).
     static let support = URL(string: "https://ozcanr17.github.io/Timelapse/support")!
+
+    /// Video kapanış kartındaki QR kodun götürdüğü tanıtım sayfası. Uygulama App
+    /// Store'a çıkınca doğrudan mağaza bağlantısıyla değiştirilebilir.
+    static let appSite = URL(string: "https://ozcanr17.github.io/Timelapse/")!
 }

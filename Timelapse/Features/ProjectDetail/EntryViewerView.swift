@@ -181,6 +181,10 @@ private struct EntryPage: View {
     let entry: Entry
 
     @State private var image: UIImage?
+    @State private var zoom: CGFloat = 1
+    @State private var pinchBase: CGFloat?
+    @State private var offset: CGSize = .zero
+    @State private var dragBase: CGSize?
 
     var body: some View {
         ZStack {
@@ -188,6 +192,21 @@ private struct EntryPage: View {
                 Image(uiImage: image)
                     .resizable()
                     .scaledToFit()
+                    .scaleEffect(zoom)
+                    .offset(offset)
+                    .gesture(zoomGesture)
+                    .simultaneousGesture(zoom > 1 ? panGesture : nil)
+                    .onTapGesture(count: 2) {
+                        withAnimation(.spring(response: 0.32, dampingFraction: 0.85)) {
+                            if zoom > 1 {
+                                zoom = 1
+                                offset = .zero
+                            } else {
+                                zoom = 2.4
+                            }
+                        }
+                    }
+                    .animation(.spring(response: 0.3, dampingFraction: 0.9), value: zoom == 1)
             } else {
                 Image(systemName: "photo")
                     .font(.largeTitle)
@@ -198,5 +217,36 @@ private struct EntryPage: View {
         .task(id: entry.imageData?.count) {
             image = await ImageDownsampler.image(from: entry.imageData, maxPixelSize: 2400)
         }
+        .onChange(of: entry.id) {
+            zoom = 1
+            offset = .zero
+        }
+    }
+
+    private var zoomGesture: some Gesture {
+        MagnificationGesture()
+            .onChanged { value in
+                if pinchBase == nil { pinchBase = zoom }
+                zoom = min(max((pinchBase ?? 1) * value, 1), 5)
+            }
+            .onEnded { _ in
+                pinchBase = nil
+                if zoom <= 1.02 {
+                    withAnimation(.spring(response: 0.32, dampingFraction: 0.85)) {
+                        zoom = 1
+                        offset = .zero
+                    }
+                }
+            }
+    }
+
+    private var panGesture: some Gesture {
+        DragGesture()
+            .onChanged { value in
+                if dragBase == nil { dragBase = offset }
+                let base = dragBase ?? .zero
+                offset = CGSize(width: base.width + value.translation.width, height: base.height + value.translation.height)
+            }
+            .onEnded { _ in dragBase = nil }
     }
 }

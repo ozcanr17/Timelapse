@@ -1,6 +1,24 @@
 import WidgetKit
 import SwiftUI
 
+let widgetBrandGreen = Color(red: 0.37, green: 0.85, blue: 0.54)
+let widgetCaptureURL = URL(string: "flapse://capture")
+
+struct WidgetBackground: View {
+    var body: some View {
+        ZStack {
+            LinearGradient(
+                colors: [Color(red: 0.08, green: 0.09, blue: 0.11), Color(red: 0.04, green: 0.05, blue: 0.06)],
+                startPoint: .top, endPoint: .bottom
+            )
+            RadialGradient(
+                colors: [widgetBrandGreen.opacity(0.16), .clear],
+                center: .topLeading, startRadius: 0, endRadius: 200
+            )
+        }
+    }
+}
+
 struct StreakEntry: TimelineEntry {
     let date: Date
     let streak: Int
@@ -42,38 +60,58 @@ struct StreakWidgetView: View {
     let entry: StreakEntry
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: 5) {
-                Image(systemName: "flame.fill")
-                    .font(.system(size: 16, weight: .bold))
-                    .foregroundStyle(entry.streak > 0 ? .orange : .secondary)
-                Text("\(entry.streak)")
-                    .font(.system(size: 28, weight: .bold, design: .rounded))
-                    .monospacedDigit()
+        VStack(alignment: .leading, spacing: 0) {
+            HStack {
+                ZStack {
+                    Circle()
+                        .fill(.orange.opacity(entry.streak > 0 ? 0.2 : 0.08))
+                        .frame(width: 34, height: 34)
+                    Image(systemName: "flame.fill")
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundStyle(
+                            entry.streak > 0
+                            ? AnyShapeStyle(LinearGradient(colors: [.yellow, .orange, .red], startPoint: .top, endPoint: .bottom))
+                            : AnyShapeStyle(Color.white.opacity(0.35))
+                        )
+                }
                 Spacer()
+                Image(systemName: "camera.fill")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(widgetBrandGreen.opacity(0.85))
             }
-            Text("gün serisi")
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(.secondary)
-            Spacer()
-            if entry.capturedToday {
-                Label("Bugün çekildi", systemImage: "checkmark.circle.fill")
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(.green)
-            } else if entry.dueCount > 0 {
-                Label("Bugün \(entry.dueCount) çekim", systemImage: "camera.fill")
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(.orange)
-            } else {
-                Label("Bugün için tamam", systemImage: "checkmark.circle")
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(.secondary)
-            }
+
+            Spacer(minLength: 6)
+
+            Text("\(entry.streak)")
+                .font(.system(size: 40, weight: .heavy, design: .rounded))
+                .monospacedDigit()
+                .foregroundStyle(.white)
+            Text("GÜN SERİSİ")
+                .font(.system(size: 10, weight: .bold))
+                .tracking(1.4)
+                .foregroundStyle(.white.opacity(0.55))
+
+            Spacer(minLength: 6)
+
+            statusChip
         }
-        .padding(2)
-        .containerBackground(for: .widget) {
-            Color(red: 0.06, green: 0.07, blue: 0.09)
+        .widgetURL(widgetCaptureURL)
+        .containerBackground(for: .widget) { WidgetBackground() }
+    }
+
+    private var statusChip: some View {
+        let (icon, text, tint): (String, String, Color) =
+            entry.capturedToday ? ("checkmark.circle.fill", "Bugün çekildi", widgetBrandGreen)
+            : entry.dueCount > 0 ? ("camera.fill", "Bugün \(entry.dueCount) çekim", .orange)
+            : ("checkmark.circle", "Bugün için tamam", Color.white.opacity(0.6))
+        return HStack(spacing: 5) {
+            Image(systemName: icon).font(.system(size: 11, weight: .bold))
+            Text(text).font(.system(size: 11, weight: .semibold)).lineLimit(1).minimumScaleFactor(0.8)
         }
+        .foregroundStyle(tint)
+        .padding(.horizontal, 9)
+        .padding(.vertical, 5)
+        .background(tint.opacity(0.14), in: Capsule())
     }
 }
 
@@ -145,9 +183,8 @@ struct PhotoGridWidgetView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .containerBackground(for: .widget) {
-            Color(red: 0.06, green: 0.07, blue: 0.09)
-        }
+        .widgetURL(widgetCaptureURL)
+        .containerBackground(for: .widget) { WidgetBackground() }
     }
 
     @ViewBuilder
@@ -157,9 +194,9 @@ struct PhotoGridWidgetView: View {
                 .resizable()
                 .scaledToFill()
                 .frame(width: size, height: size)
-                .clipShape(RoundedRectangle(cornerRadius: 2.5, style: .continuous))
+                .clipShape(RoundedRectangle(cornerRadius: 3.5, style: .continuous))
         } else {
-            RoundedRectangle(cornerRadius: 2.5, style: .continuous)
+            RoundedRectangle(cornerRadius: 3.5, style: .continuous)
                 .fill(Color.white.opacity(0.08))
                 .frame(width: size, height: size)
         }
@@ -227,9 +264,8 @@ struct ProjectsWidgetView: View {
                 }
             }
         }
-        .containerBackground(for: .widget) {
-            Color(red: 0.06, green: 0.07, blue: 0.09)
-        }
+        .widgetURL(widgetCaptureURL)
+        .containerBackground(for: .widget) { WidgetBackground() }
     }
 
     @ViewBuilder
@@ -243,15 +279,17 @@ struct ProjectsWidgetView: View {
                 } else {
                     Color.white.opacity(0.08)
                 }
-                LinearGradient(colors: [.clear, .black.opacity(0.65)], startPoint: .center, endPoint: .bottom)
+                LinearGradient(colors: [.clear, .black.opacity(0.75)], startPoint: .center, endPoint: .bottom)
                 Text(entry.tiles[index].title)
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(.system(size: 13, weight: .bold, design: .rounded))
                     .foregroundStyle(.white)
+                    .shadow(color: .black.opacity(0.6), radius: 2, y: 1)
                     .lineLimit(1)
-                    .padding(7)
+                    .minimumScaleFactor(0.8)
+                    .padding(8)
             }
             .frame(width: width, height: height)
-            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         } else {
             infoTile(index, width: width, height: height)
         }
@@ -264,33 +302,38 @@ struct ProjectsWidgetView: View {
             case entry.tiles.count:
                 Image(systemName: "flame.fill")
                     .font(.system(size: 18, weight: .bold))
-                    .foregroundStyle(entry.streak > 0 ? .orange : .secondary)
+                    .foregroundStyle(
+                        entry.streak > 0
+                        ? AnyShapeStyle(LinearGradient(colors: [.yellow, .orange, .red], startPoint: .top, endPoint: .bottom))
+                        : AnyShapeStyle(Color.white.opacity(0.35))
+                    )
                 Text("\(entry.streak)")
-                    .font(.system(size: 22, weight: .bold, design: .rounded)).monospacedDigit()
+                    .font(.system(size: 24, weight: .heavy, design: .rounded)).monospacedDigit()
                     .foregroundStyle(.white)
                 Text("gün serisi")
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundStyle(.secondary)
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(.white.opacity(0.6))
             default:
                 if entry.capturedToday {
                     Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 22, weight: .bold))
-                        .foregroundStyle(.green)
+                        .font(.system(size: 24, weight: .bold))
+                        .foregroundStyle(widgetBrandGreen)
                     Text("Bugün çekildi")
-                        .font(.system(size: 10, weight: .semibold))
-                        .foregroundStyle(.secondary)
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(.white.opacity(0.7))
                 } else {
                     Image(systemName: "camera.fill")
-                        .font(.system(size: 20, weight: .bold))
-                        .foregroundStyle(entry.dueCount > 0 ? .orange : .secondary)
+                        .font(.system(size: 22, weight: .bold))
+                        .foregroundStyle(entry.dueCount > 0 ? .orange : .white.opacity(0.4))
                     Text(entry.dueCount > 0 ? "Bugün \(entry.dueCount) çekim" : "Bugün için tamam")
-                        .font(.system(size: 10, weight: .semibold))
-                        .foregroundStyle(.secondary)
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(.white.opacity(0.7))
+                        .minimumScaleFactor(0.8)
                 }
             }
         }
         .frame(width: width, height: height)
-        .background(Color.white.opacity(0.07), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .background(Color.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 }
 
