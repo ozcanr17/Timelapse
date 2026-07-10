@@ -49,10 +49,19 @@ struct TimelapseExportSheet: View {
         return max(1, (Calendar.current.dateComponents([.day], from: first, to: last).day ?? 0) + 1)
     }
 
-    private var frames: [TimelapseFrame] {
-        project.sortedEntries.compactMap { entry in
-            entry.imageData.map { TimelapseFrame(imageData: $0, capturedAt: entry.capturedAt) }
+    @State private var frames: [TimelapseFrame] = []
+    @State private var framesLoaded = false
+
+    private func loadFrames() async {
+        var result: [TimelapseFrame] = []
+        for entry in project.sortedEntries {
+            if let data = entry.imageData {
+                result.append(TimelapseFrame(imageData: data, capturedAt: entry.capturedAt))
+            }
+            await Task.yield()
         }
+        frames = result
+        framesLoaded = true
     }
 
     var body: some View {
@@ -76,6 +85,9 @@ struct TimelapseExportSheet: View {
                         lastRenderedURL = url
                         isStale = false
                     }
+                }
+                if !framesLoaded {
+                    await loadFrames()
                 }
             }
             .sheet(isPresented: $showPaywall) {
@@ -325,8 +337,8 @@ struct TimelapseExportSheet: View {
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.timelapsePrimary)
-                .disabled(frames.count < 2)
-                if frames.count < 2 {
+                .disabled(!framesLoaded || frames.count < 2)
+                if framesLoaded && frames.count < 2 {
                     Text("Timelapse için en az 2 kare gerekli.")
                         .font(Theme.caption(12))
                         .foregroundStyle(theme.inkMuted)
