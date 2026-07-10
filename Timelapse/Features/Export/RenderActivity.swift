@@ -44,7 +44,8 @@ enum RenderActivityCenter {
                         sound: .default
                     )
                 )
-                await activity.end(content, dismissalPolicy: .after(.now + 8))
+                try? await Task.sleep(for: .seconds(3))
+                await activity.end(content, dismissalPolicy: .after(.now + 60 * 10))
             } else {
                 await activity.end(nil, dismissalPolicy: .immediate)
             }

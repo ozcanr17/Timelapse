@@ -74,6 +74,20 @@ final class TimelapseRenderService {
 
     static let shared = TimelapseRenderService()
 
+    private init() {
+        NotificationCenter.default.addObserver(
+            forName: UIApplication.didBecomeActiveNotification, object: nil, queue: .main
+        ) { _ in
+            Task { @MainActor in TimelapseRenderService.shared.resumeBackgroundFailures() }
+        }
+    }
+
+    private func resumeBackgroundFailures() {
+        for job in jobs where job.viewModel.retryAfterBackgroundFailure() {
+            rearm(job)
+        }
+    }
+
     struct Job: Identifiable {
         let id: UUID
         let title: String
@@ -105,8 +119,12 @@ final class TimelapseRenderService {
     }
 
     func didStartRender(for project: Project) {
-        let id = project.id
-        guard let job = jobs.first(where: { $0.id == id }) else { return }
+        guard let job = jobs.first(where: { $0.id == project.id }) else { return }
+        rearm(job)
+    }
+
+    private func rearm(_ job: Job) {
+        let id = job.id
         if backgroundTasks[id] == nil {
             backgroundTasks[id] = UIApplication.shared.beginBackgroundTask(withName: "timelapse-render") { [weak self] in
                 Task { @MainActor in self?.endBackgroundTask(for: id) }
@@ -124,7 +142,7 @@ final class TimelapseRenderService {
             endBackgroundTask(for: id)
             if case .finished = job.viewModel.phase {
                 RenderActivityCenter.finish(id: id, success: true)
-            } else {
+            } else if !job.viewModel.failedInBackground {
                 RenderActivityCenter.finish(id: id, success: false)
             }
         }

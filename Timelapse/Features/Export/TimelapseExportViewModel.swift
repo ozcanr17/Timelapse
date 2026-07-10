@@ -14,9 +14,11 @@ final class TimelapseExportViewModel {
 
     private(set) var phase: Phase = .idle
     private(set) var progress: Double = 0
+    private(set) var failedInBackground = false
 
     private let composer: any TimelapseComposing
     private var renderTask: Task<Void, Never>?
+    private var retryAction: (() -> Void)?
 
     init(composer: any TimelapseComposing = TimelapseComposer()) {
         self.composer = composer
@@ -47,6 +49,16 @@ final class TimelapseExportViewModel {
         let composer = composer
         phase = .rendering
         progress = 0
+        failedInBackground = false
+        retryAction = { [weak self] in
+            self?.export(
+                frames: frames, isPro: isPro, speed: speed, speedMultiplier: speedMultiplier,
+                aspect: aspect, zoom: zoom, soundtrackURL: soundtrackURL, bundledBeats: bundledBeats,
+                beatSync: beatSync, overlay: overlay, smartAlignment: smartAlignment,
+                manualAnchor: manualAnchor, manualAnchors: manualAnchors,
+                transition: transition, alignmentSubject: alignmentSubject
+            )
+        }
         renderTask = Task { [weak self] in
             do {
                 var beats: [Double]? = nil
@@ -86,6 +98,9 @@ final class TimelapseExportViewModel {
             } catch is CancellationError {
             } catch {
                 guard !Task.isCancelled else { return }
+                if UIApplication.shared.applicationState != .active {
+                    self?.failedInBackground = true
+                }
                 self?.phase = .failed(String(localized: "Video oluşturulamadı: \(error.localizedDescription)", bundle: .appLanguage))
             }
         }
@@ -173,5 +188,12 @@ final class TimelapseExportViewModel {
 
     func waitForRender() async {
         await renderTask?.value
+    }
+
+    func retryAfterBackgroundFailure() -> Bool {
+        guard failedInBackground else { return false }
+        failedInBackground = false
+        retryAction?()
+        return true
     }
 }

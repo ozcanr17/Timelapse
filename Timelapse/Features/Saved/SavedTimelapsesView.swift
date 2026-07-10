@@ -12,25 +12,15 @@ struct SavedTimelapsesView: View {
     @State private var playing: SavedTimelapse?
     @State private var pendingDeletion: SavedTimelapse?
 
-    private var service: TimelapseRenderService { TimelapseRenderService.shared }
-
     var body: some View {
         ZStack {
             theme.canvas.ignoresSafeArea()
-            if items.isEmpty && service.activeJobs.isEmpty && service.finishedJobs.isEmpty {
+            if items.isEmpty {
                 emptyState
             } else {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 18) {
-                        if !service.activeJobs.isEmpty {
-                            jobSection(title: "Oluşturuluyor", jobs: service.activeJobs)
-                        }
-                        if !service.finishedJobs.isEmpty {
-                            jobSection(title: "Hazır — kaydetmeyi unutma", jobs: service.finishedJobs)
-                        }
-                        if !items.isEmpty {
-                            librarySection
-                        }
+                        librarySection
                     }
                     .padding(20)
                 }
@@ -77,66 +67,6 @@ struct SavedTimelapsesView: View {
             }
         }
         .padding(.horizontal, 40)
-    }
-
-    private func jobSection(title: LocalizedStringKey, jobs: [TimelapseRenderService.Job]) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text(title)
-                .font(Theme.caption(13))
-                .foregroundStyle(theme.inkMuted)
-            ForEach(jobs) { job in
-                jobRow(job)
-            }
-        }
-    }
-
-    private func jobRow(_ job: TimelapseRenderService.Job) -> some View {
-        HStack(spacing: 12) {
-            if job.viewModel.phase == .rendering {
-                SpinningLogo(size: 34)
-            } else {
-                Image(systemName: "checkmark.circle.fill")
-                    .font(.system(size: 26))
-                    .foregroundStyle(theme.accent)
-            }
-            VStack(alignment: .leading, spacing: 3) {
-                Text(job.title)
-                    .font(Theme.headline(15))
-                    .foregroundStyle(theme.ink)
-                if job.viewModel.phase == .rendering {
-                    ProgressView(value: job.viewModel.progress)
-                        .tint(theme.accent)
-                } else {
-                    Text("Video hazır")
-                        .font(Theme.caption(12))
-                        .foregroundStyle(theme.inkMuted)
-                }
-            }
-            Spacer()
-            if job.viewModel.phase == .rendering {
-                Button {
-                    service.discard(projectID: job.id)
-                } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 22))
-                        .foregroundStyle(theme.inkMuted)
-                }
-                .accessibilityLabel(Text("İptal et"))
-            } else {
-                Button("Kaydet") {
-                    Task {
-                        if await service.saveToLibrary(projectID: job.id, context: modelContext) != nil {
-                            service.discard(projectID: job.id)
-                        }
-                    }
-                }
-                .font(Theme.caption(13))
-                .buttonStyle(.borderedProminent)
-                .tint(theme.accent)
-            }
-        }
-        .padding(14)
-        .liquidGlassStyle()
     }
 
     private var librarySection: some View {

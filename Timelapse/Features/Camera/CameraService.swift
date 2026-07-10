@@ -51,6 +51,10 @@ final class CameraService: NSObject, CameraServiceProtocol, @unchecked Sendable 
                     self.captureContinuation = nil
                     pending.resume(throwing: CameraError.captureInterrupted)
                 }
+                if let connection = self.photoOutput.connection(with: .video), connection.isVideoMirroringSupported {
+                    connection.automaticallyAdjustsVideoMirroring = false
+                    connection.isVideoMirrored = false
+                }
                 let settings = AVCapturePhotoSettings()
                 settings.photoQualityPrioritization = .speed
                 self.captureContinuation = continuation

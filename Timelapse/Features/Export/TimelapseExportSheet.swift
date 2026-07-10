@@ -72,6 +72,10 @@ struct TimelapseExportSheet: View {
                 if !didInitAlign {
                     didInitAlign = true
                     if smartAlignmentEnabled { alignMode = .smart }
+                    if case .finished(let url) = viewModel.phase {
+                        lastRenderedURL = url
+                        isStale = false
+                    }
                 }
             }
             .sheet(isPresented: $showPaywall) {
