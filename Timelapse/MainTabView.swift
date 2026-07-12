@@ -304,13 +304,17 @@ struct MainTabView: View {
     }
 
     private func presentPendingCapture() {
-        guard let project = pendingCapture else { return }
+        guard let project = pendingCapture else {
+            CameraService.shared.stop()
+            return
+        }
         pendingCapture = nil
         let count = project.sortedEntries.filter { !$0.isDeleted }.count
         if FeatureGate.canAddEntry(isPro: store.isPro, currentEntryCount: count) {
             CameraService.shared.prewarm()
             captureRoute = .project(project)
         } else {
+            CameraService.shared.stop()
             showPaywall = true
         }
     }

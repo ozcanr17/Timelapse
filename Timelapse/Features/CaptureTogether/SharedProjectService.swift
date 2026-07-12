@@ -64,6 +64,13 @@ final class SharedProjectService {
                 toSave.append(record)
             }
         }
+        defer {
+            for record in toSave {
+                if let asset = record["image"] as? CKAsset, let url = asset.fileURL {
+                    try? FileManager.default.removeItem(at: url)
+                }
+            }
+        }
 
         let results = try await privateDB.modifyRecords(saving: toSave, deleting: [])
         guard

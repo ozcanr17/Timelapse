@@ -65,6 +65,17 @@ enum TimelapseLibrary {
         for item in deleted where (item.deletedAt ?? now) < cutoff {
             delete(item, context: context)
         }
+        removeOrphanFiles(context: context)
+    }
+
+    @MainActor
+    private static func removeOrphanFiles(context: ModelContext) {
+        guard let all = try? context.fetch(FetchDescriptor<SavedTimelapse>()) else { return }
+        let referenced = Set(all.map(\.fileName))
+        let files = (try? FileManager.default.contentsOfDirectory(atPath: directory.path)) ?? []
+        for file in files where !referenced.contains(file) {
+            try? FileManager.default.removeItem(at: directory.appendingPathComponent(file))
+        }
     }
 }
 
@@ -78,7 +89,10 @@ final class TimelapseRenderService {
         NotificationCenter.default.addObserver(
             forName: UIApplication.didBecomeActiveNotification, object: nil, queue: .main
         ) { _ in
-            Task { @MainActor in TimelapseRenderService.shared.resumeBackgroundFailures() }
+            Task { @MainActor in
+                TimelapseRenderService.shared.pruneStaleJobs()
+                TimelapseRenderService.shared.resumeBackgroundFailures()
+            }
         }
     }
 
@@ -106,8 +120,17 @@ final class TimelapseRenderService {
     var finishedJobs: [Job] {
         jobs.filter {
             guard !$0.isSaved else { return false }
-            if case .finished = $0.viewModel.phase { return true }
+            if case .finished(let url) = $0.viewModel.phase {
+                return FileManager.default.fileExists(atPath: url.path)
+            }
             return false
+        }
+    }
+
+    private func pruneStaleJobs() {
+        jobs.removeAll { job in
+            guard case .finished(let url) = job.viewModel.phase else { return false }
+            return job.isSaved || !FileManager.default.fileExists(atPath: url.path)
         }
     }
 

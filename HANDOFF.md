@@ -7,7 +7,7 @@ Written for a fresh session with zero context. Read this first, then `README.md`
 Native iOS app (Swift/SwiftUI/SwiftData/StoreKit 2/AVFoundation/Vision/ActivityKit, **no third-party deps**). "One photo a day" progress timelapses with smart alignment, streaks, background rendering with a Dynamic Island Live Activity, an in-app saved-video library, widgets, and freemium monetization.
 
 - Local path: `/Users/ridvanozcan/Desktop/workspace/Timelapse`
-- Repo: `https://github.com/ozcanr17/Timelapse.git`, branch `main`. Working tree clean at handoff; everything is pushed (last commit: export-sheet latency fix).
+- Repo: `https://github.com/ozcanr17/Timelapse.git`, branch `main`. Working tree clean at handoff; everything is pushed (last commit: bug/security sweep).
 - Owner: Rıdvan Özcan (`ridvanozcan7@gmail.com`), display name **Flapse**, bundle ID `rozcan.Timelapse`, min iOS 17, tested on an iOS 26 device with Dynamic Island.
 
 ## Build & test
@@ -18,7 +18,7 @@ xcodebuild build -scheme Timelapse -destination 'platform=iOS Simulator,name=iPh
 xcodebuild test  -scheme Timelapse -destination 'platform=iOS Simulator,name=iPhone 17' -only-testing:TimelapseTests
 ```
 
-105 unit tests, all green at handoff. Use **iPhone 17** as the destination ("iPhone 16" matches multiple runtimes and errors). SourceKit diagnostics in the IDE harness are noise ("No such module UIKit" etc.) — trust `xcodebuild` only.
+108 unit tests, all green at handoff. Use **iPhone 17** as the destination ("iPhone 16" matches multiple runtimes and errors). SourceKit diagnostics in the IDE harness are noise ("No such module UIKit" etc.) — trust `xcodebuild` only.
 
 ## House rules (from the owner — do not break)
 
@@ -40,6 +40,15 @@ xcodebuild test  -scheme Timelapse -destination 'platform=iOS Simulator,name=iPh
 9. Background render failure auto-retry: `TimelapseComposerError.writerFailed` (error 2) happens because iOS cuts the hardware encoder when the app suspends. `TimelapseExportViewModel` stores a `retryAction` + `failedInBackground`; `TimelapseRenderService` observes `didBecomeActiveNotification` and re-runs the export, keeping the Live Activity alive.
 10. Performance: 120Hz via `CADisableMinimumFrameDurationOnPhone`, Metal-backed fire border (`drawingGroup`), and the big one — export sheet `frames` converted from a repeatedly-evaluated computed property (main-thread faulting of ALL photo data) to a once-loaded `@State` with per-item `Task.yield()`.
 11. Publishing prep: `NSPhotoLibraryUsageDescription` added; privacy/support pages exist in `docs/` (EN+TR); README fully rewritten ("ghost alignment" wording is banned — it's "smart alignment" now).
+
+## Session after handoff (2026-07-11/12, all pushed)
+
+1. **Photos saving fixed everywhere** — new `PhotoLibrarySaver` (add-only PHPhotoLibrary authorization, `.photosDeniedAlert` view modifier with an "Ayarları Aç" action). Used by the export sheet, Saved context menu, and entry viewer. The old code never requested permission and swallowed failures.
+2. **Export sheet state bug fixed**: opening a *finished* render used to show "Yeniden Oluştur" instead of the share/save/AI-caption actions, because setting `alignMode` in `.task` fired `onChange` → `isStale = true`. Alignment + finished-phase adoption now happen in `init` — keep it there; anything that mutates control state after appear will re-trigger the stale flag.
+3. **Beat sync restored + loop fix**: the "drop-synced cuts" reallocation (from `e22ee93`) made manual songs cut off-beat and was removed (`alignedCutTimes`, `changeScores`, `AudioBeatAnalyzer.structure`/`dropTime` are gone). Cuts are strictly one per beat via `TimelapseExportViewModel.loopedCutTimes`, which repeats the beat grid shifted by the song duration when the video outlives the track (muxer loops audio from 0). 3 unit tests cover it. **Do not reintroduce drop detection without owner sign-off.**
+4. **Camera prewarm**: `CameraService.shared` + `prewarm()` starts the session while the full-screen cover animates (tab-bar capture + quick-pick paths). `configure` early-returns when the input already matches. If a capture flow is cancelled before presenting (quick-pick dismissed, paywall), call `CameraService.shared.stop()` — otherwise the green camera indicator stays on (MainTabView.presentPendingCapture does this).
+5. **Bug/security sweep fixes**: `LocationService` no longer leaks/hangs continuations on concurrent calls (pending ones are resumed before being replaced); CloudKit share upload deletes its temp JPEG assets after `modifyRecords`; `TimelapseRenderService` prunes finished jobs whose tmp video iOS purged (and `finishedJobs` re-checks file existence); `TimelapseLibrary.purgeExpired` also removes orphaned files in `SavedTimelapses/` not referenced by any model.
+6. Sweep notes (reviewed, intentionally unchanged): no networking at all ("Data Not Collected" stays accurate; CaptionWriter is on-device FoundationModels); StoreKit entitlements are verified and never persisted; admin Pro rides UserDefaults/iCloud KVS by design; `CKShare.publicPermission = .readWrite` is required for the link-invite UX — anyone with the link can join and add photos, revisit before marketing the feature broadly.
 
 ## Currently stuck / needs the owner
 

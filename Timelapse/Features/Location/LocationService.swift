@@ -27,6 +27,7 @@ final class LocationService: NSObject, LocationProviding, CLLocationManagerDeleg
     func currentLocation() async -> ResolvedLocation? {
         if manager.authorizationStatus == .notDetermined {
             await withCheckedContinuation { continuation in
+                authContinuation?.resume()
                 authContinuation = continuation
                 manager.requestWhenInUseAuthorization()
             }
@@ -36,6 +37,7 @@ final class LocationService: NSObject, LocationProviding, CLLocationManagerDeleg
         guard status == .authorizedWhenInUse || status == .authorizedAlways else { return nil }
 
         let location: CLLocation? = await withCheckedContinuation { continuation in
+            locationContinuation?.resume(returning: nil)
             locationContinuation = continuation
             manager.requestLocation()
         }
