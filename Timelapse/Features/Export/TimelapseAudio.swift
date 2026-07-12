@@ -69,16 +69,16 @@ enum AudioBeatAnalyzer {
 
     static func beats(in url: URL) async throws -> [Double] {
         try await Task.detached(priority: .userInitiated) {
-            try analyze(url)
+            try await analyze(url)
         }.value
     }
 
     private static let sampleRate = 22050.0
     private static let hop = 512
 
-    private static func analyze(_ url: URL) throws -> [Double] {
+    private static func analyze(_ url: URL) async throws -> [Double] {
         let hopDuration = Double(hop) / sampleRate
-        let samples = try decodeSamples(url)
+        let samples = try await decodeSamples(url)
         guard samples.count >= hop * 16 else { return [] }
 
         let envelope = onsetEnvelope(samples: samples)
@@ -91,10 +91,10 @@ enum AudioBeatAnalyzer {
         return stride(from: period, through: total, by: period).map { $0 }
     }
 
-    private static func decodeSamples(_ url: URL) throws -> [Float] {
+    private static func decodeSamples(_ url: URL) async throws -> [Float] {
         let asset = AVURLAsset(url: url)
         let reader = try AVAssetReader(asset: asset)
-        guard let track = asset.tracks(withMediaType: .audio).first else { return [] }
+        guard let track = try await asset.loadTracks(withMediaType: .audio).first else { return [] }
         let settings: [String: Any] = [
             AVFormatIDKey: kAudioFormatLinearPCM,
             AVSampleRateKey: sampleRate,

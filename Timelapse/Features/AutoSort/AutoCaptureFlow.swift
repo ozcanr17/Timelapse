@@ -233,7 +233,8 @@ struct AutoCaptureFlow: View {
     }
 
     private var subjectLabel: String? {
-        signature.labels.first.map(Self.prettify)
+        guard let label = signature.labels.first else { return nil }
+        return Self.prettify(label)
     }
 
     private func handleCaptured(_ data: Data) {

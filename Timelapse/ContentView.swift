@@ -54,7 +54,7 @@ struct ContentView: View {
         .preferredColorScheme(appTheme.preferredColorScheme)
         .animation(.easeInOut(duration: 0.25), value: themeID)
         .environment(\.locale, appLanguage.localeIdentifier.map(Locale.init(identifier:)) ?? .autoupdatingCurrent)
-        .environment(\.layoutDirection, appLanguage.isRightToLeft ? .rightToLeft : (appLanguage == .system ? (Locale.characterDirection(forLanguage: Locale.preferredLanguages.first ?? "en") == .rightToLeft ? .rightToLeft : .leftToRight) : .leftToRight))
+        .environment(\.layoutDirection, appLanguage.isRightToLeft ? .rightToLeft : (appLanguage == .system ? (Locale.Language(identifier: Locale.preferredLanguages.first ?? "en").characterDirection == .rightToLeft ? .rightToLeft : .leftToRight) : .leftToRight))
         .id(languageID)
         .onChange(of: languageID) {
             LanguageOverrideBundle.apply(appLanguage)

@@ -19,3 +19,6 @@ Carthage/Build/
 # fastlane
 fastlane/report.xml
 fastlane/screenshots/**/*.png
+
+# Xcode results
+*.xcresult
