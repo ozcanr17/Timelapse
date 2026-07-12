@@ -50,6 +50,15 @@ xcodebuild test  -scheme Timelapse -destination 'platform=iOS Simulator,name=iPh
 5. **Bug/security sweep fixes**: `LocationService` no longer leaks/hangs continuations on concurrent calls (pending ones are resumed before being replaced); CloudKit share upload deletes its temp JPEG assets after `modifyRecords`; `TimelapseRenderService` prunes finished jobs whose tmp video iOS purged (and `finishedJobs` re-checks file existence); `TimelapseLibrary.purgeExpired` also removes orphaned files in `SavedTimelapses/` not referenced by any model.
 6. Sweep notes (reviewed, intentionally unchanged): no networking at all ("Data Not Collected" stays accurate; CaptionWriter is on-device FoundationModels); StoreKit entitlements are verified and never persisted; admin Pro rides UserDefaults/iCloud KVS by design; `CKShare.publicPermission = .readWrite` is required for the link-invite UX — anyone with the link can join and add photos, revisit before marketing the feature broadly.
 
+## Release-readiness pass (2026-07-12, pushed)
+
+1. App icon 1024px had an alpha channel (App Store Connect rejects it) — flattened onto opaque white in place.
+2. Release build now has **zero warnings**: `Locale.Language.characterDirection` replaces deprecated API in `ContentView`, `AutoCaptureFlow.subjectLabel` no longer passes a main-actor method as a nonisolated closure, `TimelapseAudio.decodeSamples` is async via `loadTracks(withMediaType:)`.
+3. `Widgets/PrivacyInfo.xcprivacy` added (UserDefaults CA92.1 + 1C8F.1); app manifest gained 1C8F.1 (app-group suite).
+4. `LegalLinks` stale TODO doc comments removed; URLs are final (pending Pages enable).
+5. `RELEASE_CHECKLIST.md` added — the full pre-submission list.
+6. `.github/workflows/ci.yml` exists **locally only**: the git credential lacks `workflow` scope, so it's gitignored. To enable CI: remove `.github/workflows/` from `.gitignore` and push from a credential with workflow scope.
+
 ## Currently stuck / needs the owner
 
 - **GitHub Pages is NOT enabled** — the harness blocked publishing a public site. Owner must run: `gh api repos/ozcanr17/Timelapse/pages -X POST -f "source[branch]=main" -f "source[path]=/docs"` (or repo Settings → Pages → main /docs). Until then `LegalLinks.privacyPolicy/support/appSite` URLs 404 and the outro QR points at a dead page.
