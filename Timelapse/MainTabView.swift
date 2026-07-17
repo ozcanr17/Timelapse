@@ -90,7 +90,12 @@ struct MainTabView: View {
             guard url.scheme == "flapse", url.host == "capture" else { return }
             captureRoute = nil
             if let due = capturableProjects.first(where: { $0.isCaptureDue() }) {
-                captureRoute = .project(due)
+                let count = due.sortedEntries.filter { !$0.isDeleted }.count
+                if FeatureGate.canAddEntry(isPro: store.isPro, currentEntryCount: count) {
+                    captureRoute = .project(due)
+                } else {
+                    showPaywall = true
+                }
             } else {
                 captureTapped()
             }

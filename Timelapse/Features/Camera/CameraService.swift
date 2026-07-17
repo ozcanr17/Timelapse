@@ -130,13 +130,17 @@ extension CameraService: AVCapturePhotoCaptureDelegate {
         didFinishProcessingPhoto photo: AVCapturePhoto,
         error: Error?
     ) {
-        if let error {
-            captureContinuation?.resume(throwing: error)
-        } else if let data = photo.fileDataRepresentation() {
-            captureContinuation?.resume(returning: data)
-        } else {
-            captureContinuation?.resume(throwing: CameraError.imageDataUnavailable)
+        let data = photo.fileDataRepresentation()
+        sessionQueue.async {
+            guard let continuation = self.captureContinuation else { return }
+            self.captureContinuation = nil
+            if let error {
+                continuation.resume(throwing: error)
+            } else if let data {
+                continuation.resume(returning: data)
+            } else {
+                continuation.resume(throwing: CameraError.imageDataUnavailable)
+            }
         }
-        captureContinuation = nil
     }
 }
