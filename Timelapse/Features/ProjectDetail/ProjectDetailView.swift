@@ -176,7 +176,8 @@ struct ProjectDetailView: View {
                 PhotoImportSheet(
                     mode: .existing(project),
                     repository: ProjectRepository(context: modelContext),
-                    maxSelection: store.isPro ? nil : max(0, FeatureGate.freeEntryLimit - liveEntries.count)
+                    maxSelection: store.isPro ? nil : max(0, FeatureGate.freeEntryLimit - liveEntries.count),
+                    onFinished: { _ in activeSheet = nil }
                 )
             case .cloudShare:
                 if let preparedShare, let url = preparedShare.url {

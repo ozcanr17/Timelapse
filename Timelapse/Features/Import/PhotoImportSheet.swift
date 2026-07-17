@@ -31,6 +31,11 @@ struct PhotoImportSheet: View {
         _viewModel = State(initialValue: PhotoImportViewModel(repository: repository))
     }
 
+    private func close() {
+        if let finished { onFinished(finished) }
+        dismiss()
+    }
+
     var body: some View {
         NavigationStack {
             content
@@ -219,10 +224,7 @@ struct PhotoImportSheet: View {
                 .font(Theme.caption(14)).foregroundStyle(theme.inkMuted)
                 .multilineTextAlignment(.center)
             Spacer()
-            Button("Bitti") {
-                if let finished { onFinished(finished) }
-                dismiss()
-            }
+            Button("Bitti") { close() }
             .buttonStyle(.timelapsePrimary)
             .padding(.horizontal, 24)
         }
