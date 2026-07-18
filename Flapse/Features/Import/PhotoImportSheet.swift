@@ -34,7 +34,7 @@ struct PhotoImportSheet: View {
         _viewModel = State(initialValue: PhotoImportViewModel(repository: repository))
     }
 
-    private func close() {
+    private func notifyFinishedIfNeeded() {
         let project: Project
         switch mode {
         case .existing(let existing):
@@ -61,6 +61,9 @@ struct PhotoImportSheet: View {
                 }
         }
         .interactiveDismissDisabled(viewModel.phase == .importing)
+        .presentationDetents([.fraction(0.75)])
+        .presentationDragIndicator(.visible)
+        .onDisappear { notifyFinishedIfNeeded() }
         .fullScreenCover(isPresented: $isShowingPhotoPicker) {
             SystemPhotoPicker(maxSelectionCount: maxSelection) { photos in
                 if !photos.isEmpty {
@@ -241,9 +244,19 @@ struct PhotoImportSheet: View {
                 .font(Theme.caption(14)).foregroundStyle(theme.inkMuted)
                 .multilineTextAlignment(.center)
             Spacer()
-            Button("Bitti") { close() }
-            .buttonStyle(.flapsePrimary)
-            .padding(.horizontal, 24)
+            VStack(spacing: 2) {
+                Text("Bitti")
+                    .font(Theme.headline(15))
+                    .foregroundStyle(theme.inkMuted)
+                Image(systemName: "chevron.compact.down")
+                    .font(.system(size: 24, weight: .semibold))
+                    .foregroundStyle(theme.accent)
+                Image(systemName: "chevron.compact.down")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(theme.accent.opacity(0.55))
+                    .offset(y: -7)
+            }
+            .accessibilityElement(children: .combine)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(24)

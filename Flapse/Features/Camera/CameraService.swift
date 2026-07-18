@@ -13,7 +13,7 @@ protocol CameraServiceProtocol: AnyObject {
     func stop()
     func switchCamera(to position: AVCaptureDevice.Position) async throws
     func zoomCapabilities() async -> CameraZoomCapabilities
-    func setZoomFactor(_ factor: CGFloat)
+    func setZoomFactor(_ factor: CGFloat, smoothly: Bool)
     func capturePhoto() async throws -> Data
 }
 
@@ -79,7 +79,7 @@ final class CameraService: NSObject, CameraServiceProtocol, @unchecked Sendable 
         }
     }
 
-    func setZoomFactor(_ factor: CGFloat) {
+    func setZoomFactor(_ factor: CGFloat, smoothly: Bool) {
         sessionQueue.async {
             guard let device = self.currentInput?.device else { return }
             let multiplier = self.zoomDisplayMultiplier(for: device)
@@ -87,7 +87,12 @@ final class CameraService: NSObject, CameraServiceProtocol, @unchecked Sendable 
             let clamped = min(max(rawFactor, device.minAvailableVideoZoomFactor), device.maxAvailableVideoZoomFactor)
             do {
                 try device.lockForConfiguration()
-                device.videoZoomFactor = clamped
+                if smoothly {
+                    device.ramp(toVideoZoomFactor: clamped, withRate: 4)
+                } else {
+                    device.cancelVideoZoomRamp()
+                    device.videoZoomFactor = clamped
+                }
                 device.unlockForConfiguration()
             } catch {}
         }

@@ -86,6 +86,13 @@ final class ProjectRepository: ProjectRepositoryProtocol {
         try saveIfNeeded()
     }
 
+    func permanentlyDeleteEntries(_ entries: [Entry]) throws {
+        for entry in entries {
+            context.delete(entry)
+        }
+        try saveIfNeeded()
+    }
+
     func deleteProject(_ project: Project) throws {
         for entry in project.entries ?? [] {
             context.delete(entry)

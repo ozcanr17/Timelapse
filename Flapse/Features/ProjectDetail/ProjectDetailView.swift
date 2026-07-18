@@ -222,7 +222,12 @@ struct ProjectDetailView: View {
     private var captureCTA: some View {
         let due = isCaptureDue
         return Button {
-            if canAddEntry { activeCover = .capture } else { activeSheet = .paywall }
+            if canAddEntry {
+                CameraService.shared.prewarm(position: CameraCaptureViewModel.initialPosition(for: project.category))
+                activeCover = .capture
+            } else {
+                activeSheet = .paywall
+            }
         } label: {
             HStack(spacing: 14) {
                 ZStack {

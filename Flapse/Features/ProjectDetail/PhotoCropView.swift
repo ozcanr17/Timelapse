@@ -19,7 +19,6 @@ struct PhotoEditView: View {
     @State private var cropDisplaySize = CGSize(width: 1, height: 1)
     @State private var cropAspect: PhotoCropAspect = .free
     @State private var freeAspect: CGFloat?
-    @State private var freeAspectBase: CGFloat?
     @State private var operations: [PhotoEditOperation] = []
     @State private var isProcessing = false
 
@@ -54,12 +53,6 @@ struct PhotoEditView: View {
                             .allowsHitTesting(false)
                     }
                     .frame(width: frame.width, height: frame.height)
-                    .overlay(alignment: .bottomTrailing) {
-                        if cropAspect == .free {
-                            freeCropHandle(imageSize: image.size)
-                                .offset(x: 10, y: 10)
-                        }
-                    }
                     .position(x: proxy.size.width / 2, y: proxy.size.height / 2)
                     .onAppear { cropDisplaySize = frame }
                     .onChange(of: frame) { _, newFrame in cropDisplaySize = newFrame }
@@ -115,6 +108,9 @@ struct PhotoEditView: View {
     private var editorControls: some View {
         VStack(spacing: 12) {
             aspectControl
+            if cropAspect == .free, let image {
+                freeAspectControl(imageSize: image.size)
+            }
             HStack(spacing: 10) {
                 editControl("Yatay Çevir", icon: "arrow.left.and.right") {
                     apply(.horizontalFlip)
@@ -194,17 +190,27 @@ struct PhotoEditView: View {
         .disabled(image == nil || isProcessing)
     }
 
-    private func freeCropHandle(imageSize: CGSize) -> some View {
-        Image(systemName: "arrow.up.left.and.arrow.down.right")
-            .font(.system(size: 13, weight: .bold))
-            .foregroundStyle(.white)
-            .frame(width: 34, height: 34)
-            .background(theme.accent, in: Circle())
-            .overlay(Circle().strokeBorder(.white.opacity(0.8), lineWidth: 1))
-            .shadow(color: .black.opacity(0.35), radius: 4, y: 2)
-            .contentShape(Circle())
-            .gesture(freeCropGesture(imageSize: imageSize))
-            .accessibilityLabel(Text("Serbest"))
+    private func freeAspectControl(imageSize: CGSize) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: "rectangle.portrait")
+                .foregroundStyle(.white.opacity(0.65))
+            Slider(
+                value: Binding(
+                    get: { freeAspect ?? imageSize.width / max(imageSize.height, 1) },
+                    set: {
+                        freeAspect = PhotoCropGeometry.clampedFreeAspect($0)
+                        zoom = 1
+                        offset = .zero
+                    }
+                ),
+                in: 0.4...2.5
+            )
+            .tint(theme.accent)
+            Image(systemName: "rectangle")
+                .foregroundStyle(.white.opacity(0.65))
+        }
+        .padding(.horizontal, 4)
+        .accessibilityLabel(Text("Serbest"))
     }
 
     private var gridLines: some View {
@@ -287,7 +293,6 @@ struct PhotoEditView: View {
             offset = .zero
             cropAspect = .free
             freeAspect = nil
-            freeAspectBase = nil
             operations = []
         }
     }
@@ -299,22 +304,6 @@ struct PhotoEditView: View {
             zoom = 1
             offset = .zero
         }
-    }
-
-    private func freeCropGesture(imageSize: CGSize) -> some Gesture {
-        DragGesture(minimumDistance: 0)
-            .onChanged { value in
-                if freeAspectBase == nil {
-                    freeAspectBase = cropAspect.ratio(for: imageSize, freeAspect: freeAspect)
-                }
-                freeAspect = PhotoCropGeometry.adjustedFreeAspect(
-                    base: freeAspectBase ?? 1,
-                    translation: value.translation
-                )
-                zoom = 1
-                offset = .zero
-            }
-            .onEnded { _ in freeAspectBase = nil }
     }
 
     private func apply(_ operation: PhotoEditOperation) {
@@ -399,10 +388,8 @@ enum PhotoCropAspect: String, CaseIterable, Identifiable {
 }
 
 enum PhotoCropGeometry {
-    static func adjustedFreeAspect(base: CGFloat, translation: CGSize) -> CGFloat {
-        let horizontal = max(0.2, 1 + translation.width / 180)
-        let vertical = max(0.2, 1 + translation.height / 180)
-        return min(max(base * horizontal / vertical, 0.4), 2.5)
+    static func clampedFreeAspect(_ value: CGFloat) -> CGFloat {
+        min(max(value, 0.4), 2.5)
     }
 
     static func maxOffset(imageSize: CGSize, displaySize: CGSize, zoom: CGFloat) -> CGSize {

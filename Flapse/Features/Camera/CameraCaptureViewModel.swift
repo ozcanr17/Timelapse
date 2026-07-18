@@ -101,10 +101,10 @@ final class CameraCaptureViewModel {
         }
     }
 
-    func setZoomFactor(_ factor: CGFloat) {
+    func setZoomFactor(_ factor: CGFloat, smoothly: Bool = true) {
         guard state == .ready else { return }
         zoomFactor = min(max(factor, zoomRange.lowerBound), zoomRange.upperBound)
-        camera.setZoomFactor(zoomFactor)
+        camera.setZoomFactor(zoomFactor, smoothly: smoothly)
     }
 
     /// Fotoğrafı çeker; yeniden çekimde mevcut karenin fotoğrafını değiştirir,
@@ -164,7 +164,7 @@ final class CameraCaptureViewModel {
         zoomFactor = capabilities.factor
     }
 
-    private static func initialPosition(for category: ProjectCategory) -> AVCaptureDevice.Position {
+    static func initialPosition(for category: ProjectCategory) -> AVCaptureDevice.Position {
         switch category {
         case .selfPortrait, .hairAndBeard: .front
         default: .back

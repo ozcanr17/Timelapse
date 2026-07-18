@@ -96,6 +96,20 @@ final class ProjectRepositoryTests: XCTestCase {
         XCTAssertEqual(remainingEntries, 0)
     }
 
+    func test_birdenFazlaSilinenCekim_birlikteKaliciSilinir() throws {
+        let project = try repository.createProject(title: "Sakal", category: .hairAndBeard, cadence: .daily)
+        let first = Entry()
+        let second = Entry()
+        try repository.addEntries([first, second], to: project)
+        try repository.deleteEntry(first)
+        try repository.deleteEntry(second)
+
+        try repository.permanentlyDeleteEntries([first, second])
+
+        let remainingEntries = try container.mainContext.fetchCount(FetchDescriptor<Entry>())
+        XCTAssertEqual(remainingEntries, 0)
+    }
+
     func test_suresiDolanSilinmisCekim_temizlenir() throws {
         let project = try repository.createProject(title: "Sakal", category: .hairAndBeard, cadence: .daily)
         let entry = Entry()

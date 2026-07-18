@@ -16,9 +16,19 @@ struct RecentlyDeletedView: View {
 
     private struct DeletedPhotoItem: Identifiable, Equatable {
         let id: UUID
+        let projectID: UUID
         let projectTitle: String
+        let category: ProjectCategory
         let capturedAt: Date
+        let deletedAt: Date
         let daysRemaining: Int
+    }
+
+    private struct DeletedPhotoGroup: Identifiable {
+        let id: UUID
+        let title: String
+        let category: ProjectCategory
+        let items: [DeletedPhotoItem]
     }
 
     @Query(filter: #Predicate<Project> { $0.deletedAt != nil }) private var projects: [Project]
@@ -31,6 +41,7 @@ struct RecentlyDeletedView: View {
 
     @State private var pendingEraseID: UUID?
     @State private var pendingPhotoEraseID: UUID?
+    @State private var pendingPhotoGroupEraseID: UUID?
     @State private var pendingTimelapseEraseID: UUID?
 
     private var deletedItems: [DeletedItem] {
@@ -53,16 +64,36 @@ struct RecentlyDeletedView: View {
     private var deletedPhotoItems: [DeletedPhotoItem] {
         deletedPhotos
             .filter { !$0.isDeleted && $0.project?.deletedAt == nil }
-            .map { entry in
+            .compactMap { entry in
+                guard let project = entry.project else { return nil }
                 let elapsed = Calendar.current.dateComponents(
                     [.day], from: entry.deletedAt ?? Date(), to: Date()
                 ).day ?? 0
                 return DeletedPhotoItem(
                     id: entry.id,
-                    projectTitle: entry.project?.title ?? String(localized: "Proje", bundle: .appLanguage),
+                    projectID: project.id,
+                    projectTitle: project.title,
+                    category: project.category,
                     capturedAt: entry.capturedAt,
+                    deletedAt: entry.deletedAt ?? .distantPast,
                     daysRemaining: max(0, 30 - elapsed)
                 )
+            }
+    }
+
+    private var deletedPhotoGroups: [DeletedPhotoGroup] {
+        Dictionary(grouping: deletedPhotoItems, by: \.projectID)
+            .compactMap { id, items in
+                guard let first = items.first else { return nil }
+                return DeletedPhotoGroup(
+                    id: id,
+                    title: first.projectTitle,
+                    category: first.category,
+                    items: items.sorted { $0.deletedAt > $1.deletedAt }
+                )
+            }
+            .sorted {
+                ($0.items.first?.deletedAt ?? .distantPast) > ($1.items.first?.deletedAt ?? .distantPast)
             }
     }
 
@@ -96,8 +127,14 @@ struct RecentlyDeletedView: View {
             }
             if !deletedPhotoItems.isEmpty {
                 Section {
-                    ForEach(deletedPhotoItems) { item in
-                        photoRow(item)
+                    ForEach(deletedPhotoGroups) { group in
+                        DisclosureGroup {
+                            ForEach(group.items) { item in
+                                photoRow(item)
+                            }
+                        } label: {
+                            photoGroupHeader(group)
+                        }
                     }
                 } header: {
                     Text("Fotoğraflar")
@@ -136,12 +173,47 @@ struct RecentlyDeletedView: View {
             Button("Vazgeç", role: .cancel) { pendingPhotoEraseID = nil }
         }
         .confirmationDialog(
+            pendingPhotoGroup?.title ?? "Fotoğraflar",
+            isPresented: photoGroupEraseBinding,
+            titleVisibility: .visible
+        ) {
+            Button("Kalıcı Olarak Sil", role: .destructive) { confirmPhotoGroupErase() }
+            Button("Vazgeç", role: .cancel) { pendingPhotoGroupEraseID = nil }
+        }
+        .confirmationDialog(
             "Bu timelapse kalıcı olarak silinsin mi?",
             isPresented: timelapseEraseBinding,
             titleVisibility: .visible
         ) {
             Button("Kalıcı Olarak Sil", role: .destructive) { confirmTimelapseErase() }
             Button("Vazgeç", role: .cancel) { pendingTimelapseEraseID = nil }
+        }
+    }
+
+    private func photoGroupHeader(_ group: DeletedPhotoGroup) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: Theme.icon(for: group.category))
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(Theme.accent(for: group.category))
+                .frame(width: 38, height: 38)
+                .background(Theme.accent(for: group.category).opacity(0.12), in: Circle())
+            VStack(alignment: .leading, spacing: 2) {
+                Text(group.title)
+                    .font(Theme.headline(15))
+                    .foregroundStyle(theme.ink)
+                Label("\(group.items.count)", systemImage: "photo.stack")
+                    .font(Theme.caption(12))
+                    .foregroundStyle(theme.inkMuted)
+            }
+            Spacer()
+            Button(role: .destructive) {
+                pendingPhotoGroupEraseID = group.id
+            } label: {
+                Image(systemName: "trash")
+                    .font(.system(size: 15, weight: .semibold))
+            }
+            .buttonStyle(.borderless)
+            .accessibilityLabel(Text("Kalıcı Olarak Sil"))
         }
     }
 
@@ -183,9 +255,6 @@ struct RecentlyDeletedView: View {
         HStack(spacing: 12) {
             DeletedPhotoThumbnail(entryID: item.id)
             VStack(alignment: .leading, spacing: 2) {
-                Text(item.projectTitle)
-                    .font(Theme.headline(15))
-                    .foregroundStyle(theme.ink)
                 Text(item.capturedAt, format: .dateTime.day().month().year())
                     .font(Theme.caption(12))
                     .foregroundStyle(theme.inkMuted)
@@ -223,6 +292,24 @@ struct RecentlyDeletedView: View {
             get: { pendingPhotoEraseID != nil },
             set: { if !$0 { pendingPhotoEraseID = nil } }
         )
+    }
+
+    private var pendingPhotoGroup: DeletedPhotoGroup? {
+        deletedPhotoGroups.first { $0.id == pendingPhotoGroupEraseID }
+    }
+
+    private var photoGroupEraseBinding: Binding<Bool> {
+        Binding(
+            get: { pendingPhotoGroupEraseID != nil },
+            set: { if !$0 { pendingPhotoGroupEraseID = nil } }
+        )
+    }
+
+    private func confirmPhotoGroupErase() {
+        guard let group = pendingPhotoGroup else { return }
+        pendingPhotoGroupEraseID = nil
+        let entries = group.items.compactMap { fetchEntry($0.id) }
+        try? ProjectRepository(context: modelContext).permanentlyDeleteEntries(entries)
     }
 
     private func fetchEntry(_ id: UUID) -> Entry? {

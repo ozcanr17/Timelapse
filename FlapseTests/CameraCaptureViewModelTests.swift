@@ -16,6 +16,7 @@ final class CameraCaptureViewModelTests: XCTestCase {
         var captureError: Error?
         var switchError: Error?
         var zoom = CameraZoomCapabilities(factor: 1, range: 1...5)
+        var lastZoomWasSmooth = false
         private(set) var startedPositions: [AVCaptureDevice.Position] = []
         private(set) var switchedPositions: [AVCaptureDevice.Position] = []
 
@@ -29,7 +30,10 @@ final class CameraCaptureViewModelTests: XCTestCase {
             switchedPositions.append(position)
         }
         func zoomCapabilities() async -> CameraZoomCapabilities { zoom }
-        func setZoomFactor(_ factor: CGFloat) { zoom = CameraZoomCapabilities(factor: factor, range: zoom.range) }
+        func setZoomFactor(_ factor: CGFloat, smoothly: Bool) {
+            zoom = CameraZoomCapabilities(factor: factor, range: zoom.range)
+            lastZoomWasSmooth = smoothly
+        }
         func capturePhoto() async throws -> Data {
             if let captureError { throw captureError }
             return photoToReturn
@@ -128,6 +132,7 @@ final class CameraCaptureViewModelTests: XCTestCase {
         XCTAssertEqual(viewModel.zoomRange, 0.5...5)
         XCTAssertEqual(viewModel.zoomFactor, 5)
         XCTAssertEqual(camera.zoom.factor, 5)
+        XCTAssertTrue(camera.lastZoomWasSmooth)
     }
 
     // MARK: - Yeniden çekim

@@ -81,22 +81,10 @@ final class PhotoImageEditorTests: XCTestCase {
         XCTAssertEqual(rect.maxX, 168.75, accuracy: 0.001)
     }
 
-    func testFreeCropHandleChangesAndClampsAspect() {
-        let wider = PhotoCropGeometry.adjustedFreeAspect(
-            base: 1,
-            translation: CGSize(width: 90, height: 0)
-        )
-        let taller = PhotoCropGeometry.adjustedFreeAspect(
-            base: 1,
-            translation: CGSize(width: 0, height: 90)
-        )
-
-        XCTAssertGreaterThan(wider, 1)
-        XCTAssertLessThan(taller, 1)
-        XCTAssertEqual(
-            PhotoCropGeometry.adjustedFreeAspect(base: 1, translation: CGSize(width: 10_000, height: 0)),
-            2.5
-        )
+    func testFreeCropAspectClampsToEditorRange() {
+        XCTAssertEqual(PhotoCropGeometry.clampedFreeAspect(0.1), 0.4)
+        XCTAssertEqual(PhotoCropGeometry.clampedFreeAspect(1.2), 1.2)
+        XCTAssertEqual(PhotoCropGeometry.clampedFreeAspect(8), 2.5)
     }
 
     func testRenderAppliesEditToOriginalPixelDimensions() throws {

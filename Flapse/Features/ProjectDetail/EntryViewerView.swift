@@ -180,6 +180,7 @@ struct EntryViewerView: View {
 
     private var bottomBar: some View {
         Button {
+            CameraService.shared.prewarm(position: CameraCaptureViewModel.initialPosition(for: project.category))
             retakeTarget = selectedEntry
         } label: {
             Label("Yeniden Çek", systemImage: "camera.badge.clock")

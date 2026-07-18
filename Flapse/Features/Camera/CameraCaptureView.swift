@@ -156,7 +156,7 @@ private struct CameraSessionView: View {
         MagnificationGesture()
             .onChanged { value in
                 if zoomGestureBase == nil { zoomGestureBase = viewModel.zoomFactor }
-                viewModel.setZoomFactor((zoomGestureBase ?? 1) * value)
+                viewModel.setZoomFactor((zoomGestureBase ?? 1) * value, smoothly: false)
             }
             .onEnded { _ in zoomGestureBase = nil }
     }

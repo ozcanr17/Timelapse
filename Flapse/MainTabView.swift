@@ -106,6 +106,7 @@ struct MainTabView: View {
             if let due = capturableProjects.first(where: { $0.isCaptureDue() }) {
                 let count = due.sortedEntries.filter { !$0.isDeleted }.count
                 if FeatureGate.canAddEntry(isPro: store.isPro, currentEntryCount: count) {
+                    CameraService.shared.prewarm(position: CameraCaptureViewModel.initialPosition(for: due.category))
                     captureRoute = .project(due)
                 } else {
                     showPaywall = true
@@ -321,7 +322,7 @@ struct MainTabView: View {
     private func beginCapture(_ project: Project) {
         let count = project.sortedEntries.filter { !$0.isDeleted }.count
         if FeatureGate.canAddEntry(isPro: store.isPro, currentEntryCount: count) {
-            CameraService.shared.prewarm()
+            CameraService.shared.prewarm(position: CameraCaptureViewModel.initialPosition(for: project.category))
             captureRoute = .project(project)
         } else {
             showPaywall = true
@@ -336,7 +337,7 @@ struct MainTabView: View {
         pendingCapture = nil
         let count = project.sortedEntries.filter { !$0.isDeleted }.count
         if FeatureGate.canAddEntry(isPro: store.isPro, currentEntryCount: count) {
-            CameraService.shared.prewarm()
+            CameraService.shared.prewarm(position: CameraCaptureViewModel.initialPosition(for: project.category))
             captureRoute = .project(project)
         } else {
             CameraService.shared.stop()
@@ -358,6 +359,9 @@ struct QuickCaptureSheet: View {
                 ForEach(projects) { project in
                     let accent = Theme.accent(for: project.category)
                     Button {
+                        CameraService.shared.prewarm(
+                            position: CameraCaptureViewModel.initialPosition(for: project.category)
+                        )
                         onSelect(project)
                     } label: {
                         HStack(spacing: 14) {
