@@ -1,7 +1,8 @@
 import SwiftUI
 import PhotosUI
-import CoreTransferable
+import Photos
 import UniformTypeIdentifiers
+import UIKit
 
 struct PhotoImportSheet: View {
 
@@ -14,7 +15,8 @@ struct PhotoImportSheet: View {
     @Environment(\.theme) private var theme
 
     @State private var viewModel: PhotoImportViewModel
-    @State private var selection: [PhotosPickerItem] = []
+    @State private var selection: [SelectedPhoto] = []
+    @State private var isShowingPhotoPicker = false
 
     private let mode: Mode
     private let maxSelection: Int?
@@ -33,9 +35,15 @@ struct PhotoImportSheet: View {
     }
 
     private func close() {
-        guard let project = viewModel.completedProject else { return }
+        let project: Project
+        switch mode {
+        case .existing(let existing):
+            project = existing
+        case .newProject:
+            guard let completed = viewModel.completedProject else { return }
+            project = completed
+        }
         onFinished(project)
-        dismiss()
     }
 
     var body: some View {
@@ -53,6 +61,17 @@ struct PhotoImportSheet: View {
                 }
         }
         .interactiveDismissDisabled(viewModel.phase == .importing)
+        .fullScreenCover(isPresented: $isShowingPhotoPicker) {
+            SystemPhotoPicker(maxSelectionCount: maxSelection) { photos in
+                if !photos.isEmpty {
+                    selection = photos
+                }
+                isShowingPhotoPicker = false
+            } onCancel: {
+                isShowingPhotoPicker = false
+            }
+            .ignoresSafeArea()
+        }
     }
 
     @ViewBuilder
@@ -85,14 +104,9 @@ struct PhotoImportSheet: View {
     }
 
     private var picker: some View {
-        PhotosPicker(
-            selection: $selection,
-            maxSelectionCount: maxSelection,
-            selectionBehavior: .continuousAndOrdered,
-            matching: .images,
-            preferredItemEncoding: .current,
-            photoLibrary: .shared()
-        ) {
+        Button {
+            isShowingPhotoPicker = true
+        } label: {
             HStack(spacing: 14) {
                 Image(systemName: selection.isEmpty ? "photo.stack" : "checkmark.circle.fill")
                     .font(.system(size: 22, weight: .semibold))
@@ -255,14 +269,9 @@ struct PhotoImportSheet: View {
     private func startImport() {
         let sources = selection.enumerated().map { index, item in
             PhotoImportSource(
-                assetIdentifier: item.itemIdentifier,
+                assetIdentifier: item.assetIdentifier,
                 selectionIndex: index,
-                load: {
-                    if let photo = try? await item.loadTransferable(type: ImportedPhoto.self) {
-                        return photo.data
-                    }
-                    return (try? await item.loadTransferable(type: Data.self)) ?? nil
-                }
+                load: { await item.loadData() }
             )
         }
         Task {
@@ -281,15 +290,67 @@ struct PhotoImportSheet: View {
     }
 }
 
-private struct ImportedPhoto: Transferable {
-    let data: Data
+private struct SelectedPhoto: Identifiable, @unchecked Sendable {
+    let id = UUID()
+    let assetIdentifier: String?
+    let provider: NSItemProvider
 
-    static var transferRepresentation: some TransferRepresentation {
-        DataRepresentation(importedContentType: .image) { data in
-            ImportedPhoto(data: data)
+    func loadData() async -> Data? {
+        let typeIdentifier = provider.registeredTypeIdentifiers.first {
+            UTType($0)?.conforms(to: .image) == true
+        } ?? UTType.image.identifier
+
+        return await withCheckedContinuation { continuation in
+            provider.loadDataRepresentation(forTypeIdentifier: typeIdentifier) { data, _ in
+                if let data {
+                    continuation.resume(returning: data)
+                    return
+                }
+                provider.loadFileRepresentation(forTypeIdentifier: typeIdentifier) { url, _ in
+                    continuation.resume(returning: url.flatMap { try? Data(contentsOf: $0) })
+                }
+            }
         }
-        FileRepresentation(importedContentType: .image) { received in
-            ImportedPhoto(data: try Data(contentsOf: received.file))
+    }
+}
+
+private struct SystemPhotoPicker: UIViewControllerRepresentable {
+    let maxSelectionCount: Int?
+    let onComplete: ([SelectedPhoto]) -> Void
+    let onCancel: () -> Void
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(parent: self)
+    }
+
+    func makeUIViewController(context: Context) -> PHPickerViewController {
+        var configuration = PHPickerConfiguration(photoLibrary: .shared())
+        configuration.filter = .images
+        configuration.selectionLimit = maxSelectionCount ?? 0
+        configuration.selection = .ordered
+        configuration.preferredAssetRepresentationMode = .current
+        let picker = PHPickerViewController(configuration: configuration)
+        picker.delegate = context.coordinator
+        return picker
+    }
+
+    func updateUIViewController(_ uiViewController: PHPickerViewController, context: Context) {}
+
+    final class Coordinator: NSObject, PHPickerViewControllerDelegate {
+        private let parent: SystemPhotoPicker
+
+        init(parent: SystemPhotoPicker) {
+            self.parent = parent
+        }
+
+        func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
+            guard !results.isEmpty else {
+                parent.onCancel()
+                return
+            }
+            parent.onComplete(results.map {
+                SelectedPhoto(assetIdentifier: $0.assetIdentifier, provider: $0.itemProvider)
+            })
         }
     }
 }

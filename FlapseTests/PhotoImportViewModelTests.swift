@@ -106,4 +106,16 @@ final class PhotoImportViewModelTests: XCTestCase {
             XCTFail("failed bekleniyordu: \(vm.phase)")
         }
     }
+
+    func test_mevcutProje_basariliAktarim_tamamlananProjeyiKorur() async {
+        let repository = FakeRepository()
+        let importer = FakeImporter(entriesToReturn: [Entry(imageData: Data([1]))])
+        let vm = PhotoImportViewModel(repository: repository, importer: importer)
+        let existing = Project(title: "Mevcut")
+
+        await vm.importInto(project: existing, sources: [source()])
+
+        XCTAssertEqual(vm.completedProject?.id, existing.id)
+        XCTAssertEqual(vm.phase, .done(1))
+    }
 }

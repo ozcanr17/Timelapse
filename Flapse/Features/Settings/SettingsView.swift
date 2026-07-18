@@ -6,6 +6,8 @@ import CloudKit
 
 struct SettingsView: View {
 
+    var onWelcomeFinished: () -> Void = {}
+
     @Environment(StoreService.self) private var store
     @Environment(\.openURL) private var openURL
     @Environment(\.theme) private var theme
@@ -24,6 +26,7 @@ struct SettingsView: View {
     @State private var showPaywall = false
     @State private var cloudAccountAvailable: Bool?
     @State private var showWelcome = false
+    @State private var shouldReturnHomeAfterWelcome = false
     @State private var devTapCount = 0
     @State private var adminSignInMessage: String?
     @State private var isConfirmingAccountDeletion = false
@@ -271,8 +274,11 @@ struct SettingsView: View {
         .sheet(isPresented: $showPaywall) {
             PaywallView(store: store)
         }
-        .fullScreenCover(isPresented: $showWelcome) {
-            WelcomeView { showWelcome = false }
+        .fullScreenCover(isPresented: $showWelcome, onDismiss: finishWelcomeReplay) {
+            WelcomeView {
+                shouldReturnHomeAfterWelcome = true
+                showWelcome = false
+            }
         }
         .onChange(of: remindersEnabled) { _, enabled in
             if enabled {
@@ -313,6 +319,12 @@ struct SettingsView: View {
         } message: {
             Text("Apple ile giriş kaydın bu cihazdan ve iCloud'dan kaldırılır. Projelerin ve fotoğrafların cihazında kalır.")
         }
+    }
+
+    private func finishWelcomeReplay() {
+        guard shouldReturnHomeAfterWelcome else { return }
+        shouldReturnHomeAfterWelcome = false
+        onWelcomeFinished()
     }
 
     @ViewBuilder

@@ -60,6 +60,9 @@ final class FlapseUITests: XCTestCase {
         showWelcomeButton.tap()
         XCTAssertTrue(app.buttons["Başla"].waitForExistence(timeout: 5))
         app.buttons["Başla"].tap()
+        XCTAssertTrue(app.buttons["homeTab"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["homeTab"].isSelected)
+        settingsButton.tap()
         XCTAssertTrue(app.navigationBars["Ayarlar"].waitForExistence(timeout: 5))
 
         let darkroomTheme = app.buttons["theme-darkroom"]

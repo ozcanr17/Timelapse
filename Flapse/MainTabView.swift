@@ -73,7 +73,7 @@ struct MainTabView: View {
                 pane { SavedTimelapsesView() }
                     .tag(Tab.saved)
 
-                pane { SettingsView() }
+                pane { SettingsView(onWelcomeFinished: { tab = .home }) }
                     .tag(Tab.settings)
             }
             .toolbar(.hidden, for: .tabBar)
