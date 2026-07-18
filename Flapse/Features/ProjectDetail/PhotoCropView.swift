@@ -17,6 +17,7 @@ struct PhotoEditView: View {
     @State private var offset: CGSize = .zero
     @State private var dragBase: CGSize?
     @State private var cropDisplaySize = CGSize(width: 1, height: 1)
+    @State private var cropAspect: PhotoCropAspect = .free
     @State private var hasTransformChanges = false
     @State private var isProcessing = false
 
@@ -25,7 +26,10 @@ struct PhotoEditView: View {
             Color.black.ignoresSafeArea()
             GeometryReader { proxy in
                 if let image {
-                    let frame = cropFrame(in: proxy.size, aspect: image.size.width / image.size.height)
+                    let frame = cropFrame(
+                        in: proxy.size,
+                        aspect: cropAspect.ratio(for: image.size)
+                    )
                     ZStack {
                         Image(uiImage: image)
                             .resizable()
@@ -36,8 +40,8 @@ struct PhotoEditView: View {
                             .frame(width: frame.width, height: frame.height)
                             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                             .contentShape(Rectangle())
-                            .gesture(zoomGesture(frame: frame))
-                            .simultaneousGesture(panGesture(frame: frame))
+                            .gesture(zoomGesture(frame: frame, imageSize: image.size))
+                            .simultaneousGesture(panGesture(frame: frame, imageSize: image.size))
                             .allowsHitTesting(!isProcessing)
                         RoundedRectangle(cornerRadius: 12, style: .continuous)
                             .strokeBorder(.white.opacity(0.35), lineWidth: 1)
@@ -49,7 +53,7 @@ struct PhotoEditView: View {
                     }
                     .position(x: proxy.size.width / 2, y: proxy.size.height / 2)
                     .onAppear { cropDisplaySize = frame }
-                    .onChange(of: proxy.size) { cropDisplaySize = frame }
+                    .onChange(of: frame) { _, newFrame in cropDisplaySize = newFrame }
                 } else {
                     ProgressView()
                         .tint(.white)
@@ -57,7 +61,8 @@ struct PhotoEditView: View {
                 }
             }
             .padding(.horizontal, 20)
-            .padding(.vertical, 90)
+            .padding(.top, 70)
+            .padding(.bottom, 225)
 
             VStack {
                 HStack {
@@ -78,6 +83,7 @@ struct PhotoEditView: View {
                 .padding(.top, 8)
                 Spacer()
                 VStack(spacing: 16) {
+                    aspectControl
                     HStack(spacing: 12) {
                         editControl("Yatay Çevir", icon: "arrow.left.and.right") {
                             apply(.horizontalFlip)
@@ -113,7 +119,38 @@ struct PhotoEditView: View {
     }
 
     private var hasChanges: Bool {
-        hasTransformChanges || zoom > 1.001 || offset != .zero
+        hasTransformChanges || cropAspect != .free || zoom > 1.001 || offset != .zero
+    }
+
+    private var aspectControl: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Label("Oran", systemImage: "aspectratio")
+                .font(Theme.caption(12))
+                .foregroundStyle(.white.opacity(0.7))
+            ScrollView(.horizontal) {
+                HStack(spacing: 8) {
+                    ForEach(PhotoCropAspect.allCases) { option in
+                        Button {
+                            selectAspect(option)
+                        } label: {
+                            Text(option.title)
+                                .font(Theme.caption(13))
+                                .foregroundStyle(cropAspect == option ? .white : .white.opacity(0.72))
+                                .padding(.horizontal, 13)
+                                .frame(height: 34)
+                                .background(
+                                    cropAspect == option ? theme.accent : .white.opacity(0.1),
+                                    in: Capsule()
+                                )
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(image == nil || isProcessing)
+                    }
+                }
+            }
+            .scrollIndicators(.hidden)
+        }
+        .padding(.horizontal, 20)
     }
 
     private func editControl(_ title: LocalizedStringKey, icon: String, action: @escaping () -> Void) -> some View {
@@ -160,27 +197,28 @@ struct PhotoEditView: View {
         return CGSize(width: width, height: width / aspect)
     }
 
-    private func maxOffset(frame: CGSize) -> CGSize {
-        CGSize(
-            width: frame.width * (zoom - 1) / 2,
-            height: frame.height * (zoom - 1) / 2
+    private func maxOffset(frame: CGSize, imageSize: CGSize) -> CGSize {
+        PhotoCropGeometry.maxOffset(
+            imageSize: imageSize,
+            displaySize: frame,
+            zoom: zoom
         )
     }
 
-    private func clampOffset(_ proposed: CGSize, frame: CGSize) -> CGSize {
-        let limit = maxOffset(frame: frame)
+    private func clampOffset(_ proposed: CGSize, frame: CGSize, imageSize: CGSize) -> CGSize {
+        let limit = maxOffset(frame: frame, imageSize: imageSize)
         return CGSize(
             width: min(max(proposed.width, -limit.width), limit.width),
             height: min(max(proposed.height, -limit.height), limit.height)
         )
     }
 
-    private func zoomGesture(frame: CGSize) -> some Gesture {
+    private func zoomGesture(frame: CGSize, imageSize: CGSize) -> some Gesture {
         MagnificationGesture()
             .onChanged { value in
                 if pinchBase == nil { pinchBase = zoom }
                 zoom = min(max((pinchBase ?? 1) * value, 1), 6)
-                offset = clampOffset(offset, frame: frame)
+                offset = clampOffset(offset, frame: frame, imageSize: imageSize)
             }
             .onEnded { _ in
                 pinchBase = nil
@@ -193,7 +231,7 @@ struct PhotoEditView: View {
             }
     }
 
-    private func panGesture(frame: CGSize) -> some Gesture {
+    private func panGesture(frame: CGSize, imageSize: CGSize) -> some Gesture {
         DragGesture()
             .onChanged { value in
                 if dragBase == nil { dragBase = offset }
@@ -202,7 +240,7 @@ struct PhotoEditView: View {
                     width: base.width + value.translation.width,
                     height: base.height + value.translation.height
                 )
-                offset = clampOffset(proposed, frame: frame)
+                offset = clampOffset(proposed, frame: frame, imageSize: imageSize)
             }
             .onEnded { _ in dragBase = nil }
     }
@@ -212,7 +250,16 @@ struct PhotoEditView: View {
             image = originalImage
             zoom = 1
             offset = .zero
+            cropAspect = .free
             hasTransformChanges = false
+        }
+    }
+
+    private func selectAspect(_ aspect: PhotoCropAspect) {
+        withAnimation(.easeInOut(duration: 0.22)) {
+            cropAspect = aspect
+            zoom = 1
+            offset = .zero
         }
     }
 
@@ -246,26 +293,82 @@ struct PhotoEditView: View {
     }
 
     private func editedData(from image: UIImage) -> Data? {
-        guard zoom > 1.001 || offset != .zero else {
+        guard cropAspect != .free || zoom > 1.001 || offset != .zero else {
             return image.jpegData(compressionQuality: 0.9)
         }
         guard let cgImage = image.cgImage else { return nil }
-        let width = CGFloat(cgImage.width)
-        let height = CGFloat(cgImage.height)
-        let visibleWidth = width / zoom
-        let visibleHeight = height / zoom
-        let centerX = width / 2 - offset.width / zoom * (width / max(cropDisplaySize.width, 1))
-        let centerY = height / 2 - offset.height / zoom * (height / max(cropDisplaySize.height, 1))
-        var rect = CGRect(
-            x: centerX - visibleWidth / 2,
-            y: centerY - visibleHeight / 2,
-            width: visibleWidth,
-            height: visibleHeight
+        let imageSize = CGSize(width: cgImage.width, height: cgImage.height)
+        let rect = PhotoCropGeometry.cropRect(
+            imageSize: imageSize,
+            cropAspect: cropAspect.ratio(for: imageSize),
+            zoom: zoom,
+            offset: offset,
+            displaySize: cropDisplaySize
         )
-        rect.origin.x = min(max(rect.origin.x, 0), width - rect.width)
-        rect.origin.y = min(max(rect.origin.y, 0), height - rect.height)
         guard let croppedCG = cgImage.cropping(to: rect.integral) else { return nil }
         return UIImage(cgImage: croppedCG, scale: 1, orientation: .up).jpegData(compressionQuality: 0.9)
+    }
+}
+
+enum PhotoCropAspect: String, CaseIterable, Identifiable {
+    case free
+    case nineSixteen
+    case fourThree
+    case threeFour
+    case sixteenNine
+
+    var id: String { rawValue }
+
+    var title: LocalizedStringKey {
+        switch self {
+        case .free: "Serbest"
+        case .nineSixteen: "9:16"
+        case .fourThree: "4:3"
+        case .threeFour: "3:4"
+        case .sixteenNine: "16:9"
+        }
+    }
+
+    func ratio(for imageSize: CGSize) -> CGFloat {
+        switch self {
+        case .free: imageSize.width / max(imageSize.height, 1)
+        case .nineSixteen: 9.0 / 16.0
+        case .fourThree: 4.0 / 3.0
+        case .threeFour: 3.0 / 4.0
+        case .sixteenNine: 16.0 / 9.0
+        }
+    }
+}
+
+enum PhotoCropGeometry {
+    static func maxOffset(imageSize: CGSize, displaySize: CGSize, zoom: CGFloat) -> CGSize {
+        guard imageSize.width > 0, imageSize.height > 0,
+              displaySize.width > 0, displaySize.height > 0 else { return .zero }
+        let scale = max(displaySize.width / imageSize.width, displaySize.height / imageSize.height)
+        return CGSize(
+            width: max(0, imageSize.width * scale * zoom - displaySize.width) / 2,
+            height: max(0, imageSize.height * scale * zoom - displaySize.height) / 2
+        )
+    }
+
+    static func cropRect(
+        imageSize: CGSize,
+        cropAspect: CGFloat,
+        zoom: CGFloat,
+        offset: CGSize,
+        displaySize: CGSize
+    ) -> CGRect {
+        guard imageSize.width > 0, imageSize.height > 0,
+              cropAspect > 0, displaySize.width > 0, displaySize.height > 0 else { return .zero }
+        let scale = max(displaySize.width / imageSize.width, displaySize.height / imageSize.height)
+        let effectiveScale = scale * max(zoom, 1)
+        let visibleWidth = min(imageSize.width, displaySize.width / effectiveScale)
+        let visibleHeight = min(imageSize.height, visibleWidth / cropAspect)
+        let centerX = imageSize.width / 2 - offset.width / effectiveScale
+        let centerY = imageSize.height / 2 - offset.height / effectiveScale
+        let originX = min(max(centerX - visibleWidth / 2, 0), imageSize.width - visibleWidth)
+        let originY = min(max(centerY - visibleHeight / 2, 0), imageSize.height - visibleHeight)
+        return CGRect(x: originX, y: originY, width: visibleWidth, height: visibleHeight)
     }
 }
 

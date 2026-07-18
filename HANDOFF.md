@@ -18,7 +18,7 @@ xcodebuild build -scheme Flapse -destination 'platform=iOS Simulator,name=iPhone
 xcodebuild test  -scheme Flapse -destination 'platform=iOS Simulator,name=iPhone 17' -only-testing:FlapseTests
 ```
 
-**123 unit tests**, all green at handoff. The full UI journey test is also green. Use **iPhone 17** as destination ("iPhone 16" matches multiple runtimes and errors). SourceKit diagnostics in the IDE harness are noise ("No such module UIKit") — trust `xcodebuild` only. Release build has **zero warnings**.
+**126 unit tests**, all green at handoff. The full UI journey test is also green. Use **iPhone 17** as destination ("iPhone 16" matches multiple runtimes and errors). SourceKit diagnostics in the IDE harness are noise ("No such module UIKit") — trust `xcodebuild` only. Release build has **zero warnings**.
 
 ## House rules (from the owner — do not break)
 
@@ -53,7 +53,7 @@ The app is **technically ready for App Store submission**. State of the pipeline
 - **Reliable presentation/import flows**: Settings welcome replay now dismisses and selects Home; completed manual imports return to their selected project without racing SwiftUI's dismiss environment; a full-screen system `PHPickerViewController` supports ordered current-format transfers plus file/data fallbacks, including hidden-library selection after system authentication without requesting broad library access.
 - **Entry-level Recently Deleted**: deleting a frame now soft-deletes it for 30 days. Settings shows deleted photos alongside projects and saved videos with restore/permanent-delete actions; automatic purging and thumbnail invalidation are covered by repository tests.
 - **Couple-mode identity order**: smart group alignment compares on-device Vision face feature prints against the first reliable two-face frame and mirrors confidently swapped frames so the same people remain on their reference sides. No identity or biometric data leaves the device or is persisted.
-- **Unified photo editor**: the former crop action opens a native editor with crop/pan/zoom, horizontal flip, vertical flip, 90-degree rotation, reset and save/cancel semantics. Pixel tests cover transform direction and dimensions.
+- **Unified photo editor**: the former crop action opens a native editor with free, 9:16, 4:3, 3:4 and 16:9 crop ratios plus pan/zoom, horizontal flip, vertical flip, 90-degree rotation, reset and save/cancel semantics. Pixel and crop-geometry tests cover transform direction, dimensions, centered crops and pan bounds.
 - **Localization audit**: the app and Info.plist catalogs have complete translations for all 11 target locales, with stale machine-state entries resolved and recent jargon rewritten naturally per language.
 - **Widget redesign**: Today supports small/medium, Activity supports small/medium/large, Projects supports medium/large, and the Lock Screen widget supports inline/rectangular/circular families. The new layouts use adaptive system surfaces, restrained accent color and photo-first compositions without glow.
 - **Final Flapse rename**: the app target/module/product, source/test folders, Xcode project and scheme are named Flapse. The GitHub repository, Pages paths and local repository folder also use Flapse; domain terms such as `TimelapseComposer` and fixed StoreKit product identifiers intentionally remain unchanged.

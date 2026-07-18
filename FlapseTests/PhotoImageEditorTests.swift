@@ -31,6 +31,56 @@ final class PhotoImageEditorTests: XCTestCase {
         XCTAssertEqual(rotated.size.height, 2)
     }
 
+    func testNineSixteenCropUsesCenteredPortraitRect() {
+        let rect = PhotoCropGeometry.cropRect(
+            imageSize: CGSize(width: 400, height: 300),
+            cropAspect: 9.0 / 16.0,
+            zoom: 1,
+            offset: .zero,
+            displaySize: CGSize(width: 180, height: 320)
+        )
+
+        XCTAssertEqual(rect.width, 168.75, accuracy: 0.001)
+        XCTAssertEqual(rect.height, 300, accuracy: 0.001)
+        XCTAssertEqual(rect.midX, 200, accuracy: 0.001)
+        XCTAssertEqual(rect.midY, 150, accuracy: 0.001)
+    }
+
+    func testSixteenNineCropUsesCenteredLandscapeRect() {
+        let rect = PhotoCropGeometry.cropRect(
+            imageSize: CGSize(width: 300, height: 400),
+            cropAspect: 16.0 / 9.0,
+            zoom: 1,
+            offset: .zero,
+            displaySize: CGSize(width: 320, height: 180)
+        )
+
+        XCTAssertEqual(rect.width, 300, accuracy: 0.001)
+        XCTAssertEqual(rect.height, 168.75, accuracy: 0.001)
+        XCTAssertEqual(rect.midX, 150, accuracy: 0.001)
+        XCTAssertEqual(rect.midY, 200, accuracy: 0.001)
+    }
+
+    func testCropOffsetMovesVisibleRectWithoutLeavingImage() {
+        let imageSize = CGSize(width: 400, height: 300)
+        let displaySize = CGSize(width: 180, height: 320)
+        let limit = PhotoCropGeometry.maxOffset(
+            imageSize: imageSize,
+            displaySize: displaySize,
+            zoom: 1
+        )
+        let rect = PhotoCropGeometry.cropRect(
+            imageSize: imageSize,
+            cropAspect: 9.0 / 16.0,
+            zoom: 1,
+            offset: CGSize(width: limit.width, height: 0),
+            displaySize: displaySize
+        )
+
+        XCTAssertEqual(rect.minX, 0, accuracy: 0.001)
+        XCTAssertEqual(rect.maxX, 168.75, accuracy: 0.001)
+    }
+
     private func horizontalPattern() -> UIImage {
         image(width: 2, height: 1) { context in
             context.setFillColor(UIColor.red.cgColor)
