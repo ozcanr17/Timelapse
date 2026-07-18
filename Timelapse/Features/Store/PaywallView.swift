@@ -42,6 +42,7 @@ struct PaywallView: View {
                         Image(systemName: "xmark.circle.fill")
                             .foregroundStyle(.white.opacity(0.85))
                     }
+                    .accessibilityLabel(Text("Kapat"))
                 }
             }
             .task { await viewModel.load() }
@@ -243,6 +244,8 @@ private struct PackageCard: View {
             )
         }
         .buttonStyle(.plain)
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }
 

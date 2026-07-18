@@ -25,7 +25,7 @@ struct LogoMark: View {
             .rotationEffect(innerRotation)
         }
         .frame(width: size, height: size)
-        .shadow(color: Theme.brand.opacity(0.35), radius: size * 0.12, x: 0, y: size * 0.05)
+        .shadow(color: .black.opacity(0.12), radius: size * 0.1, x: 0, y: size * 0.04)
     }
 }
 

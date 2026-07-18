@@ -7,7 +7,7 @@ Flapse is a native iOS app for building day-by-day "progress" timelapses — a b
 - **Platform:** iOS 17.0+ (iPhone & iPad) · widget extension + Live Activity included
 - **Stack:** Swift, SwiftUI, SwiftData, CloudKit, StoreKit 2, AVFoundation, Vision, WidgetKit, ActivityKit, Apple Foundation Models — no third-party dependencies
 - **Languages:** Turkish, English, German, Spanish, French, Portuguese, Hindi, Simplified Chinese, Japanese, Arabic, Russian, Korean — switchable in-app, live, no restart
-- **Bundle ID:** `rozcan.Timelapse` · **Version:** 1.0 (1)
+- **Bundle ID:** `rozcan.Flapse` · **Version:** 1.0 (1)
 
 ---
 
@@ -29,14 +29,14 @@ Four tabs (Home, Projects, Saved, Settings) plus a center capture button live in
 ### Projects
 Each project is a full-bleed photo card showing its latest frame, title, frame count, and cadence. Projects with an active day streak get an **animated fire border** burning around the card edge. In-progress and finished (unsaved) timelapse renders appear at the top of the same list; an unsaved render stays until you open and check it. Toolbar: *create project from Photos* (bulk import) and *new project*.
 
-Creating a project requires **Sign in with Apple** (a friendly gate sheet explains that projects link to the account and return on any device).
+Creating a project offers **Sign in with Apple**, but sign-in is optional: people can continue without an account. Signed-in projects can use the user's own iCloud features.
 
 **Categories:** Me, Person, Child, Plant, Hair & Beard, Pet, Fitness, Pregnancy, Baby, Outfit, Couple Mode (Pro), Other — each with its own accent color and icon.
 
 ### Camera — smart-aligned capture
 The capture screen overlays your **previous frame as a translucent guide** so every photo lines up. Couple-mode projects show a split guide for two people. Location (optional) tags each frame with the place it was taken. After a capture, milestone toasts celebrate round numbers ("100. kare! 🎉", "30 gün seri! 🔥").
 
-**Auto-sorting (Pro):** shoot from the tab bar without picking a project. After the shutter you first **review the photo** (use / retake / cancel). Vision then classifies the subject — face-crop signatures learn from a project's previous photos (top-3 nearest matching) so recognition sharpens over time — and **always asks for confirmation** with the photo attached: add to the suggested project, or pick/create another.
+**Auto-sorting (Pro):** shoot from the tab bar without picking a project. After the shutter you first **review the photo** (use / retake / cancel). Vision then suggests a project — face-crop signatures learn from previous photos using the top three nearest matches — and **always asks for confirmation** with the photo attached: accept the suggestion, or pick/create another project.
 
 ### Project detail
 A hero image, stats (total frames, day streak, days running), collaborator names for shared projects, and a timeline of every frame with month filters. Opened photos support **pinch-to-zoom, pan, and double-tap zoom**. Toolbar: **share** (choose *Streak Card*, *Before & After card*, or a **9:16 Story Card** sized for Reels/TikTok — Day 1 on top, today below, day-count badge in the middle), **edit project**, **add photos** (bulk import with EXIF date ordering), and **Capture Together invite**.
@@ -52,7 +52,7 @@ Tap *Create Timelapse* and the studio opens with a live preview that resizes to 
 | **Zoom** | slider 0.5×–2×, scaled around center |
 | **Aspect** | 3:4 · 9:16 · 9:18 · 1:1 · 4:3 · 16:9 |
 | **Music** | off · 5 bundled royalty-free moods (Calm, Joyful, Upbeat, Melancholic, Cinematic) · any audio file from Files (Pro) |
-| **Beat sync** | photo cuts land exactly on the beat; bundled tracks use exact grids, imported songs use onset detection with tempo-estimation fallback; **drop detection** places your biggest visual change on the chorus hit |
+| **Beat sync** | exactly one photo cut lands on each beat; bundled tracks use exact grids, while imported songs use onset detection with tempo-estimation fallback |
 | **Transition** | cut · smooth eased crossfade · **Fluid (AI, Pro)** — Vision optical-flow morphing that warps faces and scenes between frames |
 | **Alignment** | **Smart is on by default for everyone** (eye-locked face tracking, torso pose for fitness/outfit, belly for pregnancy, group for couples, saliency fallback) · off · **Manual per-photo (Pro)** — page through every frame, drag / pinch-zoom / two-finger-rotate each one, or Apply to All |
 | **Overlays** | date stamp, custom note, corner positions; free tier carries the FLAPSE mark |

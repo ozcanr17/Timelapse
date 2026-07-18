@@ -344,6 +344,7 @@ struct GlassSurface: ViewModifier {
 
 struct PrimaryButtonStyle: ButtonStyle {
     @Environment(\.theme) private var theme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
@@ -354,8 +355,8 @@ struct PrimaryButtonStyle: ButtonStyle {
             .liquidGlassStyle(cornerRadius: 14, tint: theme.accent, interactive: true)
             .shadow(color: .black.opacity(0.12), radius: 8, x: 0, y: 3)
             .opacity(configuration.isPressed ? 0.85 : 1)
-            .scaleEffect(configuration.isPressed ? 0.98 : 1)
-            .animation(.spring(response: 0.3, dampingFraction: 0.8), value: configuration.isPressed)
+            .scaleEffect(configuration.isPressed && !reduceMotion ? 0.98 : 1)
+            .animation(reduceMotion ? nil : .spring(response: 0.3, dampingFraction: 0.8), value: configuration.isPressed)
     }
 }
 
@@ -364,11 +365,13 @@ extension ButtonStyle where Self == PrimaryButtonStyle {
 }
 
 struct GlassIconButtonStyle: ButtonStyle {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .scaleEffect(configuration.isPressed ? 0.88 : 1)
+            .scaleEffect(configuration.isPressed && !reduceMotion ? 0.88 : 1)
             .opacity(configuration.isPressed ? 0.75 : 1)
-            .animation(.spring(response: 0.28, dampingFraction: 0.75), value: configuration.isPressed)
+            .animation(reduceMotion ? nil : .spring(response: 0.28, dampingFraction: 0.75), value: configuration.isPressed)
     }
 }
 

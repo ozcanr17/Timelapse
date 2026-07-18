@@ -1,73 +1,62 @@
-# Timelapse — Project Handoff
+# Flapse — Project Handoff
 
-Quick brief to resume development on another Claude/dev account. For full detail read `README.md` (architecture, monetization, compliance). This file is the fast on-ramp.
+This is a compact on-ramp. `HANDOFF.md` is the authoritative live-status document; also read `README.md` for the feature tour and `YAYINLAMA_REHBERI.md` for App Store publishing.
 
-## What it is
-Native **iOS** app (Swift 5 / SwiftUI / SwiftData / StoreKit 2 / AVFoundation), no third-party deps. "One photo a day" progress timelapses (beard, baby, plant, fitness…) with ghost-alignment capture, streaks/reminders, and MP4 export with overlays. Freemium + Pro (subscription + lifetime).
+## Project
 
-- **Bundle ID:** `rozcan.Timelapse` · **Version:** 1.0 (1) · **Min iOS:** 17.0
-- **Owner:** Rıdvan Özcan
+Native iOS 17+ app built with Swift, SwiftUI, SwiftData, StoreKit 2, AVFoundation, Vision, ActivityKit, WidgetKit, CloudKit, and on-device Foundation Models. There are no third-party dependencies.
 
-## Where the code is
-- **Repo:** https://github.com/ozcanr17/Timelapse.git (branch `main`)
-- **Local path (this machine):** `/Users/ridvanozcan/Desktop/workspace/Timelapse`
-- **State at handoff:** working tree clean, `main` == `origin/main`, latest commit `b330c66` ("Softer glass + readable labels, WYSIWYG manual align, short smooth transitions, no-delay capture").
+- Display name: **Flapse**
+- App bundle ID: `rozcan.Flapse`
+- Widget bundle ID: `rozcan.Flapse.Widgets`
+- Team: `5ZYCHZ39QV`
+- Repository: `https://github.com/ozcanr17/Timelapse.git`, branch `main`
 
-On the other account just:
-```bash
-git clone https://github.com/ozcanr17/Timelapse.git
-cd Timelapse
-open Timelapse.xcodeproj
-```
+## Build and test
 
-## Build & test
-Needs full **Xcode 16+** (not just Command Line Tools).
-```bash
+```sh
 export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
-
-# Run
-xcodebuild build -scheme Timelapse -destination 'platform=iOS Simulator,name=iPhone 16'
-# Test (74 unit tests: monetization, store override, export/speed, composer, cadence, repo, VMs)
-xcodebuild test  -scheme Timelapse -destination 'platform=iOS Simulator,name=iPhone 16'
+xcodebuild build -scheme Timelapse -destination 'platform=iOS Simulator,name=iPhone 17'
+xcodebuild test -scheme Timelapse -destination 'platform=iOS Simulator,name=iPhone 17' -only-testing:TimelapseTests
 ```
-The shared **Timelapse** scheme references `Products.storekit`, so StoreKit prices work in the Simulator with no App Store Connect setup.
 
-## Layout (start here)
-- `TimelapseApp.swift` — entry, container + `StoreService` wiring
-- `Models/CoreModels.swift` — `@Model Project` → `Entry`
-- `Data/ProjectRepository.swift` — all persistence goes through this protocol (never SwiftData from views)
-- `Features/Camera/` — capture + ghost alignment
-- `Features/Export/` — `TimelapseComposer` (AVAssetWriter H.264), `FrameAligner` (Vision), export sheet/VM
-- `Features/Store/` — `FeatureGate` (pure monetization rules), `StoreService` (`isPro` = single source of truth), paywall
-- `Theme.swift` — design system / selectable palettes
+Use iPhone 17 because the iPhone 16 destination can match multiple runtimes. Trust `xcodebuild`, not SourceKit diagnostics from the IDE harness. The suite currently contains 112 unit tests.
 
-Pattern: MVVM + protocol-backed services; view models are `@Observable @MainActor`; services injected so tests use fakes.
+## Architecture
 
-## House rules (important)
-- **No comments in code.** Do not add code comments.
-- **English-only identifiers.** UI is localized TR (base) + EN via `.xcstrings`.
-- Minimal token usage; work step-by-step and wait for "continue" before large moves.
+- `Timelapse/TimelapseApp.swift`: app entry and service wiring
+- `Timelapse/Models/CoreModels.swift`: SwiftData project and entry models
+- `Timelapse/Data/ProjectRepository.swift`: persistence boundary
+- `Timelapse/Features/Camera/`: capture and ghost alignment
+- `Timelapse/Features/Export/`: composition, alignment, background rendering, and Live Activity
+- `Timelapse/Features/Store/`: StoreKit, entitlement state, feature gating, and paywall
+- `Timelapse/Features/Auth/`: optional Sign in with Apple and account-data deletion
+- `Widgets/`: widgets and render Live Activity UI
 
-## Gotchas
-- **Sign in with Apple + iCloud/CloudKit** are wired in `Timelapse.entitlements` but **disabled** (not referenced by `CODE_SIGN_ENTITLEMENTS`) — they need a **paid** Apple Developer account. Re-enable via target → Signing & Capabilities (see README §5).
-- **DEBUG-only Pro backdoor:** Settings → tap version number 7× → "Geliştirici" → "Pro'yu Test Et." Does not exist in Release.
-- Pro unlock in Release comes **only** from verified StoreKit purchases (`#if DEBUG` guards the override) — keep it that way (App Store 2.3.1 / 3.1.1).
-- Two `CameraCaptureViewModelTests` can crash under simulator diagnostics if `xcode-select` points at CLT; point it at Xcode.app for a clean run.
+The project uses MVVM with protocol-backed services and injectable fakes/in-memory stores for tests. Views must not bypass `ProjectRepository` to perform persistence work.
 
-## Pricing / products
-| Product ID | Type | Price |
-|---|---|---|
-| `com.ridvan.timelapse.pro.monthly` | Auto-renewable (P1M) | $0.50/mo |
-| `com.ridvan.timelapse.pro.lifetime` | Non-consumable | $3.99 |
+## House rules
 
-Mirror these in App Store Connect for production.
+- Do not add code comments.
+- Use English identifiers.
+- Turkish UI literals are localization keys. Every new user-facing string needs all 11 target translations in `Timelapse/Localizable.xcstrings`; widget strings also belong in `Widgets/Localizable.xcstrings`.
+- Load `.agents/skills/tasteskill/SKILL.md` before changing SwiftUI presentation.
+- Build, run unit tests, and push `main` after each approved batch.
 
-## Open / next up (pre-submission checklist)
-- [ ] Replace `LegalLinks.privacyPolicy` / `.support` with **hosted** URLs; enter Privacy Policy URL in App Store Connect.
-- [ ] Create the two IAP products in App Store Connect (matching IDs/prices); submit with the build.
-- [ ] Fill App Privacy questionnaire (Data Not Collected if photos stay local/iCloud-only, no analytics).
-- [ ] Review notes explaining freemium limits + how to trigger the paywall.
-- [ ] Confirm screenshots, app icon, age rating.
+## Monetization
 
-## Free-tier limits (in `FeatureGate`)
-1 active project · 14 photos (15th → paywall) · 720×960 export with "TIMELAPSE" watermark. Pro removes all + 4K/no-watermark, iCloud backup, Smart Alignment, Couple Mode, Capture Together.
+Free users get one active project and 14 visible frames. Smart alignment is free and enabled by default; manual per-frame alignment is Pro.
+
+| Product ID | Type | Reference price |
+|---|---|---:|
+| `com.ridvan.timelapse.pro.monthly` | Auto-renewable, one month | $0.49 |
+| `com.ridvan.timelapse.pro.yearly` | Auto-renewable, one year | $4.99 |
+| `com.ridvan.timelapse.pro.lifetime` | Non-consumable | $9.99 |
+
+Both subscriptions promise a seven-day free trial, which must be configured identically in App Store Connect. Release entitlements come only from verified StoreKit purchases; the admin grant remains an intentional UserDefaults/iCloud KVS mechanism.
+
+## Current release state
+
+Code-side App Store preparation, signing, archive, export, legal pages, metadata drafts, optional sign-in, account deletion, and review compliance are complete. Remaining work is in App Store Connect: agreements/tax/banking, app and IAP records, screenshots and metadata, CloudKit Production deployment, upload, TestFlight, and review submission.
+
+Do not claim or reintroduce drop detection. Do not list smart alignment as a Pro benefit. Keep `RenderActivityAttributes` byte-identical in the app and widget targets, and preserve the foreground retry for background hardware-encoder failures.

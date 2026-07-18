@@ -115,6 +115,7 @@ struct ContentView: View {
 private struct LaunchSplashView: View {
 
     @Environment(\.theme) private var theme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var isAnimating = false
 
     var body: some View {
@@ -127,8 +128,8 @@ private struct LaunchSplashView: View {
 
             VStack(spacing: 20) {
                 LogoMark(size: 108)
-                    .rotationEffect(.degrees(isAnimating ? 0 : -120))
-                    .scaleEffect(isAnimating ? 1 : 0.6)
+                    .rotationEffect(.degrees(isAnimating || reduceMotion ? 0 : -120))
+                    .scaleEffect(isAnimating || reduceMotion ? 1 : 0.6)
                     .opacity(isAnimating ? 1 : 0)
 
                 Text("Flapse")
@@ -136,7 +137,7 @@ private struct LaunchSplashView: View {
                     .foregroundStyle(theme.ink)
                     .opacity(isAnimating ? 1 : 0)
             }
-            .animation(.spring(response: 0.8, dampingFraction: 0.7), value: isAnimating)
+            .animation(reduceMotion ? nil : .spring(response: 0.8, dampingFraction: 0.7), value: isAnimating)
         }
         .onAppear { isAnimating = true }
     }

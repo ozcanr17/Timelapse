@@ -5,6 +5,7 @@ struct WelcomeView: View {
     let onFinish: () -> Void
 
     @Environment(\.theme) private var theme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var isAnimating = false
 
     var body: some View {
@@ -18,10 +19,10 @@ struct WelcomeView: View {
             ScrollView {
                 VStack(spacing: 0) {
                     LogoMark(size: 112)
-                        .rotationEffect(.degrees(isAnimating ? 0 : -120))
-                        .scaleEffect(isAnimating ? 1 : 0.6)
+                        .rotationEffect(.degrees(isAnimating || reduceMotion ? 0 : -120))
+                        .scaleEffect(isAnimating || reduceMotion ? 1 : 0.6)
                         .opacity(isAnimating ? 1 : 0)
-                        .animation(.spring(response: 0.9, dampingFraction: 0.7), value: isAnimating)
+                        .animation(reduceMotion ? nil : .spring(response: 0.9, dampingFraction: 0.7), value: isAnimating)
                         .padding(.top, 48)
 
                     Text("Flapse")
@@ -67,7 +68,7 @@ struct WelcomeView: View {
                         .padding(.bottom, 24)
                 }
                 .opacity(isAnimating ? 1 : 0)
-                .animation(.easeOut(duration: 0.6).delay(0.15), value: isAnimating)
+                .animation(reduceMotion ? nil : .easeOut(duration: 0.6).delay(0.15), value: isAnimating)
             }
             .scrollBounceBehavior(.basedOnSize)
         }
