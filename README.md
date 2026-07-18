@@ -79,12 +79,13 @@ Membership (paywall/restore) · Account (Sign in with Apple) · feature toggles 
 ### Notifications & reminders
 Daily reminders arrive **with yesterday's photo attached** and a day-numbered title ("Day 41 — keep going"), scheduled per project cadence at your chosen hour.
 
-### Widgets (all 2×2)
-1. **Streak** — gradient flame, bold day counter, today's capture status chip
-2. **Activity** — 6×6 photo grid of the last 5 weeks
-3. **Projects** — latest covers of up to 4 projects; empty slots become streak/status tiles
+### Widgets
+1. **Today** — small and medium home-screen layouts for the current streak, capture status, and latest project photo
+2. **Activity** — small, medium, and large photo calendars covering the last 5 weeks
+3. **Projects** — medium and large editorial grids using the latest project covers
+4. **Lock Screen** — inline (4×1), rectangular (2×1), and circular (1×1) layouts for streak and capture status
 
-All widgets share a modern dark-gradient look with a brand-green glow, and **tapping any widget deep-links straight into the camera** for today's due project (`flapse://capture`).
+The widgets use adaptive system surfaces, restrained accents, and the user's photos as the visual focus. **Tapping any widget deep-links straight into the camera** for today's due project (`flapse://capture`).
 
 ### Monetization
 Freemium. **Flapse Pro** — monthly ($0.49), yearly ($4.99, best value), both with a **7-day free trial**, or lifetime ($9.99) — unlocks unlimited projects/frames, manual per-photo alignment, fluid AI transitions, music & beat sync, Capture Together, iCloud backup, auto-sorting, unlimited import, and watermark-free 4K export. Smart alignment is free for everyone. Prices come from App Store Connect (Turkey overrides: 24,99₺ / 249,99₺ / 499,99₺).
@@ -93,10 +94,10 @@ Freemium. **Flapse Pro** — monthly ($0.49), yearly ($4.99, best value), both w
 
 ## Development
 
-Open `Timelapse.xcodeproj` (Xcode 16+), scheme **Timelapse**. StoreKit testing is preconfigured via `Products.storekit`.
+Open `Flapse.xcodeproj` (Xcode 16+), scheme **Timelapse**. StoreKit testing is preconfigured via `Products.storekit`.
 
 ```sh
-xcodebuild -project Timelapse.xcodeproj -scheme Timelapse \
+xcodebuild -project Flapse.xcodeproj -scheme Flapse \
   -destination 'platform=iOS Simulator,name=iPhone 17' test
 ```
 

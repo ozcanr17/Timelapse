@@ -22,13 +22,13 @@ uygulamayı gönderebilirsin; onaylandığı andan itibaren komisyon %30 yerine 
 GitHub Pages açıldı (`main` / `/docs`); üç adres de canlı ve Flapse markalı sayfaları sunuyor
 (uygulamadaki `LegalLinks` bunlara işaret eder):
 
-- Gizlilik: `https://ozcanr17.github.io/Timelapse/privacy`
-- Destek: `https://ozcanr17.github.io/Timelapse/support`
-- Site (outro QR kodu): `https://ozcanr17.github.io/Timelapse/`
+- Gizlilik: `https://ozcanr17.github.io/Flapse/privacy`
+- Destek: `https://ozcanr17.github.io/Flapse/support`
+- Site (outro QR kodu): `https://ozcanr17.github.io/Flapse/`
 
 App Store Connect'e yazılacak adresler bunlardır.
 
-> ⚠️ `https://github.com/ozcanr17/Timelapse/tree/main/docs/privacy` gibi repo adresleri
+> ⚠️ `https://github.com/ozcanr17/Flapse/tree/main/docs/privacy` gibi repo adresleri
 > **kullanılmaz** — GitHub'ın kod görünümüdür; politika metnini değil dosya listesini gösterir.
 
 Not: Sayfa içerikleri `docs/privacy/index.html` ve `docs/support/index.html` dosyalarından
@@ -45,7 +45,7 @@ Organizer (veya `-exportArchive`) dağıtım imzasına otomatik çevirir. CLI il
 istersen repo kökünde hazır `ExportOptions.plist` var:
 
 ```sh
-xcodebuild archive -scheme Timelapse -destination 'generic/platform=iOS' \
+xcodebuild archive -scheme Flapse -destination 'generic/platform=iOS' \
   -archivePath build/Flapse.xcarchive -allowProvisioningUpdates
 xcodebuild -exportArchive -archivePath build/Flapse.xcarchive \
   -exportOptionsPlist ExportOptions.plist -exportPath build/export -allowProvisioningUpdates
@@ -90,8 +90,8 @@ için: App Store Connect → Users and Access → **Sandbox Testers**'dan test h
    Simülatörde `Cmd+S` ile alınır.
 2. **Description / Keywords / Promotional Text**: Türkçe + istenen diğer diller.
    (`docs/AppStoreListing.md` taslak metinleri içerir.)
-3. **Support URL**: `https://ozcanr17.github.io/Timelapse/support`
-   **Privacy Policy URL**: `https://ozcanr17.github.io/Timelapse/privacy`
+3. **Support URL**: `https://ozcanr17.github.io/Flapse/support`
+   **Privacy Policy URL**: `https://ozcanr17.github.io/Flapse/privacy`
 4. **App Privacy** anketi: **"Data Not Collected"** — uygulamada hiç ağ kodu yok, beyan doğru.
    (CloudKit kullanıcının kendi iCloud'udur; Apple bunu geliştiricinin topladığı veri saymaz.)
 5. **Age rating**: tüm sorulara "None" → 4+.

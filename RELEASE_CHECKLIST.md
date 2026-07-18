@@ -8,12 +8,12 @@
 - [x] `ITSAppUsesNonExemptEncryption = NO` (skips export-compliance prompt)
 - [x] All permission strings present and localized via xcstrings (camera, photo add, photo read, location)
 - [x] No third-party dependencies, no networking, no analytics — "Data Not Collected" is accurate
-- [x] Unit tests green (`TimelapseTests`)
+- [x] Unit tests green (`FlapseTests`)
 - [x] CI workflow (`.github/workflows/ci.yml`)
 
 ## Before archiving (owner)
 - [ ] Enable GitHub Pages (main `/docs`) so privacy/support/QR links resolve:
-      `gh api repos/ozcanr17/Timelapse/pages -X POST -f "source[branch]=main" -f "source[path]=/docs"`
+      `gh api repos/ozcanr17/Flapse/pages -X POST -f "source[branch]=main" -f "source[path]=/docs"`
 - [ ] Paid Apple Developer account active; team selected in Signing & Capabilities
 - [ ] Decide Sign in with Apple + CloudKit: either enable capabilities on the App ID
       or strip the entitlements before archiving (unprovisioned entitlements fail App Store signing)
@@ -25,8 +25,8 @@
 - [ ] Create IAPs matching `Products.storekit`: `com.ridvan.timelapse.pro.monthly` / `.yearly` / `.lifetime`
 - [ ] Attach subscription group + localized IAP metadata; submit IAPs with the binary
 - [ ] Privacy questionnaire: **Data Not Collected**
-- [ ] Privacy Policy URL: https://ozcanr17.github.io/Timelapse/privacy
-- [ ] Support URL: https://ozcanr17.github.io/Timelapse/support
+- [ ] Privacy Policy URL: https://ozcanr17.github.io/Flapse/privacy
+- [ ] Support URL: https://ozcanr17.github.io/Flapse/support
 - [ ] Screenshots: 6.9" and 6.5" iPhone sets (portrait); optional iPad 13" set
 - [ ] App Review notes: mention paywall restore flow, that no account is required,
       and how to trigger a render for the Live Activity

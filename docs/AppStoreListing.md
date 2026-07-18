@@ -62,7 +62,7 @@ FLAPSE PRO
 Unlimited projects and frames, smart & per-photo alignment, fluid AI transitions, music and beat sync, Capture Together, iCloud backup, auto-sorting and watermark-free 4K export. Subscriptions start with a 7-day free trial; a one-time lifetime unlock is also available.
 
 Terms of Use: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
-Privacy Policy: https://ozcanr17.github.io/Timelapse/privacy
+Privacy Policy: https://ozcanr17.github.io/Flapse/privacy
 ```
 
 ### Turkish

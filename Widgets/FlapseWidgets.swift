@@ -1,359 +1,516 @@
 import WidgetKit
 import SwiftUI
 
-let widgetBrandGreen = Color(red: 0.37, green: 0.85, blue: 0.54)
-let widgetCaptureURL = URL(string: "flapse://capture")
+private let flapseAccent = Color(red: 0.22, green: 0.67, blue: 0.38)
+private let captureURL = URL(string: "flapse://capture")
 
-struct WidgetBackground: View {
-    var body: some View {
-        ZStack {
-            LinearGradient(
-                colors: [Color(red: 0.08, green: 0.09, blue: 0.11), Color(red: 0.04, green: 0.05, blue: 0.06)],
-                startPoint: .top, endPoint: .bottom
-            )
-            RadialGradient(
-                colors: [widgetBrandGreen.opacity(0.16), .clear],
-                center: .topLeading, startRadius: 0, endRadius: 200
-            )
-        }
-    }
-}
-
-struct StreakEntry: TimelineEntry {
+struct FlapseWidgetEntry: TimelineEntry {
     let date: Date
     let streak: Int
     let capturedToday: Bool
     let dueCount: Int
+    let projects: [(title: String, image: UIImage?)]
+    let activityImages: [Int: UIImage]
 }
 
-struct StreakProvider: TimelineProvider {
-    private var shared: UserDefaults? { UserDefaults(suiteName: "group.rozcan.Flapse") }
-
-    private func currentEntry() -> StreakEntry {
-        let defaults = shared
-        return StreakEntry(
-            date: Date(),
-            streak: defaults?.integer(forKey: "widget.streak") ?? 0,
-            capturedToday: defaults?.bool(forKey: "widget.capturedToday") ?? false,
-            dueCount: defaults?.integer(forKey: "widget.dueCount") ?? 0
+struct FlapseProvider: TimelineProvider {
+    func placeholder(in context: Context) -> FlapseWidgetEntry {
+        FlapseWidgetEntry(
+            date: .now,
+            streak: 12,
+            capturedToday: false,
+            dueCount: 1,
+            projects: [(String(localized: "Flapse"), nil)],
+            activityImages: [:]
         )
     }
 
-    func placeholder(in context: Context) -> StreakEntry {
-        StreakEntry(date: Date(), streak: 5, capturedToday: false, dueCount: 1)
+    func getSnapshot(in context: Context, completion: @escaping (FlapseWidgetEntry) -> Void) {
+        completion(context.isPreview ? placeholder(in: context) : currentEntry())
     }
 
-    func getSnapshot(in context: Context, completion: @escaping (StreakEntry) -> Void) {
-        completion(currentEntry())
+    func getTimeline(in context: Context, completion: @escaping (Timeline<FlapseWidgetEntry>) -> Void) {
+        let refresh = Calendar.current.nextDate(
+            after: .now,
+            matching: DateComponents(hour: 0, minute: 5),
+            matchingPolicy: .nextTime
+        ) ?? Date.now.addingTimeInterval(1800)
+        completion(Timeline(entries: [currentEntry()], policy: .after(refresh)))
     }
 
-    func getTimeline(in context: Context, completion: @escaping (Timeline<StreakEntry>) -> Void) {
-        let entry = currentEntry()
-        let nextMidnight = Calendar.current.nextDate(
-            after: Date(), matching: DateComponents(hour: 0, minute: 5), matchingPolicy: .nextTime
-        ) ?? Date().addingTimeInterval(3600)
-        completion(Timeline(entries: [entry], policy: .after(nextMidnight)))
+    private func currentEntry() -> FlapseWidgetEntry {
+        let defaults = WidgetStore.suite
+        let titles = defaults?.stringArray(forKey: "widget.projectTitles") ?? []
+        var activityImages: [Int: UIImage] = [:]
+        for offset in 0..<35 {
+            activityImages[offset] = WidgetStore.image("grid-\(offset).jpg")
+        }
+        return FlapseWidgetEntry(
+            date: .now,
+            streak: defaults?.integer(forKey: "widget.streak") ?? 0,
+            capturedToday: defaults?.bool(forKey: "widget.capturedToday") ?? false,
+            dueCount: defaults?.integer(forKey: "widget.dueCount") ?? 0,
+            projects: titles.enumerated().map { index, title in
+                (title, WidgetStore.image("project-\(index).jpg"))
+            },
+            activityImages: activityImages
+        )
     }
 }
 
-struct StreakWidgetView: View {
-    let entry: StreakEntry
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            HStack {
-                ZStack {
-                    Circle()
-                        .fill(.orange.opacity(entry.streak > 0 ? 0.2 : 0.08))
-                        .frame(width: 34, height: 34)
-                    Image(systemName: "flame.fill")
-                        .font(.system(size: 16, weight: .bold))
-                        .foregroundStyle(
-                            entry.streak > 0
-                            ? AnyShapeStyle(LinearGradient(colors: [.yellow, .orange, .red], startPoint: .top, endPoint: .bottom))
-                            : AnyShapeStyle(Color.white.opacity(0.35))
-                        )
-                }
-                Spacer()
-                Image(systemName: "camera.fill")
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(widgetBrandGreen.opacity(0.85))
-            }
-
-            Spacer(minLength: 6)
-
-            Text("\(entry.streak)")
-                .font(.system(size: 40, weight: .heavy, design: .rounded))
-                .monospacedDigit()
-                .foregroundStyle(.white)
-            Text("GÜN SERİSİ")
-                .font(.system(size: 10, weight: .bold))
-                .tracking(1.4)
-                .foregroundStyle(.white.opacity(0.55))
-
-            Spacer(minLength: 6)
-
-            statusChip
-        }
-        .widgetURL(widgetCaptureURL)
-        .containerBackground(for: .widget) { WidgetBackground() }
-    }
-
-    private var statusChip: some View {
-        let (icon, text, tint): (String, String, Color) =
-            entry.capturedToday ? ("checkmark.circle.fill", String(localized: "Bugün çekildi"), widgetBrandGreen)
-            : entry.dueCount > 0 ? ("camera.fill", String(localized: "Bugün \(entry.dueCount) çekim"), .orange)
-            : ("checkmark.circle", String(localized: "Bugün için tamam"), Color.white.opacity(0.6))
-        return HStack(spacing: 5) {
-            Image(systemName: icon).font(.system(size: 11, weight: .bold))
-            Text(text).font(.system(size: 11, weight: .semibold)).lineLimit(1).minimumScaleFactor(0.8)
-        }
-        .foregroundStyle(tint)
-        .padding(.horizontal, 9)
-        .padding(.vertical, 5)
-        .background(tint.opacity(0.14), in: Capsule())
-    }
-}
-
-struct FlapseStreakWidget: Widget {
-    var body: some WidgetConfiguration {
-        StaticConfiguration(kind: "FlapseStreakWidget", provider: StreakProvider()) { entry in
-            StreakWidgetView(entry: entry)
-        }
-        .configurationDisplayName("Flapse")
-        .description("Gün serin ve bugünün çekim durumu.")
-        .supportedFamilies([.systemSmall])
-    }
-}
-
-struct WidgetStore {
+enum WidgetStore {
     static let suite = UserDefaults(suiteName: "group.rozcan.Flapse")
-    static var dir: URL? {
+
+    private static var directory: URL? {
         FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.rozcan.Flapse")?
             .appendingPathComponent("widget", isDirectory: true)
     }
+
     static func image(_ name: String) -> UIImage? {
-        guard let dir else { return nil }
-        return UIImage(contentsOfFile: dir.appendingPathComponent(name).path)
+        guard let directory else { return nil }
+        return UIImage(contentsOfFile: directory.appendingPathComponent(name).path)
     }
 }
 
-struct GridEntry: TimelineEntry {
-    let date: Date
-    let images: [Int: UIImage]
-    let streak: Int
+private struct WidgetCanvas: View {
+    var body: some View {
+        Color(uiColor: .secondarySystemBackground)
+    }
 }
 
-struct GridProvider: TimelineProvider {
-    private func current() -> GridEntry {
-        var images: [Int: UIImage] = [:]
-        for offset in 0..<35 {
-            if let image = WidgetStore.image("grid-\(offset).jpg") { images[offset] = image }
+private struct FlapseWordmark: View {
+    var body: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "circle.inset.filled")
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(flapseAccent)
+            Text("Flapse")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.primary)
         }
-        return GridEntry(date: Date(), images: images, streak: WidgetStore.suite?.integer(forKey: "widget.streak") ?? 0)
-    }
-    func placeholder(in context: Context) -> GridEntry { GridEntry(date: Date(), images: [:], streak: 3) }
-    func getSnapshot(in context: Context, completion: @escaping (GridEntry) -> Void) { completion(current()) }
-    func getTimeline(in context: Context, completion: @escaping (Timeline<GridEntry>) -> Void) {
-        completion(Timeline(entries: [current()], policy: .after(Date().addingTimeInterval(1800))))
     }
 }
 
-struct PhotoGridWidgetView: View {
-    let entry: GridEntry
+private struct ProjectPhoto: View {
+    let project: (title: String, image: UIImage?)?
+    let cornerRadius: CGFloat
 
     var body: some View {
-        GeometryReader { geo in
-            let columns = 6
-            let rows = 6
-            let gap: CGFloat = 3
-            let cell = min(
-                (geo.size.width - gap * CGFloat(columns - 1)) / CGFloat(columns),
-                (geo.size.height - gap * CGFloat(rows - 1)) / CGFloat(rows)
+        ZStack(alignment: .bottomLeading) {
+            if let image = project?.image {
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFill()
+            } else {
+                Color(uiColor: .tertiarySystemFill)
+                Image(systemName: "photo")
+                    .font(.title2.weight(.regular))
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+            if let title = project?.title {
+                LinearGradient(
+                    colors: [.clear, .black.opacity(0.62)],
+                    startPoint: .center,
+                    endPoint: .bottom
+                )
+                Text(title)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.white)
+                    .lineLimit(1)
+                    .padding(10)
+            }
+        }
+        .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+    }
+}
+
+struct TodayWidgetView: View {
+    @Environment(\.widgetFamily) private var family
+    let entry: FlapseWidgetEntry
+
+    var body: some View {
+        Group {
+            if family == .systemMedium {
+                mediumLayout
+            } else {
+                smallLayout
+            }
+        }
+        .widgetURL(captureURL)
+        .containerBackground(for: .widget) { WidgetCanvas() }
+    }
+
+    private var smallLayout: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack {
+                FlapseWordmark()
+                Spacer()
+                statusSymbol
+            }
+            Spacer(minLength: 8)
+            HStack(alignment: .firstTextBaseline, spacing: 5) {
+                Text("\(entry.streak)")
+                    .font(.system(.largeTitle, design: .default, weight: .bold))
+                    .monospacedDigit()
+                Text("gün serisi")
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(.secondary)
+            }
+            Spacer(minLength: 8)
+            statusLabel
+        }
+    }
+
+    private var mediumLayout: some View {
+        HStack(spacing: 16) {
+            VStack(alignment: .leading, spacing: 0) {
+                FlapseWordmark()
+                Spacer()
+                Text(entry.capturedToday ? "Bugün için tamam" : "Flapse")
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(.secondary)
+                HStack(alignment: .firstTextBaseline, spacing: 5) {
+                    Text("\(entry.streak)")
+                        .font(.system(.title, design: .default, weight: .bold))
+                        .monospacedDigit()
+                    Text("gün serisi")
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(.secondary)
+                }
+                statusLabel
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            ProjectPhoto(project: entry.projects.first, cornerRadius: 16)
+                .frame(width: 132)
+        }
+    }
+
+    private var statusSymbol: some View {
+        Image(systemName: entry.capturedToday ? "checkmark.circle.fill" : "camera.circle.fill")
+            .font(.title3)
+            .foregroundStyle(entry.capturedToday ? flapseAccent : .orange)
+            .accessibilityHidden(true)
+    }
+
+    private var statusLabel: some View {
+        Label(statusText, systemImage: entry.capturedToday ? "checkmark" : "camera.fill")
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(entry.capturedToday ? flapseAccent : .primary)
+            .lineLimit(1)
+            .minimumScaleFactor(0.8)
+    }
+
+    private var statusText: String {
+        if entry.capturedToday {
+            return String(localized: "Bugün çekildi")
+        }
+        if entry.dueCount > 0 {
+            return String(localized: "Bugün \(entry.dueCount) çekim")
+        }
+        return String(localized: "Bugün için tamam")
+    }
+}
+
+struct FlapseTodayWidget: Widget {
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: "FlapseStreakWidget", provider: FlapseProvider()) { entry in
+            TodayWidgetView(entry: entry)
+        }
+        .configurationDisplayName("Flapse")
+        .description("Gün serin ve bugünün çekim durumu.")
+        .supportedFamilies([.systemSmall, .systemMedium])
+    }
+}
+
+struct ActivityWidgetView: View {
+    @Environment(\.widgetFamily) private var family
+    let entry: FlapseWidgetEntry
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: family == .systemSmall ? 10 : 14) {
+            HStack(alignment: .firstTextBaseline) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Aktivite")
+                        .font(family == .systemSmall ? .caption.weight(.semibold) : .headline)
+                    if family != .systemSmall {
+                        Text("Son 5 haftanın kareleri.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                Spacer()
+                Label("\(entry.streak)", systemImage: "flame.fill")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.orange)
+            }
+            ActivityGrid(
+                images: entry.activityImages,
+                columns: family == .systemSmall ? 5 : 7,
+                rows: family == .systemLarge ? 5 : family == .systemMedium ? 5 : 5
             )
-            VStack(spacing: gap) {
+            if family == .systemLarge {
+                Divider()
+                HStack(spacing: 12) {
+                    statusSummary
+                    Spacer()
+                    Text(entry.date, format: .dateTime.month(.wide).year())
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+        .widgetURL(captureURL)
+        .containerBackground(for: .widget) { WidgetCanvas() }
+    }
+
+    private var statusSummary: some View {
+        Label(
+            statusText,
+            systemImage: entry.capturedToday ? "checkmark.circle.fill" : "camera.fill"
+        )
+        .font(.caption.weight(.semibold))
+        .foregroundStyle(entry.capturedToday ? flapseAccent : .primary)
+    }
+
+    private var statusText: String {
+        if entry.capturedToday {
+            return String(localized: "Bugün çekildi")
+        }
+        if entry.dueCount > 0 {
+            return String(localized: "Bugün \(entry.dueCount) çekim")
+        }
+        return String(localized: "Bugün için tamam")
+    }
+}
+
+private struct ActivityGrid: View {
+    let images: [Int: UIImage]
+    let columns: Int
+    let rows: Int
+
+    var body: some View {
+        GeometryReader { geometry in
+            let spacing: CGFloat = 4
+            let cell = min(
+                (geometry.size.width - spacing * CGFloat(columns - 1)) / CGFloat(columns),
+                (geometry.size.height - spacing * CGFloat(rows - 1)) / CGFloat(rows)
+            )
+            VStack(spacing: spacing) {
                 ForEach(0..<rows, id: \.self) { row in
-                    HStack(spacing: gap) {
+                    HStack(spacing: spacing) {
                         ForEach(0..<columns, id: \.self) { column in
-                            let offset = 35 - (row * columns + column)
-                            cellView(offset: offset, size: cell)
+                            let index = row * columns + column
+                            let offset = columns * rows - index - 1
+                            activityCell(offset: offset, size: cell)
                         }
                     }
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .widgetURL(widgetCaptureURL)
-        .containerBackground(for: .widget) { WidgetBackground() }
     }
 
     @ViewBuilder
-    private func cellView(offset: Int, size: CGFloat) -> some View {
-        if offset >= 0, offset < 35, let image = entry.images[offset] {
+    private func activityCell(offset: Int, size: CGFloat) -> some View {
+        if let image = images[offset] {
             Image(uiImage: image)
                 .resizable()
                 .scaledToFill()
                 .frame(width: size, height: size)
-                .clipShape(RoundedRectangle(cornerRadius: 3.5, style: .continuous))
+                .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
         } else {
-            RoundedRectangle(cornerRadius: 3.5, style: .continuous)
-                .fill(Color.white.opacity(0.08))
+            RoundedRectangle(cornerRadius: 4, style: .continuous)
+                .fill(Color(uiColor: .tertiarySystemFill))
                 .frame(width: size, height: size)
         }
     }
 }
 
-struct FlapseGridWidget: Widget {
+struct FlapseActivityWidget: Widget {
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: "FlapseGridWidget", provider: GridProvider()) { entry in
-            PhotoGridWidgetView(entry: entry)
+        StaticConfiguration(kind: "FlapseGridWidget", provider: FlapseProvider()) { entry in
+            ActivityWidgetView(entry: entry)
         }
         .configurationDisplayName("Aktivite")
         .description("Son 5 haftanın kareleri.")
-        .supportedFamilies([.systemSmall])
-    }
-}
-
-struct ProjectsEntry: TimelineEntry {
-    let date: Date
-    let tiles: [(title: String, image: UIImage?)]
-    let streak: Int
-    let dueCount: Int
-    let capturedToday: Bool
-}
-
-struct ProjectsProvider: TimelineProvider {
-    private func current() -> ProjectsEntry {
-        let titles = WidgetStore.suite?.stringArray(forKey: "widget.projectTitles") ?? []
-        let tiles = titles.enumerated().map { index, title in
-            (title: title, image: WidgetStore.image("project-\(index).jpg"))
-        }
-        return ProjectsEntry(
-            date: Date(),
-            tiles: tiles,
-            streak: WidgetStore.suite?.integer(forKey: "widget.streak") ?? 0,
-            dueCount: WidgetStore.suite?.integer(forKey: "widget.dueCount") ?? 0,
-            capturedToday: WidgetStore.suite?.bool(forKey: "widget.capturedToday") ?? false
-        )
-    }
-    func placeholder(in context: Context) -> ProjectsEntry {
-        ProjectsEntry(date: Date(), tiles: [], streak: 3, dueCount: 1, capturedToday: false)
-    }
-    func getSnapshot(in context: Context, completion: @escaping (ProjectsEntry) -> Void) { completion(current()) }
-    func getTimeline(in context: Context, completion: @escaping (Timeline<ProjectsEntry>) -> Void) {
-        completion(Timeline(entries: [current()], policy: .after(Date().addingTimeInterval(1800))))
+        .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
     }
 }
 
 struct ProjectsWidgetView: View {
-    let entry: ProjectsEntry
+    @Environment(\.widgetFamily) private var family
+    let entry: FlapseWidgetEntry
 
     var body: some View {
-        GeometryReader { geo in
-            let gap: CGFloat = 6
-            let cellW = (geo.size.width - gap) / 2
-            let cellH = (geo.size.height - gap) / 2
-            VStack(spacing: gap) {
-                HStack(spacing: gap) {
-                    tile(0, width: cellW, height: cellH)
-                    tile(1, width: cellW, height: cellH)
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Projeler")
+                        .font(.headline)
+                    Text(projectSubtitle)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
-                HStack(spacing: gap) {
-                    tile(2, width: cellW, height: cellH)
-                    tile(3, width: cellW, height: cellH)
-                }
+                Spacer()
+                Image(systemName: "camera.fill")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(flapseAccent)
+            }
+            if family == .systemLarge {
+                largeGrid
+            } else {
+                mediumGrid
             }
         }
-        .widgetURL(widgetCaptureURL)
-        .containerBackground(for: .widget) { WidgetBackground() }
+        .widgetURL(captureURL)
+        .containerBackground(for: .widget) { WidgetCanvas() }
     }
 
-    @ViewBuilder
-    private func tile(_ index: Int, width: CGFloat, height: CGFloat) -> some View {
-        if index < entry.tiles.count {
-            ZStack(alignment: .bottomLeading) {
-                if let image = entry.tiles[index].image {
-                    Image(uiImage: image)
-                        .resizable()
-                        .scaledToFill()
-                } else {
-                    Color.white.opacity(0.08)
-                }
-                LinearGradient(colors: [.clear, .black.opacity(0.75)], startPoint: .center, endPoint: .bottom)
-                Text(entry.tiles[index].title)
-                    .font(.system(size: 13, weight: .bold, design: .rounded))
-                    .foregroundStyle(.white)
-                    .shadow(color: .black.opacity(0.6), radius: 2, y: 1)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.8)
-                    .padding(8)
+    private var mediumGrid: some View {
+        HStack(spacing: 8) {
+            ProjectPhoto(project: project(at: 0), cornerRadius: 14)
+                .frame(maxWidth: .infinity)
+            VStack(spacing: 8) {
+                ProjectPhoto(project: project(at: 1), cornerRadius: 12)
+                ProjectPhoto(project: project(at: 2), cornerRadius: 12)
             }
-            .frame(width: width, height: height)
-            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-        } else {
-            infoTile(index, width: width, height: height)
+            .frame(width: 104)
         }
     }
 
-    @ViewBuilder
-    private func infoTile(_ index: Int, width: CGFloat, height: CGFloat) -> some View {
-        VStack(spacing: 4) {
-            switch index {
-            case entry.tiles.count:
-                Image(systemName: "flame.fill")
-                    .font(.system(size: 18, weight: .bold))
-                    .foregroundStyle(
-                        entry.streak > 0
-                        ? AnyShapeStyle(LinearGradient(colors: [.yellow, .orange, .red], startPoint: .top, endPoint: .bottom))
-                        : AnyShapeStyle(Color.white.opacity(0.35))
-                    )
-                Text("\(entry.streak)")
-                    .font(.system(size: 24, weight: .heavy, design: .rounded)).monospacedDigit()
-                    .foregroundStyle(.white)
-                Text("gün serisi")
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(.white.opacity(0.6))
-            default:
-                if entry.capturedToday {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 24, weight: .bold))
-                        .foregroundStyle(widgetBrandGreen)
-                    Text("Bugün çekildi")
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(.white.opacity(0.7))
-                } else {
-                    Image(systemName: "camera.fill")
-                        .font(.system(size: 22, weight: .bold))
-                        .foregroundStyle(entry.dueCount > 0 ? .orange : .white.opacity(0.4))
-                    Text(entry.dueCount > 0 ? String(localized: "Bugün \(entry.dueCount) çekim") : String(localized: "Bugün için tamam"))
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(.white.opacity(0.7))
-                        .minimumScaleFactor(0.8)
-                }
+    private var largeGrid: some View {
+        LazyVGrid(columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible())], spacing: 8) {
+            ForEach(0..<4, id: \.self) { index in
+                ProjectPhoto(project: project(at: index), cornerRadius: 16)
+                    .frame(height: 108)
             }
         }
-        .frame(width: width, height: height)
-        .background(Color.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+    }
+
+    private var projectSubtitle: String {
+        if entry.projects.isEmpty {
+            return String(localized: "Projeler")
+        }
+        if entry.dueCount > 0 {
+            return String(localized: "Bugün \(entry.dueCount) çekim")
+        }
+        return String(localized: "Bugün için tamam")
+    }
+
+    private func project(at index: Int) -> (title: String, image: UIImage?)? {
+        guard entry.projects.indices.contains(index) else { return nil }
+        return entry.projects[index]
     }
 }
 
 struct FlapseProjectsWidget: Widget {
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: "FlapseProjectsWidget", provider: ProjectsProvider()) { entry in
+        StaticConfiguration(kind: "FlapseProjectsWidget", provider: FlapseProvider()) { entry in
             ProjectsWidgetView(entry: entry)
         }
         .configurationDisplayName("Projeler")
         .description("Projelerinin son kareleri.")
-        .supportedFamilies([.systemSmall])
+        .supportedFamilies([.systemMedium, .systemLarge])
+    }
+}
+
+struct LockScreenWidgetView: View {
+    @Environment(\.widgetFamily) private var family
+    let entry: FlapseWidgetEntry
+
+    var body: some View {
+        Group {
+            switch family {
+            case .accessoryInline:
+                inline
+            case .accessoryCircular:
+                circular
+            default:
+                rectangular
+            }
+        }
+        .widgetURL(captureURL)
+    }
+
+    private var inline: some View {
+        Label {
+            HStack(spacing: 3) {
+                Text("Flapse")
+                Text("·")
+                Text(rectangularStatus)
+            }
+        } icon: {
+            Image(systemName: entry.capturedToday ? "checkmark.circle.fill" : "camera.fill")
+        }
+    }
+
+    private var circular: some View {
+        Gauge(value: min(Double(entry.streak), 30), in: 0...30) {
+            Image(systemName: "flame.fill")
+        } currentValueLabel: {
+            Text("\(entry.streak)")
+                .font(.headline)
+                .monospacedDigit()
+        }
+        .gaugeStyle(.accessoryCircularCapacity)
+        .widgetAccentable()
+        .accessibilityLabel(Text("\(entry.streak)") + Text(" ") + Text("gün serisi"))
+    }
+
+    private var rectangular: some View {
+        HStack(spacing: 10) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Flapse")
+                    .font(.caption.weight(.semibold))
+                HStack(spacing: 4) {
+                    Text("\(entry.streak)")
+                        .monospacedDigit()
+                    Text("gün serisi")
+                }
+                .font(.headline)
+                Text(rectangularStatus)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
+            Spacer(minLength: 4)
+            Image(systemName: entry.capturedToday ? "checkmark.circle.fill" : "camera.circle.fill")
+                .font(.title2)
+                .widgetAccentable()
+        }
+    }
+
+    private var rectangularStatus: String {
+        if entry.capturedToday {
+            return String(localized: "Bugün çekildi")
+        }
+        if entry.dueCount > 0 {
+            return String(localized: "Bugün \(entry.dueCount) çekim")
+        }
+        return String(localized: "Bugün için tamam")
+    }
+}
+
+struct FlapseLockScreenWidget: Widget {
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: "FlapseLockScreenWidget", provider: FlapseProvider()) { entry in
+            LockScreenWidgetView(entry: entry)
+                .containerBackground(for: .widget) { Color.clear }
+        }
+        .configurationDisplayName("Flapse")
+        .description("Gün serin ve bugünün çekim durumu.")
+        .supportedFamilies([.accessoryInline, .accessoryRectangular, .accessoryCircular])
     }
 }
 
 @main
 struct FlapseWidgetBundle: WidgetBundle {
     var body: some Widget {
-        FlapseStreakWidget()
-        FlapseGridWidget()
+        FlapseTodayWidget()
+        FlapseActivityWidget()
         FlapseProjectsWidget()
+        FlapseLockScreenWidget()
         FlapseRenderLiveActivity()
     }
 }

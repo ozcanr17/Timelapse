@@ -10,27 +10,27 @@ Native iOS 17+ app built with Swift, SwiftUI, SwiftData, StoreKit 2, AVFoundatio
 - App bundle ID: `rozcan.Flapse`
 - Widget bundle ID: `rozcan.Flapse.Widgets`
 - Team: `5ZYCHZ39QV`
-- Repository: `https://github.com/ozcanr17/Timelapse.git`, branch `main`
+- Repository: `https://github.com/ozcanr17/Flapse.git`, branch `main`
 
 ## Build and test
 
 ```sh
 export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
-xcodebuild build -scheme Timelapse -destination 'platform=iOS Simulator,name=iPhone 17'
-xcodebuild test -scheme Timelapse -destination 'platform=iOS Simulator,name=iPhone 17' -only-testing:TimelapseTests
+xcodebuild build -scheme Flapse -destination 'platform=iOS Simulator,name=iPhone 17'
+xcodebuild test -scheme Flapse -destination 'platform=iOS Simulator,name=iPhone 17' -only-testing:FlapseTests
 ```
 
 Use iPhone 17 because the iPhone 16 destination can match multiple runtimes. Trust `xcodebuild`, not SourceKit diagnostics from the IDE harness. The suite currently contains 112 unit tests.
 
 ## Architecture
 
-- `Timelapse/TimelapseApp.swift`: app entry and service wiring
-- `Timelapse/Models/CoreModels.swift`: SwiftData project and entry models
-- `Timelapse/Data/ProjectRepository.swift`: persistence boundary
-- `Timelapse/Features/Camera/`: capture and ghost alignment
-- `Timelapse/Features/Export/`: composition, alignment, background rendering, and Live Activity
-- `Timelapse/Features/Store/`: StoreKit, entitlement state, feature gating, and paywall
-- `Timelapse/Features/Auth/`: optional Sign in with Apple and account-data deletion
+- `Flapse/FlapseApp.swift`: app entry and service wiring
+- `Flapse/Models/CoreModels.swift`: SwiftData project and entry models
+- `Flapse/Data/ProjectRepository.swift`: persistence boundary
+- `Flapse/Features/Camera/`: capture and ghost alignment
+- `Flapse/Features/Export/`: composition, alignment, background rendering, and Live Activity
+- `Flapse/Features/Store/`: StoreKit, entitlement state, feature gating, and paywall
+- `Flapse/Features/Auth/`: optional Sign in with Apple and account-data deletion
 - `Widgets/`: widgets and render Live Activity UI
 
 The project uses MVVM with protocol-backed services and injectable fakes/in-memory stores for tests. Views must not bypass `ProjectRepository` to perform persistence work.
@@ -39,7 +39,7 @@ The project uses MVVM with protocol-backed services and injectable fakes/in-memo
 
 - Do not add code comments.
 - Use English identifiers.
-- Turkish UI literals are localization keys. Every new user-facing string needs all 11 target translations in `Timelapse/Localizable.xcstrings`; widget strings also belong in `Widgets/Localizable.xcstrings`.
+- Turkish UI literals are localization keys. Every new user-facing string needs all 11 target translations in `Flapse/Localizable.xcstrings`; widget strings also belong in `Widgets/Localizable.xcstrings`.
 - Load `.agents/skills/tasteskill/SKILL.md` before changing SwiftUI presentation.
 - Build, run unit tests, and push `main` after each approved batch.
 

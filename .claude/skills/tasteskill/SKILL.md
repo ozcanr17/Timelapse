@@ -1,9 +1,9 @@
 ---
 name: tasteskill
-description: Rıdvan's strict UI/UX design taste for the Timelapse iOS app. Load BEFORE writing or changing ANY SwiftUI view, view modifier, color, font, spacing, animation, or component. Enforces a calm, professional, native Apple HIG aesthetic and bans futuristic/neon/gaming styling.
+description: Rıdvan's strict UI/UX design taste for the Flapse iOS app. Load BEFORE writing or changing ANY SwiftUI view, view modifier, color, font, spacing, animation, or component. Enforces a calm, professional, native Apple HIG aesthetic and bans futuristic/neon/gaming styling.
 ---
 
-# tasteskill — Timelapse design law
+# tasteskill — Flapse design law
 
 Every piece of UI work in this app must pass these rules. When a request and a rule
 conflict, the rule wins; surface the conflict instead of silently violating it.
