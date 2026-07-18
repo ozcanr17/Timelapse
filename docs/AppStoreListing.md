@@ -31,7 +31,7 @@ Great progress videos need two things: photos that line up, and the discipline t
 
 CAPTURE, EFFORTLESSLY
 • Ghost alignment: see yesterday's frame while you shoot today's
-• Smart auto-sorting: shoot from the home screen and AI files the photo into the right project
+• Smart auto-sorting: shoot from the home screen and AI suggests the right project — you always confirm
 • Categories that understand their subject: self, child, baby, plant, pet, fitness, pregnancy, outfit and more
 • Import your existing photos — EXIF dates put them in order automatically
 
@@ -39,7 +39,7 @@ CREATE CINEMATIC VIDEOS
 • Fluid AI transitions: optical-flow morphing melts one frame into the next
 • Smart alignment locks faces by the eyes, torsos by pose, bellies for pregnancy
 • Per-photo manual alignment: drag, pinch and rotate every single frame
-• Music: five built-in moods or any song from Files — with beat-synced cuts that land every photo on the drum hit, and drop detection that saves your biggest change for the chorus
+• Music: five built-in moods or any song from Files — with beat-synced cuts that land every photo on the beat
 • Any format: 9:16 for Stories, 1:1, 16:9 and more — bars filled with content-aware extension, never black
 • Speed and zoom sliders, date stamps, notes, and a signature outro
 
@@ -61,8 +61,8 @@ Your photos stay on your device unless you enable iCloud backup. No ads, no trac
 FLAPSE PRO
 Unlimited projects and frames, smart & per-photo alignment, fluid AI transitions, music and beat sync, Capture Together, iCloud backup, auto-sorting and watermark-free 4K export. Subscriptions start with a 7-day free trial; a one-time lifetime unlock is also available.
 
-Terms of Use: https://ridvanozcan.github.io/flapse/terms
-Privacy Policy: https://ridvanozcan.github.io/flapse/privacy
+Terms of Use: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+Privacy Policy: https://ozcanr17.github.io/Timelapse/privacy
 ```
 
 ### Turkish
@@ -75,7 +75,7 @@ NEDEN FLAPSE?
 
 ZAHMETSİZ ÇEKİM
 • Hayalet hizalama: bugünü çekerken dünü gör
-• Akıllı ayırma: ana ekrandan çek, yapay zeka kareyi doğru projeye koysun
+• Akıllı ayırma: ana ekrandan çek, yapay zeka doğru projeyi önersin — onay her zaman sende
 • Konusunu anlayan kategoriler: kendim, çocuk, bebek, bitki, evcil hayvan, fitness, hamilelik, kombin ve daha fazlası
 • Var olan fotoğraflarını içe aktar — EXIF tarihleri otomatik sıralasın
 
@@ -83,7 +83,7 @@ SİNEMATİK VİDEOLAR
 • Akışkan AI geçişler: optik akış, kareleri birbirine eritir
 • Akıllı hizalama gözlerden, gövdeden ya da karından kilitler
 • Kare kare manuel hizalama: her fotoğrafı sürükle, yakınlaştır, döndür
-• Müzik: beş hazır ruh hali ya da Dosyalar'dan kendi şarkın — kesimler vuruşlara oturur, en büyük değişimin nakarata denk gelir
+• Müzik: beş hazır ruh hali ya da Dosyalar'dan kendi şarkın — kesimler ritmin vuruşlarına oturur
 • Her format: hikayeler için 9:16, 1:1, 16:9… bantlar içerik-duyarlı dolgu ile dolar
 • Hız ve yakınlaştırma kaydırıcıları, tarih damgası, not ve imza niteliğinde kapanış
 
@@ -137,13 +137,13 @@ Localized IAP display names: Pro (Aylık/Monthly), Pro (Yıllık/Yearly), Pro (�
 
 ## App Privacy (Nutrition Labels)
 
-- **Data collected:** Photos or Videos, Precise Location (optional, capture tagging), User ID (Sign in with Apple) — all **App Functionality**, linked to user via iCloud, **not** used for tracking.
-- Tracking: **No**. Third-party SDKs: none. Privacy manifest declares UserDefaults (CA92.1) only.
+- **Data Not Collected.** Nothing is transmitted to the developer or third parties: photos, location tags and the Sign in with Apple ID stay on device (or in the user's own private iCloud/CloudKit, which the developer cannot access). There is no networking code, no analytics, no third-party SDK.
+- Tracking: **No**. Privacy manifests declare UserDefaults (CA92.1, 1C8F.1) only.
 
 ## App Review Notes (paste into the Notes field)
 
 ```
-Flapse is a daily-photo timelapse app. Everything works without an account except creating a project, which asks for Sign in with Apple (projects sync via the user's own iCloud).
+Flapse is a daily-photo timelapse app. No account is required: Sign in with Apple is optional (a "Continue without signing in" option is offered) and only links projects to the user's own iCloud. Account deletion is available in Settings → Hesap → Hesabı sil.
 
 • Pro paywall: tap + on the home screen after one project exists, or Settings → Upgrade. Subscriptions include a 7-day free trial; a sandbox account can complete the flow.
 • Capture Together requires an iCloud account; without one the app falls back to a plain text invite. Testing needs two iCloud accounts (owner shares a link, invitee joins).
@@ -159,7 +159,8 @@ Flapse is a daily-photo timelapse app. Everything works without an account excep
 ## Pre-submission checklist
 
 - [ ] CloudKit schema deployed to Production
-- [ ] Paid Apps agreement Active; bank + tax complete; Small Business Program enrolled
+- [ ] Paid Apps agreement Active; bank + tax complete (IAP'ler bu olmadan oluşturulamaz)
+- [ ] Small Business Program (başvuruldu, onay bekliyor — yayını BLOKLAMAZ; onaylanınca komisyon %15'e düşer)
 - [ ] 3 IAPs created, priced (TR overrides), trial offers attached, review screenshots uploaded
 - [ ] Terms & Privacy URLs live (update the URLs above to your real pages before submitting)
 - [ ] Screenshots captured (6.9"), TR + EN metadata entered

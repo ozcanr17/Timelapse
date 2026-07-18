@@ -7,12 +7,15 @@ depoda hazır. Kalan adımların tamamı Apple hesabı gerektiren, insan eliyle 
 
 ---
 
-## 1. Apple Developer Program üyeliği
+## 1. Apple Developer Program üyeliği — ✅ TAMAMLANDI (2026-07-18)
 
-1. [developer.apple.com](https://developer.apple.com) → `ridvanozcan7@gmail.com` Apple ID'inle
-   **Apple Developer Program**'a kayıt ol (yıllık 99 USD). Onay birkaç saat–2 gün sürebilir.
-2. Onaylandıktan sonra Xcode → **Settings → Accounts** → Apple ID'ini ekle.
-   Takım (`5ZYCHZ39QV`) listede görünmeli.
+Üyelik aktif ve doğrulandı: `xcodebuild archive -allowProvisioningUpdates` ile gerçek bir
+App Store arşivi alındı; Xcode her iki hedef için (`rozcan.Flapse`, `rozcan.Flapse.Widgets`)
+profilleri otomatik oluşturdu ve imzalı pakette Sign in with Apple, iCloud/CloudKit,
+aps-environment ve App Groups entitlement'ları doğrulandı (Team `5ZYCHZ39QV`).
+
+**Small Business Program**: başvuru yapıldı, onay bekleniyor. Bu, yayını **beklemez** —
+uygulamayı gönderebilirsin; onaylandığı andan itibaren komisyon %30 yerine %15 uygulanır.
 
 ## 2. Gizlilik sayfaları — ✅ TAMAMLANDI (2026-07-18)
 
@@ -31,16 +34,22 @@ App Store Connect'e yazılacak adresler bunlardır.
 Not: Sayfa içerikleri `docs/privacy/index.html` ve `docs/support/index.html` dosyalarından
 sunulur; düzenledikten sonra main'e push yeterlidir (Pages 1-2 dakikada yeniden yayınlar).
 
-## 3. Sertifikalar ve imzalama (Xcode halleder)
+## 3. Sertifikalar ve imzalama — ✅ TAMAMLANDI (2026-07-18)
 
-1. Xcode'da projeyi aç → **Timelapse** target → **Signing & Capabilities**.
-2. "Automatically manage signing" işaretli kalsın, Team olarak ücretli hesabı seç.
-   Aynısını **Widgets** target için de yap.
-3. Ücretli hesapla şu yetenekler artık gerçekten imzalanabilir: Sign in with Apple,
-   iCloud/CloudKit (`iCloud.rozcan.Flapse`), Push Notifications, App Groups.
-   Hata çıkarsa Capabilities listesinden ilgili satırı silip yeniden eklemek profili tazeler.
-4. Gerçek iPhone'da **Release** yapılandırmasıyla bir kez çalıştır
-   (Product → Scheme → Edit Scheme → Run → Build Configuration: Release).
+Otomatik imzalama çalışıyor; arşiv başarıyla alındı (bkz. 1. adım). Yapılacak tek şey:
+gerçek iPhone'da **Release** yapılandırmasıyla bir kez çalıştırıp son bir duman testi yapmak
+(Product → Scheme → Edit Scheme → Run → Build Configuration: Release).
+
+Not: Arşiv "Apple Development" kimliğiyle imzalanır; App Store'a yüklerken Xcode
+Organizer (veya `-exportArchive`) dağıtım imzasına otomatik çevirir. CLI ile paket çıkarmak
+istersen repo kökünde hazır `ExportOptions.plist` var:
+
+```sh
+xcodebuild archive -scheme Timelapse -destination 'generic/platform=iOS' \
+  -archivePath build/Flapse.xcarchive -allowProvisioningUpdates
+xcodebuild -exportArchive -archivePath build/Flapse.xcarchive \
+  -exportOptionsPlist ExportOptions.plist -exportPath build/export -allowProvisioningUpdates
+```
 
 ## 4. App Store Connect'te uygulamayı oluştur
 
@@ -52,7 +61,11 @@ sunulur; düzenledikten sonra main'e push yeterlidir (Pages 1-2 dakikada yeniden
 
 ## 5. Uygulama içi satın almaları tanımla
 
-App Store Connect → uygulama → **Monetization → Subscriptions / In-App Purchases**:
+**Önce**: App Store Connect → **Business** (Agreements, Tax, and Banking) →
+**Paid Applications** sözleşmesini kabul et, banka hesabı + vergi formlarını doldur.
+Bu tamamlanmadan IAP oluşturulamaz/satılamaz.
+
+Sonra App Store Connect → uygulama → **Monetization → Subscriptions / In-App Purchases**:
 
 1. **Abonelik grubu** oluştur: "Flapse Pro".
 2. Grup içine iki otomatik yenilenen abonelik — Product ID'ler koddakiyle **birebir** aynı olmalı:
