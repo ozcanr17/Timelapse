@@ -14,32 +14,22 @@ depoda hazır. Kalan adımların tamamı Apple hesabı gerektiren, insan eliyle 
 2. Onaylandıktan sonra Xcode → **Settings → Accounts** → Apple ID'ini ekle.
    Takım (`5ZYCHZ39QV`) listede görünmeli.
 
-## 2. Gizlilik sayfalarını yayına al (KRİTİK — reddedilme sebebi)
+## 2. Gizlilik sayfaları — ✅ TAMAMLANDI (2026-07-18)
 
-Durum (son kontrol: 2026-07-18): `docs/privacy/index.html` ve `docs/support/index.html`
-depoda hazır, klasör yapısı doğru; ancak **GitHub Pages henüz açık değil**, bu yüzden
-uygulamanın bağlantı verdiği adresler 404 veriyor.
-
-> ⚠️ `https://github.com/ozcanr17/Timelapse/tree/main/docs/privacy` adresi **kullanılamaz** —
-> bu, GitHub'ın kod görünümüdür; politika metnini değil dosya listesini gösterir.
-> App Store'a yazılacak doğru adresler Pages açılınca çalışacak olan adreslerdir (aşağıda).
-
-Pages'i açmak için terminalde:
-
-```sh
-gh api repos/ozcanr17/Timelapse/pages -X POST -f "source[branch]=main" -f "source[path]=/docs"
-```
-
-(ya da GitHub'da repo → **Settings → Pages** → Branch: `main`, klasör: `/docs`).
-
-1-2 dakika sonra şu adreslerin açıldığını doğrula (uygulamadaki `LegalLinks` bunlara işaret eder):
+GitHub Pages açıldı (`main` / `/docs`); üç adres de canlı ve Flapse markalı sayfaları sunuyor
+(uygulamadaki `LegalLinks` bunlara işaret eder):
 
 - Gizlilik: `https://ozcanr17.github.io/Timelapse/privacy`
 - Destek: `https://ozcanr17.github.io/Timelapse/support`
 - Site (outro QR kodu): `https://ozcanr17.github.io/Timelapse/`
 
-**Bu adresler çalışmadan App Store'a gönderme** — paywall'daki Gizlilik Politikası bağlantısı
-ölü olursa inceleme reddeder.
+App Store Connect'e yazılacak adresler bunlardır.
+
+> ⚠️ `https://github.com/ozcanr17/Timelapse/tree/main/docs/privacy` gibi repo adresleri
+> **kullanılmaz** — GitHub'ın kod görünümüdür; politika metnini değil dosya listesini gösterir.
+
+Not: Sayfa içerikleri `docs/privacy/index.html` ve `docs/support/index.html` dosyalarından
+sunulur; düzenledikten sonra main'e push yeterlidir (Pages 1-2 dakikada yeniden yayınlar).
 
 ## 3. Sertifikalar ve imzalama (Xcode halleder)
 
