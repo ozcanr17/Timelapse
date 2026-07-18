@@ -104,4 +104,11 @@ final class AuthService {
         displayName = nil
         [Key.userID, Key.email, Key.name].forEach { UserDefaults.standard.removeObject(forKey: $0) }
     }
+
+    func deleteAccountData() {
+        signOut()
+        UserDefaults.standard.removeObject(forKey: Key.adminGrant)
+        NSUbiquitousKeyValueStore.default.removeObject(forKey: Key.adminGrant)
+        NSUbiquitousKeyValueStore.default.synchronize()
+    }
 }

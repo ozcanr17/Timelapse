@@ -84,7 +84,25 @@ struct PaywallView: View {
 
     private var packageList: some View {
         VStack(spacing: 10) {
-            if viewModel.packages.isEmpty {
+            if viewModel.loadFailed {
+                VStack(spacing: 10) {
+                    Text("Fiyatlar yüklenemedi. Bağlantını kontrol edip tekrar dene.")
+                        .font(Theme.caption(13))
+                        .foregroundStyle(.white.opacity(0.85))
+                        .multilineTextAlignment(.center)
+                    Button {
+                        Task { await viewModel.load() }
+                    } label: {
+                        Label("Tekrar Dene", systemImage: "arrow.clockwise")
+                            .font(Theme.headline(15))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 18)
+                            .padding(.vertical, 10)
+                            .background(.white.opacity(0.16), in: Capsule())
+                    }
+                }
+                .padding(.vertical, 12)
+            } else if viewModel.packages.isEmpty {
                 ProgressView().tint(.white).padding()
             } else {
                 ForEach(viewModel.packages) { package in

@@ -204,9 +204,14 @@ private struct CameraSessionView: View {
                 .font(.largeTitle)
             Text(message)
                 .multilineTextAlignment(.center)
+            if AVCaptureDevice.authorizationStatus(for: .video) == .denied {
+                Button("Ayarları Aç") { PhotoLibrarySaver.openSettings() }
+                    .buttonStyle(.timelapsePrimary)
+                    .frame(width: 200)
+            }
             Button("Kapat") { dismiss() }
-                .buttonStyle(.timelapsePrimary)
-                .frame(width: 160)
+                .font(Theme.body(15))
+                .foregroundStyle(.white.opacity(0.8))
         }
         .foregroundStyle(.white)
         .padding(24)

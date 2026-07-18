@@ -8,6 +8,7 @@ final class PaywallViewModel {
 
     private(set) var packages: [StorePackage] = []
     private(set) var isPurchasing = false
+    private(set) var loadFailed = false
     var errorMessage: String?
 
     private let store: StoreServiceProtocol
@@ -35,8 +36,18 @@ final class PaywallViewModel {
     ]
 
     func load() async {
+        loadFailed = false
         await store.loadProducts()
-        packages = store.packages.isEmpty ? Self.fallbackPackages : store.packages
+        if store.packages.isEmpty {
+            #if DEBUG
+            packages = Self.fallbackPackages
+            #else
+            packages = []
+            loadFailed = true
+            #endif
+        } else {
+            packages = store.packages
+        }
     }
 
     /// Satın alma. Başarılıysa true döner (görünüm kapanır); değilse errorMessage dolabilir.

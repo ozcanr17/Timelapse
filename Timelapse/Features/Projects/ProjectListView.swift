@@ -13,6 +13,7 @@ struct ProjectListView: View {
 
     @State private var activeSheet: ActiveSheet?
     @State private var pendingAfterSignIn: ActiveSheet?
+    @AppStorage("auth.gateSkipped") private var signInGateSkipped = false
     @State private var pendingDeletion: [Project] = []
     @State private var resumeExportProject: Project?
     @State private var checkedJobID: UUID?
@@ -130,17 +131,10 @@ struct ProjectListView: View {
                 PaywallView(store: store)
             case .signIn:
                 SignInGateSheet {
-                    let next = pendingAfterSignIn
-                    pendingAfterSignIn = nil
-                    guard let next else { return }
-                    Task {
-                        try? await Task.sleep(for: .seconds(0.45))
-                        switch next {
-                        case .addProject: addProjectTapped()
-                        case .importNew: importTapped()
-                        default: break
-                        }
-                    }
+                    continuePendingAction()
+                } onSkip: {
+                    signInGateSkipped = true
+                    continuePendingAction()
                 }
             }
         }
@@ -253,8 +247,22 @@ struct ProjectListView: View {
         }
     }
 
+    private func continuePendingAction() {
+        let next = pendingAfterSignIn
+        pendingAfterSignIn = nil
+        guard let next else { return }
+        Task {
+            try? await Task.sleep(for: .seconds(0.45))
+            switch next {
+            case .addProject: addProjectTapped()
+            case .importNew: importTapped()
+            default: break
+            }
+        }
+    }
+
     private func addProjectTapped() {
-        guard AuthService.isSignedInNow else {
+        guard AuthService.isSignedInNow || signInGateSkipped else {
             pendingAfterSignIn = .addProject
             activeSheet = .signIn
             return
@@ -267,7 +275,7 @@ struct ProjectListView: View {
     }
 
     private func importTapped() {
-        guard AuthService.isSignedInNow else {
+        guard AuthService.isSignedInNow || signInGateSkipped else {
             pendingAfterSignIn = .importNew
             activeSheet = .signIn
             return

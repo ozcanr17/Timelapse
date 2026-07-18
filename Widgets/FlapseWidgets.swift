@@ -101,9 +101,9 @@ struct StreakWidgetView: View {
 
     private var statusChip: some View {
         let (icon, text, tint): (String, String, Color) =
-            entry.capturedToday ? ("checkmark.circle.fill", "Bugün çekildi", widgetBrandGreen)
-            : entry.dueCount > 0 ? ("camera.fill", "Bugün \(entry.dueCount) çekim", .orange)
-            : ("checkmark.circle", "Bugün için tamam", Color.white.opacity(0.6))
+            entry.capturedToday ? ("checkmark.circle.fill", String(localized: "Bugün çekildi"), widgetBrandGreen)
+            : entry.dueCount > 0 ? ("camera.fill", String(localized: "Bugün \(entry.dueCount) çekim"), .orange)
+            : ("checkmark.circle", String(localized: "Bugün için tamam"), Color.white.opacity(0.6))
         return HStack(spacing: 5) {
             Image(systemName: icon).font(.system(size: 11, weight: .bold))
             Text(text).font(.system(size: 11, weight: .semibold)).lineLimit(1).minimumScaleFactor(0.8)
@@ -325,7 +325,7 @@ struct ProjectsWidgetView: View {
                     Image(systemName: "camera.fill")
                         .font(.system(size: 22, weight: .bold))
                         .foregroundStyle(entry.dueCount > 0 ? .orange : .white.opacity(0.4))
-                    Text(entry.dueCount > 0 ? "Bugün \(entry.dueCount) çekim" : "Bugün için tamam")
+                    Text(entry.dueCount > 0 ? String(localized: "Bugün \(entry.dueCount) çekim") : String(localized: "Bugün için tamam"))
                         .font(.system(size: 11, weight: .semibold))
                         .foregroundStyle(.white.opacity(0.7))
                         .minimumScaleFactor(0.8)

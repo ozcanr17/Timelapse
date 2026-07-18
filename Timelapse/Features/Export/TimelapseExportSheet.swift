@@ -2,6 +2,7 @@ import SwiftUI
 import SwiftData
 import AVKit
 import Photos
+import StoreKit
 
 struct TimelapseExportSheet: View {
 
@@ -49,6 +50,8 @@ struct TimelapseExportSheet: View {
     @State private var savedToPhotos = false
     @State private var savedToLibrary = false
     @State private var showPhotosDenied = false
+    @Environment(\.requestReview) private var requestReview
+    @AppStorage("review.promptedVersion") private var reviewPromptedVersion = ""
 
     private var captionDayCount: Int {
         guard let first = frames.first?.capturedAt, let last = frames.last?.capturedAt else { return frames.count }
@@ -268,7 +271,10 @@ struct TimelapseExportSheet: View {
                 Button {
                     Task {
                         savedToLibrary = await TimelapseRenderService.shared.saveToLibrary(projectID: project.id, context: modelContext) != nil
-                        if savedToLibrary { UINotificationFeedbackGenerator().notificationOccurred(.success) }
+                        if savedToLibrary {
+                            UINotificationFeedbackGenerator().notificationOccurred(.success)
+                            promptReviewIfDue()
+                        }
                     }
                 } label: {
                     Label(savedToLibrary ? "Kaydedilenler'e eklendi" : "Uygulamada sakla",
@@ -658,6 +664,16 @@ struct TimelapseExportSheet: View {
                 showPhotosDenied = true
             }
             UINotificationFeedbackGenerator().notificationOccurred(outcome == .saved ? .success : .error)
+        }
+    }
+
+    private func promptReviewIfDue() {
+        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0"
+        guard reviewPromptedVersion != version else { return }
+        reviewPromptedVersion = version
+        Task {
+            try? await Task.sleep(for: .seconds(1.2))
+            requestReview()
         }
     }
 

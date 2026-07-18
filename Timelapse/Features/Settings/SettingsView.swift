@@ -26,6 +26,7 @@ struct SettingsView: View {
     @State private var showWelcome = false
     @State private var devTapCount = 0
     @State private var adminSignInMessage: String?
+    @State private var isConfirmingAccountDeletion = false
 
     private var totalEntries: Int {
         projects.reduce(0) { $0 + ($1.entries?.count ?? 0) }
@@ -276,6 +277,20 @@ struct SettingsView: View {
         .onChange(of: reminderHour) {
             ReminderScheduler.shared.sync(projects: projects)
         }
+        .confirmationDialog(
+            "Hesap bilgilerin silinsin mi?",
+            isPresented: $isConfirmingAccountDeletion,
+            titleVisibility: .visible
+        ) {
+            Button("Hesabı sil", role: .destructive) {
+                auth.deleteAccountData()
+                store.setAdminUnlocked(false)
+                adminSignInMessage = nil
+            }
+            Button("Vazgeç", role: .cancel) {}
+        } message: {
+            Text("Apple ile giriş kaydın bu cihazdan ve iCloud'dan kaldırılır. Projelerin ve fotoğrafların cihazında kalır.")
+        }
     }
 
     @ViewBuilder
@@ -304,6 +319,10 @@ struct SettingsView: View {
             }
             .font(Theme.body(15))
             .foregroundStyle(theme.secondary)
+            Button("Hesabı sil", role: .destructive) {
+                isConfirmingAccountDeletion = true
+            }
+            .font(Theme.body(15))
         } else {
             SignInWithAppleButton(.signIn) { request in
                 request.requestedScopes = [.fullName, .email]

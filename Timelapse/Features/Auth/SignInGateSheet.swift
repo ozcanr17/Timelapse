@@ -7,6 +7,7 @@ import AuthenticationServices
 struct SignInGateSheet: View {
 
     let onSignedIn: () -> Void
+    var onSkip: (() -> Void)? = nil
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.theme) private var theme
@@ -48,6 +49,14 @@ struct SignInGateSheet: View {
             .signInWithAppleButtonStyle(colorScheme == .dark ? .white : .black)
             .frame(height: 50)
             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            if let onSkip {
+                Button("Giriş yapmadan devam et") {
+                    dismiss()
+                    onSkip()
+                }
+                .font(Theme.body(15))
+                .foregroundStyle(theme.accent)
+            }
             Button("Vazgeç") { dismiss() }
                 .font(Theme.body(15))
                 .foregroundStyle(theme.inkMuted)

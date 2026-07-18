@@ -78,14 +78,21 @@ final class StoreService: StoreServiceProtocol {
             storeProducts = products.sorted {
                 (order.firstIndex(of: $0.id) ?? .max) < (order.firstIndex(of: $1.id) ?? .max)
             }
-            packages = storeProducts.map {
-                StorePackage(
-                    id: $0.id,
-                    displayName: $0.displayName,
-                    displayPrice: $0.displayPrice,
-                    hasTrial: $0.subscription?.introductoryOffer?.paymentMode == .freeTrial
-                )
+            var built: [StorePackage] = []
+            for product in storeProducts {
+                var hasTrial = false
+                if let subscription = product.subscription,
+                   subscription.introductoryOffer?.paymentMode == .freeTrial {
+                    hasTrial = await subscription.isEligibleForIntroOffer
+                }
+                built.append(StorePackage(
+                    id: product.id,
+                    displayName: product.displayName,
+                    displayPrice: product.displayPrice,
+                    hasTrial: hasTrial
+                ))
             }
+            packages = built
         } catch {
             storeProducts = []
             packages = []
