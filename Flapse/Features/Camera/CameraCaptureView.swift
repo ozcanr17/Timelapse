@@ -46,6 +46,7 @@ private struct CameraSessionView: View {
     @Environment(StoreService.self) private var store
 
     @State private var flashOpacity: Double = 0
+    @State private var zoomGestureBase: CGFloat?
 
     /// Çift modu projeye bağlıdır (Birlikte Çekim kategorisi). Akıllı hizalama artık
     /// kamerada değil, dışa aktarımda yüz tespitiyle uygulanır.
@@ -71,6 +72,7 @@ private struct CameraSessionView: View {
                     Color.black
 
                     CameraPreview(session: viewModel.session, position: viewModel.position)
+                        .gesture(zoomGesture)
 
                     if !hasFailed {
                         AlignmentGuideOverlay()
@@ -109,10 +111,54 @@ private struct CameraSessionView: View {
                 Spacer()
 
                 if !hasFailed {
+                    zoomControls
+                        .padding(.bottom, 12)
                     bottomBar
                 }
             }
         }
+    }
+
+    private var zoomControls: some View {
+        HStack(spacing: 8) {
+            ForEach(zoomPresets, id: \.self) { factor in
+                Button {
+                    viewModel.setZoomFactor(factor)
+                } label: {
+                    Text(zoomLabel(factor))
+                        .font(.system(size: 13, weight: .semibold, design: .rounded))
+                        .foregroundStyle(abs(viewModel.zoomFactor - factor) < 0.05 ? .yellow : .white)
+                        .frame(width: 42, height: 34)
+                        .background(.black.opacity(0.42), in: Capsule())
+                }
+                .buttonStyle(.plain)
+                .disabled(!canInteract)
+            }
+        }
+    }
+
+    private var zoomPresets: [CGFloat] {
+        [viewModel.zoomRange.lowerBound, 1, 2, 5]
+            .filter { viewModel.zoomRange.contains($0) }
+            .reduce(into: []) { result, value in
+                if !result.contains(where: { abs($0 - value) < 0.05 }) { result.append(value) }
+            }
+    }
+
+    private func zoomLabel(_ factor: CGFloat) -> String {
+        if abs(factor - factor.rounded()) < 0.01 {
+            return "\(Int(factor.rounded()))×"
+        }
+        return String(format: "%.1f×", Double(factor))
+    }
+
+    private var zoomGesture: some Gesture {
+        MagnificationGesture()
+            .onChanged { value in
+                if zoomGestureBase == nil { zoomGestureBase = viewModel.zoomFactor }
+                viewModel.setZoomFactor((zoomGestureBase ?? 1) * value)
+            }
+            .onEnded { _ in zoomGestureBase = nil }
     }
 
     private var topBar: some View {

@@ -24,6 +24,8 @@ final class CameraCaptureViewModel {
 
     private(set) var position: AVCaptureDevice.Position
     private(set) var isSwitching = false
+    private(set) var zoomFactor: CGFloat = 1
+    private(set) var zoomRange: ClosedRange<CGFloat> = 1...1
 
     private let camera: CameraServiceProtocol
     private let repository: ProjectRepositoryProtocol
@@ -74,6 +76,7 @@ final class CameraCaptureViewModel {
         state = .starting
         do {
             try await camera.start(position: position)
+            await refreshZoom()
             state = .ready
         } catch {
             state = .failed(message(for: error))
@@ -92,9 +95,16 @@ final class CameraCaptureViewModel {
         do {
             try await camera.switchCamera(to: newPosition)
             position = newPosition
+            await refreshZoom()
         } catch {
             state = .failed(message(for: error))
         }
+    }
+
+    func setZoomFactor(_ factor: CGFloat) {
+        guard state == .ready else { return }
+        zoomFactor = min(max(factor, zoomRange.lowerBound), zoomRange.upperBound)
+        camera.setZoomFactor(zoomFactor)
     }
 
     /// Fotoğrafı çeker; yeniden çekimde mevcut karenin fotoğrafını değiştirir,
@@ -146,6 +156,12 @@ final class CameraCaptureViewModel {
             entry.placeName = resolved.placeName
             try? repository.saveIfNeeded()
         }
+    }
+
+    private func refreshZoom() async {
+        let capabilities = await camera.zoomCapabilities()
+        zoomRange = capabilities.range
+        zoomFactor = capabilities.factor
     }
 
     private static func initialPosition(for category: ProjectCategory) -> AVCaptureDevice.Position {

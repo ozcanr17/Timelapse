@@ -15,6 +15,7 @@ final class CameraCaptureViewModelTests: XCTestCase {
         var startError: Error?
         var captureError: Error?
         var switchError: Error?
+        var zoom = CameraZoomCapabilities(factor: 1, range: 1...5)
         private(set) var startedPositions: [AVCaptureDevice.Position] = []
         private(set) var switchedPositions: [AVCaptureDevice.Position] = []
 
@@ -27,6 +28,8 @@ final class CameraCaptureViewModelTests: XCTestCase {
             if let switchError { throw switchError }
             switchedPositions.append(position)
         }
+        func zoomCapabilities() async -> CameraZoomCapabilities { zoom }
+        func setZoomFactor(_ factor: CGFloat) { zoom = CameraZoomCapabilities(factor: factor, range: zoom.range) }
         func capturePhoto() async throws -> Data {
             if let captureError { throw captureError }
             return photoToReturn
@@ -112,6 +115,19 @@ final class CameraCaptureViewModelTests: XCTestCase {
         } else {
             XCTFail("Durum .failed olmalıydı, ama \(viewModel.state) bulundu")
         }
+    }
+
+    func test_zoomAraligiDonanimaGoreSinirlanir() async {
+        let camera = FakeCamera()
+        camera.zoom = CameraZoomCapabilities(factor: 1, range: 0.5...5)
+        let viewModel = makeViewModel(camera: camera, repository: FakeRepository())
+
+        await viewModel.start()
+        viewModel.setZoomFactor(8)
+
+        XCTAssertEqual(viewModel.zoomRange, 0.5...5)
+        XCTAssertEqual(viewModel.zoomFactor, 5)
+        XCTAssertEqual(camera.zoom.factor, 5)
     }
 
     // MARK: - Yeniden çekim

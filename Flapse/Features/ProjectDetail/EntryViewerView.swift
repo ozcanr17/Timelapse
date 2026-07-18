@@ -32,14 +32,6 @@ struct EntryViewerView: View {
         return Array(live.suffix(FeatureGate.freeEntryLimit))
     }
 
-    private var pageEntries: ArraySlice<Entry> {
-        let available = entries
-        guard let index = available.firstIndex(where: { $0.id == selectedEntryID }) else { return [] }
-        let lower = max(available.startIndex, index - 1)
-        let upper = min(available.endIndex, index + 2)
-        return available[lower..<upper]
-    }
-
     private var selectedEntry: Entry? {
         entries.first { $0.id == selectedEntryID }
     }
@@ -52,13 +44,19 @@ struct EntryViewerView: View {
         ZStack {
             Color.black.ignoresSafeArea()
 
-            TabView(selection: $selectedEntryID) {
-                ForEach(pageEntries) { entry in
-                    EntryPage(entry: entry)
-                        .tag(entry.id)
+            ScrollView(.horizontal) {
+                LazyHStack(spacing: 0) {
+                    ForEach(entries) { entry in
+                        EntryPage(entry: entry)
+                            .containerRelativeFrame(.horizontal)
+                            .id(entry.id)
+                    }
                 }
+                .scrollTargetLayout()
             }
-            .tabViewStyle(.page(indexDisplayMode: .never))
+            .scrollTargetBehavior(.paging)
+            .scrollPosition(id: selectedEntryBinding)
+            .scrollIndicators(.hidden)
             .ignoresSafeArea()
 
             VStack {
@@ -87,6 +85,15 @@ struct EntryViewerView: View {
             }
         }
         .photosDeniedAlert(isPresented: $showPhotosDenied)
+    }
+
+    private var selectedEntryBinding: Binding<UUID?> {
+        Binding(
+            get: { selectedEntryID },
+            set: { newValue in
+                if let newValue { selectedEntryID = newValue }
+            }
+        )
     }
 
     private var topBar: some View {

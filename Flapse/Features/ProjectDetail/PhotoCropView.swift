@@ -96,7 +96,7 @@ struct PhotoEditView: View {
         .safeAreaInset(edge: .bottom, spacing: 0) { editorControls }
         .environment(\.colorScheme, .dark)
         .task {
-            let loaded = await ImageDownsampler.image(from: imageData, maxPixelSize: 4000)
+            let loaded = await ImageDownsampler.image(from: imageData, maxPixelSize: 1800)
             originalImage = loaded
             image = loaded
         }

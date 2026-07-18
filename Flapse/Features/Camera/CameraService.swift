@@ -12,7 +12,14 @@ protocol CameraServiceProtocol: AnyObject {
     func start(position: AVCaptureDevice.Position) async throws
     func stop()
     func switchCamera(to position: AVCaptureDevice.Position) async throws
+    func zoomCapabilities() async -> CameraZoomCapabilities
+    func setZoomFactor(_ factor: CGFloat)
     func capturePhoto() async throws -> Data
+}
+
+struct CameraZoomCapabilities: Equatable, Sendable {
+    let factor: CGFloat
+    let range: ClosedRange<CGFloat>
 }
 
 final class CameraService: NSObject, CameraServiceProtocol, @unchecked Sendable {
@@ -54,6 +61,38 @@ final class CameraService: NSObject, CameraServiceProtocol, @unchecked Sendable 
         }
     }
 
+    func zoomCapabilities() async -> CameraZoomCapabilities {
+        await withCheckedContinuation { continuation in
+            sessionQueue.async {
+                guard let device = self.currentInput?.device else {
+                    continuation.resume(returning: CameraZoomCapabilities(factor: 1, range: 1...1))
+                    return
+                }
+                let multiplier = self.zoomDisplayMultiplier(for: device)
+                let lower = device.minAvailableVideoZoomFactor * multiplier
+                let upper = max(lower, min(device.maxAvailableVideoZoomFactor * multiplier, 10))
+                continuation.resume(returning: CameraZoomCapabilities(
+                    factor: min(max(device.videoZoomFactor * multiplier, lower), upper),
+                    range: lower...upper
+                ))
+            }
+        }
+    }
+
+    func setZoomFactor(_ factor: CGFloat) {
+        sessionQueue.async {
+            guard let device = self.currentInput?.device else { return }
+            let multiplier = self.zoomDisplayMultiplier(for: device)
+            let rawFactor = factor / max(multiplier, 0.01)
+            let clamped = min(max(rawFactor, device.minAvailableVideoZoomFactor), device.maxAvailableVideoZoomFactor)
+            do {
+                try device.lockForConfiguration()
+                device.videoZoomFactor = clamped
+                device.unlockForConfiguration()
+            } catch {}
+        }
+    }
+
     func capturePhoto() async throws -> Data {
         try await withCheckedThrowingContinuation { continuation in
             self.sessionQueue.async {
@@ -66,7 +105,7 @@ final class CameraService: NSObject, CameraServiceProtocol, @unchecked Sendable 
                     connection.isVideoMirrored = self.currentInput?.device.position == .front
                 }
                 let settings = AVCapturePhotoSettings()
-                settings.photoQualityPrioritization = .speed
+                settings.photoQualityPrioritization = .balanced
                 self.captureContinuation = continuation
                 self.photoOutput.capturePhoto(with: settings, delegate: self)
             }
@@ -114,13 +153,32 @@ final class CameraService: NSObject, CameraServiceProtocol, @unchecked Sendable 
         }
 
         guard
-            let camera = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: position),
+            let camera = preferredCamera(position: position),
             let input = try? AVCaptureDeviceInput(device: camera),
             session.canAddInput(input)
         else { throw CameraError.configurationFailed }
 
         session.addInput(input)
         currentInput = input
+    }
+
+    private func preferredCamera(position: AVCaptureDevice.Position) -> AVCaptureDevice? {
+        let types: [AVCaptureDevice.DeviceType] = position == .back
+            ? [.builtInTripleCamera, .builtInDualWideCamera, .builtInDualCamera, .builtInWideAngleCamera]
+            : [.builtInTrueDepthCamera, .builtInWideAngleCamera]
+        for type in types {
+            if let device = AVCaptureDevice.default(type, for: .video, position: position) {
+                return device
+            }
+        }
+        return AVCaptureDevice.default(for: .video)
+    }
+
+    private func zoomDisplayMultiplier(for device: AVCaptureDevice) -> CGFloat {
+        if #available(iOS 18.0, *) {
+            return device.displayVideoZoomFactorMultiplier
+        }
+        return 1
     }
 }
 
