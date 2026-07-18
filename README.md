@@ -86,7 +86,7 @@ Daily reminders arrive **with yesterday's photo attached** and a day-numbered ti
 All widgets share a modern dark-gradient look with a brand-green glow, and **tapping any widget deep-links straight into the camera** for today's due project (`flapse://capture`).
 
 ### Monetization
-Freemium. **Flapse Pro** — monthly ($0.99), yearly ($9.99, best value), both with a **7-day free trial**, or lifetime ($19.99) — unlocks unlimited projects/frames, manual per-photo alignment, fluid AI transitions, music & beat sync, Capture Together, iCloud backup, auto-sorting, unlimited import, and watermark-free 4K export. Smart alignment is free for everyone. Prices come from App Store Connect (Turkey overrides: 50₺ / 500₺ / 1000₺).
+Freemium. **Flapse Pro** — monthly ($0.49), yearly ($4.99, best value), both with a **7-day free trial**, or lifetime ($9.99) — unlocks unlimited projects/frames, manual per-photo alignment, fluid AI transitions, music & beat sync, Capture Together, iCloud backup, auto-sorting, unlimited import, and watermark-free 4K export. Smart alignment is free for everyone. Prices come from App Store Connect (Turkey overrides: 24,99₺ / 249,99₺ / 499,99₺).
 
 ---
 

@@ -120,9 +120,9 @@ Sınırsız proje ve kare, akıllı & kare kare hizalama, akışkan AI geçişle
 
 | Reference | Product ID | Type | Price (US / TR) | Intro offer |
 |---|---|---|---|---|
-| Pro Monthly | `com.ridvan.timelapse.pro.monthly` | Auto-renewable, group "Flapse Pro" | $0.99 / 50₺ | 7 days free |
-| Pro Yearly | `com.ridvan.timelapse.pro.yearly` | Auto-renewable, same group | $9.99 / 500₺ | 7 days free |
-| Pro Lifetime | `com.ridvan.timelapse.pro.lifetime` | Non-consumable | $19.99 / 1000₺ | — |
+| Pro Monthly | `com.ridvan.timelapse.pro.monthly` | Auto-renewable, group "Flapse Pro" | $0.49 / 24,99₺ | 7 days free |
+| Pro Yearly | `com.ridvan.timelapse.pro.yearly` | Auto-renewable, same group | $4.99 / 249,99₺ | 7 days free |
+| Pro Lifetime | `com.ridvan.timelapse.pro.lifetime` | Non-consumable | $9.99 / 499,99₺ | — |
 
 Localized IAP display names: Pro (Aylık/Monthly), Pro (Yıllık/Yearly), Pro (Ömür Boyu/Lifetime).
 

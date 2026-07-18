@@ -2,7 +2,7 @@
 
 Bu doküman, uygulamayı App Store'da yayınlamak için gereken tüm adımları sırayla anlatır.
 Teknik ön hazırlık (kod tarafı) tamamlandı: paywall yasal metinleri, hesap silme, isteğe
-bağlı giriş, değerlendirme istemi, widget yerelleştirmesi ve `Configuration.storekit`
+bağlı giriş, değerlendirme istemi, widget yerelleştirmesi ve `Products.storekit`
 depoda hazır. Kalan adımların tamamı Apple hesabı gerektiren, insan eliyle yapılacak işler.
 
 ---
@@ -78,10 +78,10 @@ Sonra App Store Connect → uygulama → **Monetization → Subscriptions / In-A
    paywall ekran görüntüsü ekle.
 6. IAP'ler ilk sürümle **birlikte** incelemeye girer — sürüm sayfasında üçünü de sürüme iliştir.
 
-**Yayın öncesi cihazsız test:** Xcode → Product → Scheme → Edit Scheme → Run → Options →
-**StoreKit Configuration** → depodaki `Configuration.storekit` dosyasını seç; satın alma
-akışı sahte mağazayla uçtan uca denenebilir. Gerçek sandbox testi için: App Store Connect →
-Users and Access → **Sandbox Testers**'dan test hesabı aç.
+**Yayın öncesi cihazsız test:** depodaki `Products.storekit` dosyası Timelapse şemasına
+zaten bağlı — Xcode'dan çalıştırınca satın alma akışı sahte mağazayla uçtan uca denenebilir
+(fiyatlar App Store Connect'e girilecek değerlerle aynı tutuluyor). Gerçek sandbox testi
+için: App Store Connect → Users and Access → **Sandbox Testers**'dan test hesabı aç.
 
 ## 6. Sürüm sayfasını doldur
 

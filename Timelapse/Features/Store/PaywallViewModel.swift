@@ -24,15 +24,15 @@ final class PaywallViewModel {
     static let fallbackPackages: [StorePackage] = [
         StorePackage(id: StoreProduct.monthly.rawValue,
                      displayName: String(localized: "Pro (Aylık)", bundle: .appLanguage),
-                     displayPrice: "$0.99 / ay",
+                     displayPrice: "$0.49 / ay",
                      hasTrial: true),
         StorePackage(id: StoreProduct.yearly.rawValue,
                      displayName: String(localized: "Pro (Yıllık)", bundle: .appLanguage),
-                     displayPrice: "$9.99 / yıl",
+                     displayPrice: "$4.99 / yıl",
                      hasTrial: true),
         StorePackage(id: StoreProduct.lifetime.rawValue,
                      displayName: String(localized: "Pro (Ömür Boyu)", bundle: .appLanguage),
-                     displayPrice: "$19.99")
+                     displayPrice: "$9.99")
     ]
 
     func load() async {
