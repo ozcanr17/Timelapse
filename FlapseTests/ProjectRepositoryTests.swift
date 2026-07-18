@@ -54,6 +54,7 @@ final class ProjectRepositoryTests: XCTestCase {
         try repository.replaceImage(for: entry, with: Data([0x02]))
 
         XCTAssertEqual(entry.imageData, Data([0x02]))
+        XCTAssertEqual(entry.imageRevision, 1)
         let entryCount = try container.mainContext.fetchCount(FetchDescriptor<Entry>())
         XCTAssertEqual(entryCount, 1)
     }

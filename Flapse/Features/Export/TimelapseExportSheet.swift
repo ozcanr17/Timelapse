@@ -227,7 +227,7 @@ struct TimelapseExportSheet: View {
             }
         }
         .allowsHitTesting(false)
-        .task(id: frames.last?.imageData.count) {
+        .task(id: project.sortedEntries.last?.imageCacheKey) {
             poster = await ImageDownsampler.image(from: frames.last?.imageData, maxPixelSize: 800)
         }
     }

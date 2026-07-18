@@ -350,7 +350,7 @@ private struct DeletedPhotoThumbnail: View {
             let descriptor = FetchDescriptor<Entry>(predicate: #Predicate { $0.id == entryID })
             guard let entry = try? modelContext.fetch(descriptor).first else { return }
             image = await ImageDownsampler.cachedImage(
-                key: "deleted-\(entryID)",
+                key: "deleted-\(entry.imageCacheKey)",
                 maxPixelSize: 160,
                 load: { entry.imageData }
             )

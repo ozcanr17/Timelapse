@@ -81,6 +81,45 @@ final class PhotoImageEditorTests: XCTestCase {
         XCTAssertEqual(rect.maxX, 168.75, accuracy: 0.001)
     }
 
+    func testFreeCropHandleChangesAndClampsAspect() {
+        let wider = PhotoCropGeometry.adjustedFreeAspect(
+            base: 1,
+            translation: CGSize(width: 90, height: 0)
+        )
+        let taller = PhotoCropGeometry.adjustedFreeAspect(
+            base: 1,
+            translation: CGSize(width: 0, height: 90)
+        )
+
+        XCTAssertGreaterThan(wider, 1)
+        XCTAssertLessThan(taller, 1)
+        XCTAssertEqual(
+            PhotoCropGeometry.adjustedFreeAspect(base: 1, translation: CGSize(width: 10_000, height: 0)),
+            2.5
+        )
+    }
+
+    func testRenderAppliesEditToOriginalPixelDimensions() throws {
+        let source = image(width: 120, height: 80) { context in
+            context.setFillColor(UIColor.red.cgColor)
+            context.fill(CGRect(x: 0, y: 0, width: 120, height: 80))
+        }
+        let data = try XCTUnwrap(source.pngData())
+        let renderedData = PhotoImageEditor.render(
+            data: data,
+            operations: [.rotateClockwise],
+            cropAspect: 2.0 / 3.0,
+            zoom: 1,
+            offset: .zero,
+            displaySize: CGSize(width: 80, height: 120),
+            shouldCrop: false
+        )
+        let rendered = try XCTUnwrap(renderedData.flatMap(UIImage.init(data:)))
+
+        XCTAssertEqual(rendered.size.width, 80)
+        XCTAssertEqual(rendered.size.height, 120)
+    }
+
     private func horizontalPattern() -> UIImage {
         image(width: 2, height: 1) { context in
             context.setFillColor(UIColor.red.cgColor)

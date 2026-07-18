@@ -67,14 +67,13 @@ final class ProjectRepository: ProjectRepositoryProtocol {
 
     func replaceImage(for entry: Entry, with data: Data) throws {
         entry.imageData = data
+        entry.imageRevision += 1
         try context.save()
-        ThumbnailCache.invalidateAll()
     }
 
     func deleteEntry(_ entry: Entry) throws {
         entry.deletedAt = Date()
         try context.save()
-        ThumbnailCache.invalidateAll()
     }
 
     func restoreEntry(_ entry: Entry) throws {
@@ -85,7 +84,6 @@ final class ProjectRepository: ProjectRepositoryProtocol {
     func permanentlyDeleteEntry(_ entry: Entry) throws {
         context.delete(entry)
         try saveIfNeeded()
-        ThumbnailCache.invalidateAll()
     }
 
     func deleteProject(_ project: Project) throws {

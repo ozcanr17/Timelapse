@@ -285,9 +285,9 @@ private struct DailyCaptureCard: View {
         }
         .buttonStyle(.plain)
         .cardStyle()
-        .task(id: project.sortedEntries.last?.id) {
+        .task(id: project.sortedEntries.last?.imageCacheKey) {
             guard let last = project.sortedEntries.last(where: { !$0.isDeleted }) else { return }
-            photo = await ImageDownsampler.cachedImage(key: "daily-\(last.id)", maxPixelSize: 240) { last.imageData }
+            photo = await ImageDownsampler.cachedImage(key: "daily-\(last.imageCacheKey)", maxPixelSize: 240) { last.imageData }
         }
     }
 }
@@ -314,9 +314,9 @@ private struct DueRowThumb: View {
         }
         .frame(width: 38, height: 38)
         .clipShape(Circle())
-        .task(id: project.sortedEntries.last?.id) {
+        .task(id: project.sortedEntries.last?.imageCacheKey) {
             guard let last = project.sortedEntries.last(where: { !$0.isDeleted }) else { return }
-            photo = await ImageDownsampler.cachedImage(key: "due-\(last.id)", maxPixelSize: 150) { last.imageData }
+            photo = await ImageDownsampler.cachedImage(key: "due-\(last.imageCacheKey)", maxPixelSize: 150) { last.imageData }
         }
     }
 }
@@ -340,8 +340,8 @@ private struct RecentEntryThumb: View {
         .frame(width: 84, height: 112)
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         .contentShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .task {
-            image = await ImageDownsampler.cachedImage(key: "home-\(entry.id)", maxPixelSize: 300) { entry.imageData }
+        .task(id: entry.imageCacheKey) {
+            image = await ImageDownsampler.cachedImage(key: "home-\(entry.imageCacheKey)", maxPixelSize: 300) { entry.imageData }
         }
     }
 }
@@ -443,7 +443,7 @@ private struct ContributionGrid: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .task(id: entries.count) { await loadThumbnails() }
+        .task(id: entries.map(\.imageRevision).reduce(0, +)) { await loadThumbnails() }
     }
 
     @ViewBuilder
@@ -491,7 +491,7 @@ private struct ContributionGrid: View {
         var thumbs: [Date: UIImage] = [:]
         for (day, entry) in latestByDay {
             thumbs[day] = await ImageDownsampler.cachedImage(
-                key: "grid-\(entry.id)",
+                key: "grid-\(entry.imageCacheKey)",
                 maxPixelSize: cell * displayScale * 2
             ) { entry.imageData }
         }

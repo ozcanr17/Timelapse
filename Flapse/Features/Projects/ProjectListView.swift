@@ -31,12 +31,14 @@ struct ProjectListView: View {
     private var liveProjects: [Project] {
         projects
             .filter { !$0.isDeleted && $0.deletedAt == nil }
+            .map { (project: $0, activity: $0.lastActivityDate) }
             .sorted {
-                if $0.lastActivityDate == $1.lastActivityDate {
-                    return $0.createdAt > $1.createdAt
+                if $0.activity == $1.activity {
+                    return $0.project.createdAt > $1.project.createdAt
                 }
-                return $0.lastActivityDate > $1.lastActivityDate
+                return $0.activity > $1.activity
             }
+            .map(\.project)
     }
 
     private var unlockedProjectID: UUID? {
@@ -308,12 +310,13 @@ private struct ProjectCard: View {
     @State private var photo: UIImage?
 
     private var accent: Color { Theme.accent(for: project.category) }
-    private var count: Int { project.sortedEntries.filter { !$0.isDeleted }.count }
-    private var streak: Int {
-        ActivitySummary.streak(capturedDates: project.sortedEntries.map(\.capturedAt))
-    }
 
     var body: some View {
+        let entries = (project.entries ?? []).filter { !$0.isDeleted && $0.deletedAt == nil }
+        let last = entries.max { $0.capturedAt < $1.capturedAt }
+        let count = entries.count
+        let streak = ActivitySummary.streak(capturedDates: entries.map(\.capturedAt))
+        let isDue = project.cadence.isCaptureDue(lastCapture: last?.capturedAt)
         VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .top) {
                 Image(systemName: Theme.icon(for: project.category))
@@ -323,9 +326,9 @@ private struct ProjectCard: View {
                     .background(.black.opacity(0.28), in: Circle())
                 Spacer()
                 if streak > 0 {
-                    streakBadge
+                    streakBadge(streak)
                 }
-                if project.isCaptureDue() {
+                if isDue {
                     Text("Bugün")
                         .font(Theme.caption(12))
                         .fontWeight(.semibold)
@@ -380,13 +383,13 @@ private struct ProjectCard: View {
             }
         }
         .contentShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-        .task(id: project.sortedEntries.last?.id) {
-            guard let last = project.sortedEntries.last else { return }
-            photo = await ImageDownsampler.cachedImage(key: "card-\(last.id)", maxPixelSize: 800) { last.imageData }
+        .task(id: last?.imageCacheKey) {
+            guard let last else { return }
+            photo = await ImageDownsampler.cachedImage(key: "card-\(last.imageCacheKey)", maxPixelSize: 800) { last.imageData }
         }
     }
 
-    private var streakBadge: some View {
+    private func streakBadge(_ streak: Int) -> some View {
         HStack(spacing: 3) {
             Image(systemName: "flame.fill").font(.system(size: 11, weight: .semibold))
             Text("\(streak)").font(.system(size: 13, weight: .bold)).monospacedDigit()

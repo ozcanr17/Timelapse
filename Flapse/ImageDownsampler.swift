@@ -30,11 +30,12 @@ enum ImageDownsampler {
         maxPixelSize: CGFloat,
         load: () -> Data?
     ) async -> UIImage? {
-        let fullKey = "\(ThumbnailCache.generation)-\(key)-\(Int(maxPixelSize))" as NSString
+        let fullKey = "\(key)-\(Int(maxPixelSize))" as NSString
         if let hit = ThumbnailCache.shared.object(forKey: fullKey) { return hit }
         guard let data = load() else { return nil }
         guard let decoded = await image(from: data, maxPixelSize: maxPixelSize) else { return nil }
-        ThumbnailCache.shared.setObject(decoded, forKey: fullKey)
+        let cost = decoded.cgImage.map { $0.bytesPerRow * $0.height } ?? 0
+        ThumbnailCache.shared.setObject(decoded, forKey: fullKey, cost: cost)
         return decoded
     }
 }
@@ -42,15 +43,8 @@ enum ImageDownsampler {
 enum ThumbnailCache {
     static let shared: NSCache<NSString, UIImage> = {
         let cache = NSCache<NSString, UIImage>()
-        cache.countLimit = 500
+        cache.countLimit = 240
+        cache.totalCostLimit = 128 * 1_024 * 1_024
         return cache
     }()
-
-    /// Bir kare yeniden çekildiğinde eski küçük resimlerin görünmemesi için nesil sayacı
-    /// artırılır; tüm eski anahtarlar geçersizleşir.
-    nonisolated(unsafe) static var generation = 0
-
-    static func invalidateAll() {
-        generation += 1
-    }
 }

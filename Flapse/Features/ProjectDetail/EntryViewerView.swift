@@ -6,6 +6,7 @@ import Photos
 struct EntryViewerView: View {
 
     let project: Project
+    let sourceEntries: [Entry]
 
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
@@ -19,15 +20,24 @@ struct EntryViewerView: View {
     @State private var shareImage: UIImage?
     @State private var showPhotosDenied = false
 
-    init(project: Project, initialEntry: Entry) {
+    init(project: Project, initialEntry: Entry, entries: [Entry]) {
         self.project = project
+        sourceEntries = entries
         _selectedEntryID = State(initialValue: initialEntry.id)
     }
 
     private var entries: [Entry] {
-        let live = project.sortedEntries.filter { !$0.isDeleted }
+        let live = sourceEntries.filter { !$0.isDeleted }
         guard !store.isPro else { return live }
         return Array(live.suffix(FeatureGate.freeEntryLimit))
+    }
+
+    private var pageEntries: ArraySlice<Entry> {
+        let available = entries
+        guard let index = available.firstIndex(where: { $0.id == selectedEntryID }) else { return [] }
+        let lower = max(available.startIndex, index - 1)
+        let upper = min(available.endIndex, index + 2)
+        return available[lower..<upper]
     }
 
     private var selectedEntry: Entry? {
@@ -43,7 +53,7 @@ struct EntryViewerView: View {
             Color.black.ignoresSafeArea()
 
             TabView(selection: $selectedEntryID) {
-                ForEach(entries) { entry in
+                ForEach(pageEntries) { entry in
                     EntryPage(entry: entry)
                         .tag(entry.id)
                 }
@@ -106,8 +116,16 @@ struct EntryViewerView: View {
         }
         .padding(.horizontal, 16)
         .padding(.top, 4)
-        .task(id: "\(selectedEntryID)-\(selectedEntry?.imageData?.count ?? 0)") {
-            shareImage = await ImageDownsampler.image(from: selectedEntry?.imageData, maxPixelSize: 3000)
+        .task(id: selectedEntry?.imageCacheKey) {
+            guard let entry = selectedEntry else {
+                shareImage = nil
+                return
+            }
+            shareImage = await ImageDownsampler.cachedImage(
+                key: "viewer-\(entry.imageCacheKey)",
+                maxPixelSize: 2400,
+                load: { entry.imageData }
+            )
         }
     }
 
@@ -225,8 +243,12 @@ private struct EntryPage: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .task(id: entry.imageData?.count) {
-            image = await ImageDownsampler.image(from: entry.imageData, maxPixelSize: 2400)
+        .task(id: entry.imageCacheKey) {
+            image = await ImageDownsampler.cachedImage(
+                key: "viewer-\(entry.imageCacheKey)",
+                maxPixelSize: 2400,
+                load: { entry.imageData }
+            )
         }
         .onChange(of: entry.id) {
             zoom = 1

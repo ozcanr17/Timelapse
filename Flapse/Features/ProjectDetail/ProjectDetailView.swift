@@ -8,6 +8,8 @@ struct ProjectDetailView: View {
 
     let project: Project
 
+    @Query private var fetchedEntries: [Entry]
+
     @Environment(\.modelContext) private var modelContext
     @Environment(StoreService.self) private var store
     @Environment(\.theme) private var theme
@@ -24,6 +26,17 @@ struct ProjectDetailView: View {
     private struct MonthKey: Hashable {
         let year: Int
         let month: Int
+    }
+
+    init(project: Project) {
+        self.project = project
+        let projectID = project.id
+        _fetchedEntries = Query(
+            filter: #Predicate<Entry> { entry in
+                entry.project?.id == projectID && entry.deletedAt == nil
+            },
+            sort: [SortDescriptor(\.capturedAt)]
+        )
     }
 
     private enum DetailSheet: Identifiable {
@@ -49,7 +62,11 @@ struct ProjectDetailView: View {
     private var accent: Color { Theme.accent(for: project.category) }
 
     private var liveEntries: [Entry] {
-        project.sortedEntries.filter { !$0.isDeleted }
+        fetchedEntries
+    }
+
+    private var isCaptureDue: Bool {
+        project.cadence.isCaptureDue(lastCapture: liveEntries.last?.capturedAt)
     }
 
     var body: some View {
@@ -63,7 +80,7 @@ struct ProjectDetailView: View {
 
                 heroCard
 
-                if !project.sortedEntries.isEmpty {
+                if !liveEntries.isEmpty {
                     statsRow
                 }
 
@@ -77,11 +94,11 @@ struct ProjectDetailView: View {
 
                 captureCTA
 
-                if project.sortedEntries.count >= 2 {
+                if liveEntries.count >= 2 {
                     exportButton
                 }
 
-                if project.sortedEntries.isEmpty {
+                if liveEntries.isEmpty {
                     emptyState
                 } else {
                     timeline
@@ -194,7 +211,7 @@ struct ProjectDetailView: View {
                     case .capture:
                         CameraCaptureView(project: project)
                     case .viewer(let entry):
-                        EntryViewerView(project: project, initialEntry: entry)
+                        EntryViewerView(project: project, initialEntry: entry, entries: liveEntries)
                     }
                 }
         }
@@ -203,7 +220,7 @@ struct ProjectDetailView: View {
     /// Bugünün karesini çekmek için ana çağrı — kamerayı prim konumda, büyük bir
     /// düğmeyle açar. Uygulamanın asıl amacı bu olduğundan öne çıkarıyoruz.
     private var captureCTA: some View {
-        let due = project.isCaptureDue()
+        let due = isCaptureDue
         return Button {
             if canAddEntry { activeCover = .capture } else { activeSheet = .paywall }
         } label: {
@@ -380,8 +397,8 @@ struct ProjectDetailView: View {
         let sorted = liveEntries.sorted { $0.capturedAt < $1.capturedAt }
         guard let first = sorted.first, let last = sorted.last, first.id != last.id else { return nil }
         guard
-            let firstImage = await ImageDownsampler.cachedImage(key: "cmp-\(first.id)", maxPixelSize: 900, load: { first.imageData }),
-            let lastImage = await ImageDownsampler.cachedImage(key: "cmp-\(last.id)", maxPixelSize: 900, load: { last.imageData })
+            let firstImage = await ImageDownsampler.cachedImage(key: "cmp-\(first.imageCacheKey)", maxPixelSize: 900, load: { first.imageData }),
+            let lastImage = await ImageDownsampler.cachedImage(key: "cmp-\(last.imageCacheKey)", maxPixelSize: 900, load: { last.imageData })
         else { return nil }
         let renderer = ImageRenderer(content: CompareShareCard(
             title: project.title,
@@ -404,8 +421,8 @@ struct ProjectDetailView: View {
         let sorted = liveEntries.sorted { $0.capturedAt < $1.capturedAt }
         guard let first = sorted.first, let last = sorted.last, first.id != last.id else { return nil }
         guard
-            let firstImage = await ImageDownsampler.cachedImage(key: "story-\(first.id)", maxPixelSize: 1200, load: { first.imageData }),
-            let lastImage = await ImageDownsampler.cachedImage(key: "story-\(last.id)", maxPixelSize: 1200, load: { last.imageData })
+            let firstImage = await ImageDownsampler.cachedImage(key: "story-\(first.imageCacheKey)", maxPixelSize: 1200, load: { first.imageData }),
+            let lastImage = await ImageDownsampler.cachedImage(key: "story-\(last.imageCacheKey)", maxPixelSize: 1200, load: { last.imageData })
         else { return nil }
         let renderer = ImageRenderer(content: StoryShareCard(
             title: project.title,
@@ -425,7 +442,7 @@ struct ProjectDetailView: View {
     }
 
     private var statsRow: some View {
-        let dates = project.sortedEntries.map(\.capturedAt)
+        let dates = liveEntries.map(\.capturedAt)
         let streak = ActivitySummary.streak(capturedDates: dates)
         return HStack(spacing: 12) {
             StatTile(
@@ -506,7 +523,7 @@ struct ProjectDetailView: View {
                 .padding(16)
         }
         .overlay(alignment: .topTrailing) {
-            if project.isCaptureDue() {
+            if isCaptureDue {
                 Text("Bugün")
                     .font(Theme.caption(12))
                     .fontWeight(.semibold)
@@ -520,9 +537,9 @@ struct ProjectDetailView: View {
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .shadow(color: .black.opacity(0.12), radius: 12, x: 0, y: 6)
         .accessibilityElement(children: .combine)
-        .task(id: liveEntries.last?.id) {
+        .task(id: liveEntries.last?.imageCacheKey) {
             guard let last = liveEntries.last else { return }
-            heroImage = await ImageDownsampler.cachedImage(key: "hero-\(last.id)", maxPixelSize: 1000) { last.imageData }
+            heroImage = await ImageDownsampler.cachedImage(key: "hero-\(last.imageCacheKey)", maxPixelSize: 1000) { last.imageData }
         }
     }
 
@@ -547,7 +564,8 @@ struct ProjectDetailView: View {
     }
 
     private var timeline: some View {
-        VStack(alignment: .leading, spacing: 0) {
+        let entries = displayedEntries
+        return LazyVStack(alignment: .leading, spacing: 0) {
             Text("Zaman Çizelgesi")
                 .font(Theme.headline(18))
                 .foregroundStyle(theme.ink)
@@ -556,11 +574,11 @@ struct ProjectDetailView: View {
             monthFilterBar
                 .padding(.bottom, 18)
 
-            ForEach(Array(displayedEntries.enumerated()), id: \.element.id) { index, entry in
+            ForEach(Array(entries.enumerated()), id: \.element.id) { index, entry in
                 TimelineEntryRow(
                     entry: entry,
                     accent: accent,
-                    isLast: index == displayedEntries.count - 1
+                    isLast: index == entries.count - 1
                 ) {
                     activeCover = .viewer(entry)
                 }
@@ -631,7 +649,7 @@ struct ProjectDetailView: View {
     }
 
     private var accessibleEntries: [Entry] {
-        let newestFirst = liveEntries.sorted { $0.capturedAt > $1.capturedAt }
+        let newestFirst = Array(liveEntries.reversed())
         guard lockedCount > 0 else { return newestFirst }
         return Array(newestFirst.prefix(FeatureGate.freeEntryLimit))
     }
@@ -825,8 +843,8 @@ private struct TimelineEntryRow: View {
         .buttonStyle(.plain)
         .padding(.bottom, rowGap)
         .accessibilityIdentifier("timelineCard")
-        .task(id: entry.id) {
-            photo = await ImageDownsampler.cachedImage(key: "row-\(entry.id)", maxPixelSize: 700) { entry.imageData }
+        .task(id: entry.imageCacheKey) {
+            photo = await ImageDownsampler.cachedImage(key: "row-\(entry.imageCacheKey)", maxPixelSize: 900) { entry.imageData }
             await resolvePlaceIfNeeded()
         }
     }

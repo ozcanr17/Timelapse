@@ -103,6 +103,7 @@ final class Entry {
     // bunu ayrı bir dosyaya yazar; CloudKit'e gittiğinde otomatik olarak CKAsset'e
     // dönüşür. Performans ve maliyet için kritik tercih.
     @Attribute(.externalStorage) var imageData: Data?
+    var imageRevision: Int = 0
 
     // "Ghost" hizalaması için referans noktası. 0...1 aralığında NORMALIZE koordinat
     // tutuyoruz; böylece farklı çözünürlüklerde bile aynı yere denk gelir.
@@ -140,6 +141,10 @@ final class Entry {
         self.sourceAssetIdentifier = sourceAssetIdentifier
         self.subjectKindRaw = subjectKindRaw
         self.featurePrintData = featurePrintData
+    }
+
+    var imageCacheKey: String {
+        "\(id.uuidString)-\(imageRevision)"
     }
 }
 
@@ -189,7 +194,10 @@ final class Project {
 
     /// En son çekimin tarihi (hiç yoksa nil).
     var lastCaptureDate: Date? {
-        sortedEntries.last?.capturedAt
+        (entries ?? [])
+            .filter { !$0.isDeleted && $0.deletedAt == nil }
+            .map(\.capturedAt)
+            .max()
     }
 
     var lastActivityDate: Date {
