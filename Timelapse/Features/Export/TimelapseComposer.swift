@@ -329,8 +329,16 @@ struct TimelapseComposer: TimelapseComposing {
         writer.startSession(atSourceTime: .zero)
 
         let useSmart = settings.smartAlignment && settings.manualAnchor == nil
+        let mirrorFlags = useSmart && settings.alignmentSubject == .group
+            ? FrameAligner.coupleMirrorFlags(for: frames.map(\.imageData))
+            : Array(repeating: false, count: frames.count)
         let anchors: [FrameAnchor?] = useSmart
-            ? frames.map { FrameAligner.anchor(in: $0.imageData, subject: settings.alignmentSubject) }
+            ? frames.enumerated().map { index, frame in
+                guard let anchor = FrameAligner.anchor(in: frame.imageData, subject: settings.alignmentSubject) else {
+                    return nil
+                }
+                return mirrorFlags[index] ? FrameAligner.mirrored(anchor) : anchor
+            }
             : Array(repeating: nil, count: frames.count)
         let reference = anchors.compactMap { $0 }.first
 
@@ -381,8 +389,11 @@ struct TimelapseComposer: TimelapseComposing {
         }
 
         func keyframe(_ index: Int) throws -> CGImage {
-            guard let image = UIImage(data: frames[index].imageData) else {
+            guard var image = UIImage(data: frames[index].imageData) else {
                 throw TimelapseComposerError.frameDecodingFailed
+            }
+            if mirrorFlags[index], let mirrored = horizontallyMirrored(image) {
+                image = mirrored
             }
             var frameSettings = settings
             if let perFrame = settings.manualAnchors, index < perFrame.count {
@@ -494,6 +505,17 @@ struct TimelapseComposer: TimelapseComposing {
     // sabit bir yüksekliğe oturtulur; böylece tüm karelerde aynı yerde ve boyutta durur.
     private static let alignTargetCenter = CGPoint(x: 0.5, y: 0.42)
     private static let alignTargetHeight: CGFloat = 0.34
+
+    private static func horizontallyMirrored(_ image: UIImage) -> UIImage? {
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        format.opaque = true
+        return UIGraphicsImageRenderer(size: image.size, format: format).image { context in
+            context.cgContext.translateBy(x: image.size.width, y: 0)
+            context.cgContext.scaleBy(x: -1, y: 1)
+            image.draw(in: CGRect(origin: .zero, size: image.size))
+        }
+    }
 
     private static func composeFrame(
         _ image: UIImage,

@@ -58,15 +58,56 @@ final class ProjectRepositoryTests: XCTestCase {
         XCTAssertEqual(entryCount, 1)
     }
 
-    func test_cekimSilinince_projedenDeKalkar() throws {
+    func test_cekimSilinince_sonSilinenlereTasinir() throws {
         let project = try repository.createProject(title: "Sakal", category: .hairAndBeard, cadence: .daily)
         let entry = Entry()
         try repository.addEntry(entry, to: project)
 
         try repository.deleteEntry(entry)
+
+        XCTAssertTrue(project.sortedEntries.isEmpty)
+        XCTAssertNotNil(entry.deletedAt)
+        let remainingEntries = try container.mainContext.fetchCount(FetchDescriptor<Entry>())
+        XCTAssertEqual(remainingEntries, 1)
+    }
+
+    func test_silinenCekim_geriAlinir() throws {
+        let project = try repository.createProject(title: "Sakal", category: .hairAndBeard, cadence: .daily)
+        let entry = Entry()
+        try repository.addEntry(entry, to: project)
+        try repository.deleteEntry(entry)
+
+        try repository.restoreEntry(entry)
+
+        XCTAssertNil(entry.deletedAt)
+        XCTAssertEqual(project.sortedEntries.map(\.id), [entry.id])
+    }
+
+    func test_silinenCekim_kaliciSilinir() throws {
+        let project = try repository.createProject(title: "Sakal", category: .hairAndBeard, cadence: .daily)
+        let entry = Entry()
+        try repository.addEntry(entry, to: project)
+        try repository.deleteEntry(entry)
+
+        try repository.permanentlyDeleteEntry(entry)
+
+        let remainingEntries = try container.mainContext.fetchCount(FetchDescriptor<Entry>())
+        XCTAssertEqual(remainingEntries, 0)
+    }
+
+    func test_suresiDolanSilinmisCekim_temizlenir() throws {
+        let project = try repository.createProject(title: "Sakal", category: .hairAndBeard, cadence: .daily)
+        let entry = Entry()
+        try repository.addEntry(entry, to: project)
+        try repository.deleteEntry(entry)
+        entry.deletedAt = Date(timeIntervalSince1970: 1_700_000_000)
         try repository.saveIfNeeded()
 
-        XCTAssertEqual(project.entries?.count ?? 0, 0)
+        try repository.purgeExpiredEntries(
+            retentionDays: 30,
+            now: Date(timeIntervalSince1970: 1_700_000_000 + 31 * 86_400)
+        )
+
         let remainingEntries = try container.mainContext.fetchCount(FetchDescriptor<Entry>())
         XCTAssertEqual(remainingEntries, 0)
     }

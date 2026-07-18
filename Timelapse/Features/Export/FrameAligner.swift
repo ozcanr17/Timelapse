@@ -21,6 +21,42 @@ enum AlignmentSubject: String, Equatable {
 
 enum FrameAligner {
 
+    private struct CoupleFacePair {
+        let left: VNFeaturePrintObservation
+        let right: VNFeaturePrintObservation
+    }
+
+    static func coupleMirrorFlags(for frames: [Data]) -> [Bool] {
+        let pairs = frames.map(coupleFacePair)
+        guard let reference = pairs.compactMap({ $0 }).first else {
+            return Array(repeating: false, count: frames.count)
+        }
+        return pairs.map { pair in
+            guard let pair,
+                  let leftToLeft = featureDistance(reference.left, pair.left),
+                  let rightToRight = featureDistance(reference.right, pair.right),
+                  let leftToRight = featureDistance(reference.left, pair.right),
+                  let rightToLeft = featureDistance(reference.right, pair.left)
+            else { return false }
+            return shouldMirror(
+                sameDistance: leftToLeft + rightToRight,
+                mirroredDistance: leftToRight + rightToLeft
+            )
+        }
+    }
+
+    static func shouldMirror(sameDistance: Float, mirroredDistance: Float) -> Bool {
+        mirroredDistance + 0.02 < sameDistance
+    }
+
+    static func mirrored(_ anchor: FrameAnchor) -> FrameAnchor {
+        FrameAnchor(
+            center: CGPoint(x: 1 - anchor.center.x, y: anchor.center.y),
+            height: anchor.height,
+            roll: -anchor.roll
+        )
+    }
+
     static func anchor(in imageData: Data, subject: AlignmentSubject = .auto) -> FrameAnchor? {
         guard let image = UIImage(data: imageData), let cgImage = image.cgImage else { return nil }
         let orientation = cgOrientation(from: image.imageOrientation)
@@ -71,6 +107,58 @@ enum FrameAligner {
             lhs.boundingBox.width * lhs.boundingBox.height < rhs.boundingBox.width * rhs.boundingBox.height
         }
         return prominent.map(faceAnchor)
+    }
+
+    private static func coupleFacePair(_ imageData: Data) -> CoupleFacePair? {
+        guard let image = ImageDownsampler.image(from: imageData, maxPixelSize: 1280),
+              let cgImage = image.cgImage else { return nil }
+        let request = VNDetectFaceRectanglesRequest()
+        let handler = VNImageRequestHandler(cgImage: cgImage, orientation: .up, options: [:])
+        try? handler.perform([request])
+        guard let faces = request.results, faces.count >= 2 else { return nil }
+        let primaryFaces = faces
+            .sorted { lhs, rhs in
+                lhs.boundingBox.width * lhs.boundingBox.height > rhs.boundingBox.width * rhs.boundingBox.height
+            }
+            .prefix(2)
+            .sorted { $0.boundingBox.midX < $1.boundingBox.midX }
+        guard primaryFaces.count == 2,
+              let leftImage = faceCrop(cgImage, box: primaryFaces[0].boundingBox),
+              let rightImage = faceCrop(cgImage, box: primaryFaces[1].boundingBox),
+              let left = featurePrint(leftImage),
+              let right = featurePrint(rightImage)
+        else { return nil }
+        return CoupleFacePair(left: left, right: right)
+    }
+
+    private static func faceCrop(_ image: CGImage, box: CGRect) -> CGImage? {
+        let width = CGFloat(image.width)
+        let height = CGFloat(image.height)
+        var rect = CGRect(
+            x: box.minX * width,
+            y: (1 - box.maxY) * height,
+            width: box.width * width,
+            height: box.height * height
+        )
+        rect = rect.insetBy(dx: -rect.width * 0.35, dy: -rect.height * 0.35)
+        rect = rect.intersection(CGRect(x: 0, y: 0, width: width, height: height))
+        guard rect.width >= 32, rect.height >= 32 else { return nil }
+        return image.cropping(to: rect.integral)
+    }
+
+    private static func featurePrint(_ image: CGImage) -> VNFeaturePrintObservation? {
+        let request = VNGenerateImageFeaturePrintRequest()
+        try? VNImageRequestHandler(cgImage: image, orientation: .up, options: [:]).perform([request])
+        return request.results?.first as? VNFeaturePrintObservation
+    }
+
+    private static func featureDistance(
+        _ reference: VNFeaturePrintObservation,
+        _ candidate: VNFeaturePrintObservation
+    ) -> Float? {
+        var distance: Float = 0
+        guard (try? reference.computeDistance(&distance, to: candidate)) != nil else { return nil }
+        return distance
     }
 
     /// Gövde/karın çıpası: insan pozu kilit noktalarından (omuz, kalça, boyun, kök)

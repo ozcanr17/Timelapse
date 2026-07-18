@@ -1,5 +1,7 @@
 import SwiftUI
 import PhotosUI
+import CoreTransferable
+import UniformTypeIdentifiers
 
 struct PhotoImportSheet: View {
 
@@ -13,7 +15,6 @@ struct PhotoImportSheet: View {
 
     @State private var viewModel: PhotoImportViewModel
     @State private var selection: [PhotosPickerItem] = []
-    @State private var finished: Project?
 
     private let mode: Mode
     private let maxSelection: Int?
@@ -32,7 +33,8 @@ struct PhotoImportSheet: View {
     }
 
     private func close() {
-        if let finished { onFinished(finished) }
+        guard let project = viewModel.completedProject else { return }
+        onFinished(project)
         dismiss()
     }
 
@@ -86,8 +88,9 @@ struct PhotoImportSheet: View {
         PhotosPicker(
             selection: $selection,
             maxSelectionCount: maxSelection,
-            selectionBehavior: .ordered,
+            selectionBehavior: .continuousAndOrdered,
             matching: .images,
+            preferredItemEncoding: .current,
             photoLibrary: .shared()
         ) {
             HStack(spacing: 14) {
@@ -254,16 +257,20 @@ struct PhotoImportSheet: View {
             PhotoImportSource(
                 assetIdentifier: item.itemIdentifier,
                 selectionIndex: index,
-                load: { (try? await item.loadTransferable(type: Data.self)) ?? nil }
+                load: {
+                    if let photo = try? await item.loadTransferable(type: ImportedPhoto.self) {
+                        return photo.data
+                    }
+                    return (try? await item.loadTransferable(type: Data.self)) ?? nil
+                }
             )
         }
         Task {
             switch mode {
             case .newProject:
-                finished = await viewModel.importIntoNewProject(sources: sources)
+                _ = await viewModel.importIntoNewProject(sources: sources)
             case .existing(let project):
                 await viewModel.importInto(project: project, sources: sources)
-                finished = project
             }
         }
     }
@@ -271,5 +278,18 @@ struct PhotoImportSheet: View {
     private var navigationTitle: String {
         if case .existing = mode { return String(localized: "Fotoğraf Ekle", bundle: .appLanguage) }
         return String(localized: "Fotoğraflardan Oluştur", bundle: .appLanguage)
+    }
+}
+
+private struct ImportedPhoto: Transferable {
+    let data: Data
+
+    static var transferRepresentation: some TransferRepresentation {
+        DataRepresentation(importedContentType: .image) { data in
+            ImportedPhoto(data: data)
+        }
+        FileRepresentation(importedContentType: .image) { received in
+            ImportedPhoto(data: try Data(contentsOf: received.file))
+        }
     }
 }

@@ -213,7 +213,9 @@
         }
       }
     },
-    "%@": {},
+    "%@": {
+      "shouldTranslate": false
+    },
     "%@ için bugünkü kareni ekle.": {
       "localizations": {
         "ar": {
@@ -629,7 +631,7 @@
         },
         "tr": {
           "stringUnit": {
-            "state": "new",
+            "state": "translated",
             "value": "%1$lld / %2$lld"
           }
         },
@@ -1265,7 +1267,7 @@
         },
         "tr": {
           "stringUnit": {
-            "state": "new",
+            "state": "translated",
             "value": "%1$lld kare · %2$@"
           }
         },
@@ -2829,7 +2831,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sign in with Apple is unavailable (a paid Apple Developer account is required). To test, tap the version number 7 times and use the developer backdoor."
+            "value": "تسجيل الدخول باستخدام Apple غير متاح حاليًا (يلزم حساب Apple Developer مدفوع). للاختبار، اضغط على رقم الإصدار 7 مرات واستخدم وضع المطور."
           }
         },
         "de": {
@@ -2859,37 +2861,37 @@
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sign in with Apple is unavailable (a paid Apple Developer account is required). To test, tap the version number 7 times and use the developer backdoor."
+            "value": "Apple से साइन इन अभी उपलब्ध नहीं है (सशुल्क Apple Developer खाता आवश्यक है)। परीक्षण के लिए संस्करण संख्या पर 7 बार टैप करें और डेवलपर मोड का उपयोग करें।"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sign in with Apple is unavailable (a paid Apple Developer account is required). To test, tap the version number 7 times and use the developer backdoor."
+            "value": "Appleでサインインは現在利用できません（有料のApple Developerアカウントが必要です）。テストするにはバージョン番号を7回タップして開発者モードを使用してください。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sign in with Apple is unavailable (a paid Apple Developer account is required). To test, tap the version number 7 times and use the developer backdoor."
+            "value": "현재 Apple로 로그인할 수 없습니다(유료 Apple Developer 계정 필요). 테스트하려면 버전 번호를 7번 탭한 후 개발자 모드를 사용하세요."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sign in with Apple is unavailable (a paid Apple Developer account is required). To test, tap the version number 7 times and use the developer backdoor."
+            "value": "Iniciar sessão com a Apple não está disponível neste momento (é necessária uma conta Apple Developer paga). Para testar, toque 7 vezes no número da versão e use o modo de programador."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sign in with Apple is unavailable (a paid Apple Developer account is required). To test, tap the version number 7 times and use the developer backdoor."
+            "value": "Вход с Apple сейчас недоступен (требуется платная учётная запись Apple Developer). Для тестирования нажмите на номер версии 7 раз и используйте режим разработчика."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sign in with Apple is unavailable (a paid Apple Developer account is required). To test, tap the version number 7 times and use the developer backdoor."
+            "value": "“通过 Apple 登录”当前不可用（需要付费 Apple Developer 帐户）。如需测试，请连续轻点版本号 7 次并使用开发者模式。"
           }
         }
       }
@@ -3567,7 +3569,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "TODAY"
+            "value": "今日"
           }
         },
         "ko": {
@@ -5848,7 +5850,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "COLLECT CHANGE, ONE FRAME AT A TIME"
+            "value": "اجمع التغيير، إطارًا بعد إطار"
           }
         },
         "de": {
@@ -5878,37 +5880,37 @@
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "COLLECT CHANGE, ONE FRAME AT A TIME"
+            "value": "बदलाव को एक-एक फ़्रेम में सहेजें"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "COLLECT CHANGE, ONE FRAME AT A TIME"
+            "value": "変化を一枚ずつ残そう"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "COLLECT CHANGE, ONE FRAME AT A TIME"
+            "value": "변화를 한 프레임씩 기록하세요"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "COLLECT CHANGE, ONE FRAME AT A TIME"
+            "value": "REGISTE A MUDANÇA, FOTO A FOTO"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "COLLECT CHANGE, ONE FRAME AT A TIME"
+            "value": "СОХРАНЯЙТЕ ИЗМЕНЕНИЯ КАДР ЗА КАДРОМ"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "COLLECT CHANGE, ONE FRAME AT A TIME"
+            "value": "逐帧记录变化"
           }
         }
       }
@@ -7945,6 +7947,356 @@
         }
       }
     },
+      "90° Döndür": {
+          "localizations": {
+              "ar": {
+                  "stringUnit": {
+                      "state": "translated",
+                      "value": "تدوير 90°"
+                  }
+              },
+              "de": {
+                  "stringUnit": {
+                      "state": "translated",
+                      "value": "Um 90° drehen"
+                  }
+              },
+              "en": {
+                  "stringUnit": {
+                      "state": "translated",
+                      "value": "Rotate 90°"
+                  }
+              },
+              "es": {
+                  "stringUnit": {
+                      "state": "translated",
+                      "value": "Girar 90°"
+                  }
+              },
+              "fr": {
+                  "stringUnit": {
+                      "state": "translated",
+                      "value": "Tourner de 90°"
+                  }
+              },
+              "hi": {
+                  "stringUnit": {
+                      "state": "translated",
+                      "value": "90° घुमाएँ"
+                  }
+              },
+              "ja": {
+                  "stringUnit": {
+                      "state": "translated",
+                      "value": "90°回転"
+                  }
+              },
+              "ko": {
+                  "stringUnit": {
+                      "state": "translated",
+                      "value": "90° 회전"
+                  }
+              },
+              "pt": {
+                  "stringUnit": {
+                      "state": "translated",
+                      "value": "Girar 90°"
+                  }
+              },
+              "ru": {
+                  "stringUnit": {
+                      "state": "translated",
+                      "value": "Повернуть на 90°"
+                  }
+              },
+              "zh-Hans": {
+                  "stringUnit": {
+                      "state": "translated",
+                      "value": "旋转 90°"
+                  }
+              }
+          }
+      },
+      "Dikey Çevir": {
+          "localizations": {
+              "ar": {
+                  "stringUnit": {
+                      "state": "translated",
+                      "value": "قلب عمودي"
+                  }
+              },
+              "de": {
+                  "stringUnit": {
+                      "state": "translated",
+                      "value": "Vertikal spiegeln"
+                  }
+              },
+              "en": {
+                  "stringUnit": {
+                      "state": "translated",
+                      "value": "Flip vertically"
+                  }
+              },
+              "es": {
+                  "stringUnit": {
+                      "state": "translated",
+                      "value": "Voltear verticalmente"
+                  }
+              },
+              "fr": {
+                  "stringUnit": {
+                      "state": "translated",
+                      "value": "Retourner verticalement"
+                  }
+              },
+              "hi": {
+                  "stringUnit": {
+                      "state": "translated",
+                      "value": "लंबवत पलटें"
+                  }
+              },
+              "ja": {
+                  "stringUnit": {
+                      "state": "translated",
+                      "value": "上下反転"
+                  }
+              },
+              "ko": {
+                  "stringUnit": {
+                      "state": "translated",
+                      "value": "상하 반전"
+                  }
+              },
+              "pt": {
+                  "stringUnit": {
+                      "state": "translated",
+                      "value": "Inverter verticalmente"
+                  }
+              },
+              "ru": {
+                  "stringUnit": {
+                      "state": "translated",
+                      "value": "Отразить по вертикали"
+                  }
+              },
+              "zh-Hans": {
+                  "stringUnit": {
+                      "state": "translated",
+                      "value": "垂直翻转"
+                  }
+              }
+          }
+      },
+      "Fotoğrafı düzenle": {
+          "localizations": {
+              "ar": {
+                  "stringUnit": {
+                      "state": "translated",
+                      "value": "تعديل الصورة"
+                  }
+              },
+              "de": {
+                  "stringUnit": {
+                      "state": "translated",
+                      "value": "Foto bearbeiten"
+                  }
+              },
+              "en": {
+                  "stringUnit": {
+                      "state": "translated",
+                      "value": "Edit photo"
+                  }
+              },
+              "es": {
+                  "stringUnit": {
+                      "state": "translated",
+                      "value": "Editar foto"
+                  }
+              },
+              "fr": {
+                  "stringUnit": {
+                      "state": "translated",
+                      "value": "Modifier la photo"
+                  }
+              },
+              "hi": {
+                  "stringUnit": {
+                      "state": "translated",
+                      "value": "फ़ोटो संपादित करें"
+                  }
+              },
+              "ja": {
+                  "stringUnit": {
+                      "state": "translated",
+                      "value": "写真を編集"
+                  }
+              },
+              "ko": {
+                  "stringUnit": {
+                      "state": "translated",
+                      "value": "사진 편집"
+                  }
+              },
+              "pt": {
+                  "stringUnit": {
+                      "state": "translated",
+                      "value": "Editar foto"
+                  }
+              },
+              "ru": {
+                  "stringUnit": {
+                      "state": "translated",
+                      "value": "Редактировать фото"
+                  }
+              },
+              "zh-Hans": {
+                  "stringUnit": {
+                      "state": "translated",
+                      "value": "编辑照片"
+                  }
+              }
+          }
+      },
+      "Yatay Çevir": {
+          "localizations": {
+              "ar": {
+                  "stringUnit": {
+                      "state": "translated",
+                      "value": "قلب أفقي"
+                  }
+              },
+              "de": {
+                  "stringUnit": {
+                      "state": "translated",
+                      "value": "Horizontal spiegeln"
+                  }
+              },
+              "en": {
+                  "stringUnit": {
+                      "state": "translated",
+                      "value": "Flip horizontally"
+                  }
+              },
+              "es": {
+                  "stringUnit": {
+                      "state": "translated",
+                      "value": "Voltear horizontalmente"
+                  }
+              },
+              "fr": {
+                  "stringUnit": {
+                      "state": "translated",
+                      "value": "Retourner horizontalement"
+                  }
+              },
+              "hi": {
+                  "stringUnit": {
+                      "state": "translated",
+                      "value": "क्षैतिज रूप से पलटें"
+                  }
+              },
+              "ja": {
+                  "stringUnit": {
+                      "state": "translated",
+                      "value": "左右反転"
+                  }
+              },
+              "ko": {
+                  "stringUnit": {
+                      "state": "translated",
+                      "value": "좌우 반전"
+                  }
+              },
+              "pt": {
+                  "stringUnit": {
+                      "state": "translated",
+                      "value": "Inverter horizontalmente"
+                  }
+              },
+              "ru": {
+                  "stringUnit": {
+                      "state": "translated",
+                      "value": "Отразить по горизонтали"
+                  }
+              },
+              "zh-Hans": {
+                  "stringUnit": {
+                      "state": "translated",
+                      "value": "水平翻转"
+                  }
+              }
+          }
+      },
+    "Fotoğraflar": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الصور"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fotos"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Photos"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fotos"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Photos"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "फ़ोटो"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "写真"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "사진"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fotos"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Фотографии"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "照片"
+          }
+        }
+      }
+    },
     "Fotoğraflara erişim izni yok": {
       "localizations": {
         "ar": {
@@ -9356,7 +9708,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "Signed in. This account isn't an admin; Pro was not unlocked."
+            "value": "تم تسجيل الدخول. هذا الحساب ليس حساب مشرف، لذلك لم يتم تفعيل Pro."
           }
         },
         "de": {
@@ -9386,37 +9738,37 @@
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Signed in. This account isn't an admin; Pro was not unlocked."
+            "value": "साइन इन हो गया। यह एडमिन खाता नहीं है, इसलिए Pro चालू नहीं हुआ।"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Signed in. This account isn't an admin; Pro was not unlocked."
+            "value": "サインインしました。このアカウントは管理者ではないため、Proは有効になりませんでした。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Signed in. This account isn't an admin; Pro was not unlocked."
+            "value": "로그인했습니다. 관리자 계정이 아니므로 Pro가 활성화되지 않았습니다."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Signed in. This account isn't an admin; Pro was not unlocked."
+            "value": "Sessão iniciada. Esta não é uma conta de administrador, por isso o Pro não foi ativado."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Signed in. This account isn't an admin; Pro was not unlocked."
+            "value": "Вход выполнен. Это не учётная запись администратора, поэтому Pro не активирован."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Signed in. This account isn't an admin; Pro was not unlocked."
+            "value": "已登录。此帐户不是管理员帐户，因此 Pro 未启用。"
           }
         }
       }
@@ -11461,7 +11813,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "Daily, every other day or weekly — get reminded when it's time"
+            "value": "يوميًا أو يومًا بعد يوم أو أسبوعيًا — سنذكّرك عندما يحين الموعد"
           }
         },
         "de": {
@@ -11491,37 +11843,37 @@
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Daily, every other day or weekly — get reminded when it's time"
+            "value": "रोज़, हर दूसरे दिन या साप्ताहिक — समय आने पर रिमाइंडर पाएँ"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Daily, every other day or weekly — get reminded when it's time"
+            "value": "毎日・隔日・毎週から選び、撮影のタイミングで通知"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Daily, every other day or weekly — get reminded when it's time"
+            "value": "매일, 격일 또는 매주 — 촬영할 때가 되면 알려드려요"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Daily, every other day or weekly — get reminded when it's time"
+            "value": "Todos os dias, em dias alternados ou semanalmente — receba um lembrete na hora certa"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Daily, every other day or weekly — get reminded when it's time"
+            "value": "Каждый день, через день или еженедельно — напоминание придёт вовремя"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Daily, every other day or weekly — get reminded when it's time"
+            "value": "每天、隔天或每周——到时间时提醒你"
           }
         }
       }
@@ -12304,7 +12656,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cadence tracking"
+            "value": "متابعة وتيرة التصوير"
           }
         },
         "de": {
@@ -12334,37 +12686,37 @@
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cadence tracking"
+            "value": "शूटिंग रिदम ट्रैकिंग"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cadence tracking"
+            "value": "撮影ペースの管理"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cadence tracking"
+            "value": "촬영 주기 관리"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cadence tracking"
+            "value": "Acompanhamento do ritmo"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cadence tracking"
+            "value": "Отслеживание ритма съёмки"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cadence tracking"
+            "value": "拍摄节奏跟踪"
           }
         }
       }
@@ -13569,7 +13921,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "Turn your frames into a video with one tap and share it"
+            "value": "حوّل لقطاتك إلى فيديو بلمسة واحدة وشاركه"
           }
         },
         "de": {
@@ -13599,37 +13951,37 @@
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Turn your frames into a video with one tap and share it"
+            "value": "एक टैप में अपने फ़्रेम को वीडियो में बदलें और शेयर करें"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Turn your frames into a video with one tap and share it"
+            "value": "ワンタップで写真を動画にして共有"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Turn your frames into a video with one tap and share it"
+            "value": "한 번의 탭으로 프레임을 영상으로 만들고 공유하세요"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Turn your frames into a video with one tap and share it"
+            "value": "Transforme as suas fotos num vídeo com um toque e partilhe"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Turn your frames into a video with one tap and share it"
+            "value": "Превратите кадры в видео одним касанием и поделитесь им"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Turn your frames into a video with one tap and share it"
+            "value": "轻点一下即可将照片制成视频并分享"
           }
         }
       }
@@ -15035,14 +15387,83 @@
         }
       }
     },
-    "Made with Flapse": {},
+    "Made with Flapse": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "صُنع باستخدام Flapse"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erstellt mit Flapse"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Made with Flapse"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hecho con Flapse"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Créé avec Flapse"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Flapse से बनाया गया"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Flapseで作成"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Flapse로 제작"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Criado com Flapse"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Создано в Flapse"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "由 Flapse 制作"
+          }
+        }
+      }
+    },
     "Manuel": {
       "extractionState": "manual",
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "Manual"
+            "value": "يدوي"
           }
         },
         "de": {
@@ -15072,19 +15493,19 @@
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Manual"
+            "value": "मैन्युअल"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Manual"
+            "value": "手動"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Manual"
+            "value": "수동"
           }
         },
         "pt": {
@@ -15096,13 +15517,13 @@
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Manual"
+            "value": "Вручную"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Manual"
+            "value": "手动"
           }
         }
       }
@@ -16797,7 +17218,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "Auto-align the subject on Pro; frames flow smoothly"
+            "value": "حاذِ العنصر تلقائيًا مع Pro لتحصل على انتقال سلس بين اللقطات"
           }
         },
         "de": {
@@ -16827,37 +17248,37 @@
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Auto-align the subject on Pro; frames flow smoothly"
+            "value": "Pro में विषय को अपने-आप संरेखित करें, ताकि फ़्रेम सहजता से बहें"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Auto-align the subject on Pro; frames flow smoothly"
+            "value": "Proなら被写体を自動で揃え、なめらかな映像に"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Auto-align the subject on Pro; frames flow smoothly"
+            "value": "Pro에서 피사체를 자동 정렬해 프레임을 부드럽게 이어 보세요"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Auto-align the subject on Pro; frames flow smoothly"
+            "value": "Alinhe automaticamente o motivo com o Pro para uma sequência mais fluida"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Auto-align the subject on Pro; frames flow smoothly"
+            "value": "Автоматически выравнивайте объект в Pro для плавной смены кадров"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Auto-align the subject on Pro; frames flow smoothly"
+            "value": "使用 Pro 自动对齐主体，让画面流畅衔接"
           }
         }
       }
@@ -18340,7 +18761,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "Create a project with the + up top,\nand start capturing change over time."
+            "value": "أنشئ مشروعًا باستخدام + في أعلى اليسار،\nوابدأ بتسجيل التغيير مع مرور الوقت."
           }
         },
         "de": {
@@ -18370,37 +18791,37 @@
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Create a project with the + up top,\nand start capturing change over time."
+            "value": "ऊपर दिए + से प्रोजेक्ट बनाएँ\nऔर समय के साथ बदलाव दर्ज करना शुरू करें।"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Create a project with the + up top,\nand start capturing change over time."
+            "value": "右上の＋からプロジェクトを作成し、\n時間とともに変わる様子を記録しましょう。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Create a project with the + up top,\nand start capturing change over time."
+            "value": "오른쪽 상단의 +로 프로젝트를 만들고\n시간에 따른 변화를 기록해 보세요."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Create a project with the + up top,\nand start capturing change over time."
+            "value": "Crie um projeto com o + no canto superior direito\ne comece a registar a mudança ao longo do tempo."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Create a project with the + up top,\nand start capturing change over time."
+            "value": "Создайте проект кнопкой «+» вверху справа\nи начните фиксировать изменения со временем."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Create a project with the + up top,\nand start capturing change over time."
+            "value": "轻点右上角的“+”创建项目，\n开始记录随时间发生的变化。"
           }
         }
       }
@@ -18410,7 +18831,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "Add your first shot with the camera button up top."
+            "value": "أضف لقطتك الأولى باستخدام زر الكاميرا في أعلى اليسار."
           }
         },
         "de": {
@@ -18440,37 +18861,37 @@
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Add your first shot with the camera button up top."
+            "value": "ऊपर दिए कैमरा बटन से अपना पहला शॉट जोड़ें।"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Add your first shot with the camera button up top."
+            "value": "右上のカメラボタンから最初の写真を追加しましょう。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Add your first shot with the camera button up top."
+            "value": "오른쪽 상단의 카메라 버튼으로 첫 사진을 추가하세요."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Add your first shot with the camera button up top."
+            "value": "Adicione a primeira foto com o botão da câmara no canto superior direito."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Add your first shot with the camera button up top."
+            "value": "Добавьте первый снимок кнопкой камеры вверху справа."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Add your first shot with the camera button up top."
+            "value": "使用右上角的相机按钮添加第一张照片。"
           }
         }
       }
@@ -18681,6 +19102,76 @@
           "stringUnit": {
             "state": "translated",
             "value": "删除"
+          }
+        }
+      }
+    },
+    "Silinen fotoğraflar 30 gün saklanır, sonra kalıcı olarak silinir.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يتم الاحتفاظ بالصور المحذوفة لمدة 30 يومًا، ثم تُحذف نهائيًا."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gelöschte Fotos werden 30 Tage lang aufbewahrt und dann endgültig gelöscht."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deleted photos are kept for 30 days, then permanently deleted."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las fotos eliminadas se conservan durante 30 días y después se borran permanentemente."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les photos supprimées sont conservées pendant 30 jours, puis supprimées définitivement."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "हटाई गई फ़ोटो 30 दिनों तक रखी जाती हैं, फिर स्थायी रूप से हटा दी जाती हैं।"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "削除した写真は30日間保存された後、完全に削除されます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "삭제된 사진은 30일 동안 보관된 후 영구 삭제됩니다."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "As fotos eliminadas são mantidas durante 30 dias e depois apagadas permanentemente."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Удалённые фотографии хранятся 30 дней, после чего удаляются навсегда."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已删除的照片会保留 30 天，之后将永久删除。"
           }
         }
       }
@@ -24092,7 +24583,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "iCloud request saved; currently falling back to local storage (a paid Apple account is required)."
+            "value": "تم حفظ طلب iCloud؛ يُستخدم التخزين المحلي حاليًا (يلزم حساب Apple مدفوع)."
           }
         },
         "de": {
@@ -24122,37 +24613,37 @@
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "iCloud request saved; currently falling back to local storage (a paid Apple account is required)."
+            "value": "iCloud अनुरोध सहेजा गया; अभी स्थानीय स्टोरेज का उपयोग हो रहा है (सशुल्क Apple खाता आवश्यक है)।"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "iCloud request saved; currently falling back to local storage (a paid Apple account is required)."
+            "value": "iCloudの設定を保存しました。現在はローカルストレージを使用しています（有料のAppleアカウントが必要です）。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "iCloud request saved; currently falling back to local storage (a paid Apple account is required)."
+            "value": "iCloud 요청이 저장되었습니다. 현재는 로컬 저장 공간을 사용합니다(유료 Apple 계정 필요)."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "iCloud request saved; currently falling back to local storage (a paid Apple account is required)."
+            "value": "O pedido do iCloud foi guardado; de momento está a ser usado o armazenamento local (é necessária uma conta Apple paga)."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "iCloud request saved; currently falling back to local storage (a paid Apple account is required)."
+            "value": "Запрос iCloud сохранён; сейчас используется локальное хранилище (требуется платная учётная запись Apple)."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "iCloud request saved; currently falling back to local storage (a paid Apple account is required)."
+            "value": "iCloud 请求已保存；目前将使用本地存储（需要付费 Apple 帐户）。"
           }
         }
       }
@@ -24932,7 +25423,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "Couple Mode (capture together) opens from the invite button at the top right of each project. iCloud changes take effect after an app restart."
+            "value": "يمكن تشغيل وضع الثنائي (التقاط الصور معًا) من زر الدعوة أعلى كل مشروع. تُطبَّق تغييرات iCloud بعد إعادة تشغيل التطبيق."
           }
         },
         "de": {
@@ -24962,37 +25453,37 @@
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Couple Mode (capture together) opens from the invite button at the top right of each project. iCloud changes take effect after an app restart."
+            "value": "कपल मोड (साथ में कैप्चर) हर प्रोजेक्ट के ऊपर दिए आमंत्रण बटन से खुलता है। iCloud बदलाव ऐप दोबारा शुरू करने पर लागू होते हैं।"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Couple Mode (capture together) opens from the invite button at the top right of each project. iCloud changes take effect after an app restart."
+            "value": "カップルモード（共同撮影）は、各プロジェクト右上の招待ボタンから開始できます。iCloudの変更はアプリの再起動後に反映されます。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Couple Mode (capture together) opens from the invite button at the top right of each project. iCloud changes take effect after an app restart."
+            "value": "커플 모드(함께 촬영)는 각 프로젝트 오른쪽 상단의 초대 버튼에서 시작할 수 있습니다. iCloud 변경 사항은 앱을 다시 시작하면 적용됩니다."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Couple Mode (capture together) opens from the invite button at the top right of each project. iCloud changes take effect after an app restart."
+            "value": "O modo Casal (captar em conjunto) é aberto pelo botão de convite no canto superior direito de cada projeto. As alterações do iCloud entram em vigor após reiniciar a aplicação."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Couple Mode (capture together) opens from the invite button at the top right of each project. iCloud changes take effect after an app restart."
+            "value": "Режим пары (совместная съёмка) открывается кнопкой приглашения вверху справа в каждом проекте. Изменения iCloud вступают в силу после перезапуска приложения."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Couple Mode (capture together) opens from the invite button at the top right of each project. iCloud changes take effect after an app restart."
+            "value": "每个项目都可通过右上角的邀请按钮开启双人模式（共同拍摄）。iCloud 更改会在应用重新启动后生效。"
           }
         }
       }
@@ -25495,7 +25986,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "See the previous frame as a template and nail the same angle every time"
+            "value": "استخدم اللقطة السابقة كدليل وحافظ على الزاوية نفسها كل مرة"
           }
         },
         "de": {
@@ -25525,37 +26016,37 @@
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "See the previous frame as a template and nail the same angle every time"
+            "value": "पिछले फ़्रेम को गाइड की तरह देखें और हर बार वही कोण पाएँ"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "See the previous frame as a template and nail the same angle every time"
+            "value": "前の写真をガイドにして、毎回同じアングルで撮影"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "See the previous frame as a template and nail the same angle every time"
+            "value": "이전 프레임을 가이드로 보고 매번 같은 구도를 맞추세요"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "See the previous frame as a template and nail the same angle every time"
+            "value": "Use a foto anterior como guia e mantenha sempre o mesmo ângulo"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "See the previous frame as a template and nail the same angle every time"
+            "value": "Используйте предыдущий кадр как ориентир и сохраняйте один ракурс"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "See the previous frame as a template and nail the same angle every time"
+            "value": "以前一帧为参考，每次保持相同角度"
           }
         }
       }
@@ -25975,7 +26466,7 @@
         },
         "tr": {
           "stringUnit": {
-            "state": "new",
+            "state": "translated",
             "value": "Ücretsiz: %1$lld/%2$lld kare"
           }
         },
@@ -26338,6 +26829,77 @@
         }
       }
     },
+      "İlk referans karedeki kişi sırası korunur; gerekirse kare otomatik çevrilir.": {
+          "localizations": {
+              "ar": {
+                  "stringUnit": {
+                      "state": "translated",
+                      "value": "يُحافَظ على ترتيب الشخصين في أول لقطة مرجعية؛ وتُعكس اللقطة تلقائيًا عند الحاجة."
+                  }
+              },
+              "de": {
+                  "stringUnit": {
+                      "state": "translated",
+                      "value": "Die Personenreihenfolge des ersten Referenzbilds bleibt erhalten; bei Bedarf wird ein Bild automatisch gespiegelt."
+                  }
+              },
+              "en": {
+                  "stringUnit": {
+                      "state": "translated",
+                      "value": "The person order in the first reference frame is preserved; a frame is flipped automatically when needed."
+                  }
+              },
+              "es": {
+                  "stringUnit": {
+                      "state": "translated",
+                      "value": "Se conserva el orden de las personas del primer fotograma de referencia; si hace falta, el fotograma se voltea automáticamente."
+                  }
+              },
+              "fr": {
+                  "stringUnit": {
+                      "state": "translated",
+                      "value": "L’ordre des personnes de la première image de référence est conservé ; une image est retournée automatiquement si nécessaire."
+                  }
+              },
+              "hi": {
+                  "stringUnit": {
+                      "state": "translated",
+                      "value": "पहले रेफ़रेंस फ़्रेम में लोगों का क्रम बना रहता है; ज़रूरत होने पर फ़्रेम अपने-आप पलट जाता है।"
+                  }
+              },
+              "ja": {
+                  "stringUnit": {
+                      "state": "translated",
+                      "value": "最初の基準写真の左右を保ち、必要な写真だけ自動で反転します。"
+                  }
+              },
+              "ko": {
+                  "stringUnit": {
+                      "state": "translated",
+                      "value": "첫 기준 프레임의 사람 순서를 유지하며, 필요한 프레임은 자동으로 좌우 반전합니다."
+                  }
+              },
+              "pt": {
+                  "stringUnit": {
+                      "state": "translated",
+                      "value": "A ordem das pessoas na primeira imagem de referência é mantida; a imagem é invertida automaticamente quando necessário."
+                  }
+              },
+              "ru": {
+                  "stringUnit": {
+                      "state": "translated",
+                      "value": "Порядок людей в первом опорном кадре сохраняется; при необходимости кадр автоматически отражается."
+                  }
+              },
+              "zh-Hans": {
+                  "stringUnit": {
+                      "state": "translated",
+                      "value": "保持首张参考画面中的人物左右顺序；必要时会自动翻转画面。"
+                  }
+              }
+          }
+      }
+    ,
     "İlk hikayeni başlat": {
       "localizations": {
         "ar": {

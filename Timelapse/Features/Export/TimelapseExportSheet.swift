@@ -553,6 +553,11 @@ struct TimelapseExportSheet: View {
                         .font(Theme.caption(13))
                         .foregroundStyle(theme.accent)
                 }
+            } else if alignMode == .smart, project.isCoupleMode {
+                Text("İlk referans karedeki kişi sırası korunur; gerekirse kare otomatik çevrilir.")
+                    .font(Theme.caption(12))
+                    .foregroundStyle(theme.inkMuted)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
     }

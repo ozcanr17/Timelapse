@@ -59,6 +59,7 @@ final class PhotoImportViewModelTests: XCTestCase {
         let project = await vm.importIntoNewProject(sources: [source()])
 
         XCTAssertNotNil(project)
+        XCTAssertEqual(vm.completedProject?.id, project?.id)
         XCTAssertEqual(vm.phase, .done(1))
         XCTAssertTrue(repository.deleted.isEmpty)
     }

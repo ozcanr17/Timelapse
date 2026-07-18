@@ -24,7 +24,7 @@ struct HomeView: View {
     }
 
     private var liveEntries: [Entry] {
-        liveProjects.flatMap { ($0.entries ?? []).filter { !$0.isDeleted } }
+        liveProjects.flatMap { ($0.entries ?? []).filter { !$0.isDeleted && $0.deletedAt == nil } }
     }
 
     private var dueProjects: [Project] {
@@ -356,7 +356,7 @@ struct ActivityHeroCard: View {
     }
 
     private var liveEntries: [Entry] {
-        liveProjects.flatMap { ($0.entries ?? []).filter { !$0.isDeleted } }
+        liveProjects.flatMap { ($0.entries ?? []).filter { !$0.isDeleted && $0.deletedAt == nil } }
     }
 
     private var totalCaptures: Int { liveEntries.count }

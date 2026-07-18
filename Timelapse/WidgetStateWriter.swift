@@ -14,7 +14,7 @@ enum WidgetStateWriter {
         let live = projects.filter { !$0.isDeleted && $0.deletedAt == nil }
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date())
-        let dates = live.flatMap { ($0.entries ?? []).filter { !$0.isDeleted }.map(\.capturedAt) }
+        let dates = live.flatMap { ($0.entries ?? []).filter { !$0.isDeleted && $0.deletedAt == nil }.map(\.capturedAt) }
         defaults.set(ActivitySummary.streak(capturedDates: dates), forKey: "widget.streak")
         defaults.set(dates.contains { calendar.startOfDay(for: $0) == today }, forKey: "widget.capturedToday")
         defaults.set(live.filter { $0.isCaptureDue() }.count, forKey: "widget.dueCount")
@@ -33,7 +33,7 @@ enum WidgetStateWriter {
 
         var latestByDay: [Int: Data] = [:]
         for project in live {
-            for entry in (project.entries ?? []) where !entry.isDeleted {
+            for entry in (project.entries ?? []) where !entry.isDeleted && entry.deletedAt == nil {
                 let day = calendar.startOfDay(for: entry.capturedAt)
                 guard let offset = calendar.dateComponents([.day], from: day, to: today).day,
                       offset >= 0, offset < 35 else { continue }

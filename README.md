@@ -35,12 +35,12 @@ Creating a project offers **Sign in with Apple**, but sign-in is optional: peopl
 **Categories:** Me, Person, Child, Plant, Hair & Beard, Pet, Fitness, Pregnancy, Baby, Outfit, Couple Mode (Pro), Other — each with its own accent color and icon.
 
 ### Camera — smart-aligned capture
-The capture screen overlays your **previous frame as a translucent guide** so every photo lines up. Couple-mode projects show a split guide for two people. Location (optional) tags each frame with the place it was taken. After a capture, milestone toasts celebrate round numbers ("100. kare! 🎉", "30 gün seri! 🔥").
+The capture screen overlays your **previous frame as a translucent guide** so every photo lines up. Couple-mode projects show a split guide for two people. During export, on-device Vision matching keeps the same two people on their reference sides by mirroring confidently swapped frames before group alignment. Location (optional) tags each frame with the place it was taken. After a capture, milestone toasts celebrate round numbers ("100. kare! 🎉", "30 gün seri! 🔥").
 
 **Auto-sorting (Pro):** shoot from the tab bar without picking a project. After the shutter you first **review the photo** (use / retake / cancel). Vision then suggests a project — face-crop signatures learn from previous photos using the top three nearest matches — and **always asks for confirmation** with the photo attached: accept the suggestion, or pick/create another project.
 
 ### Project detail
-A hero image, stats (total frames, day streak, days running), collaborator names for shared projects, and a timeline of every frame with month filters. Opened photos support **pinch-to-zoom, pan, and double-tap zoom**. Toolbar: **share** (choose *Streak Card*, *Before & After card*, or a **9:16 Story Card** sized for Reels/TikTok — Day 1 on top, today below, day-count badge in the middle), **edit project**, **add photos** (bulk import with EXIF date ordering), and **Capture Together invite**.
+A hero image, stats (total frames, day streak, days running), collaborator names for shared projects, and a timeline of every frame with month filters. Opened photos support **pinch-to-zoom, pan, double-tap zoom, crop, horizontal/vertical flip, and 90-degree rotation**. Toolbar: **share** (choose *Streak Card*, *Before & After card*, or a **9:16 Story Card** sized for Reels/TikTok — Day 1 on top, today below, day-count badge in the middle), **edit project**, **add photos** (bulk import with EXIF date ordering), and **Capture Together invite**.
 
 Free tier: 1 project, 14 frames; lapsed subscribers keep their newest project with the latest 14 frames visible, the rest locked behind the paywall.
 
@@ -71,7 +71,7 @@ Finished timelapses can be stored inside the app: a poster grid with durations, 
 Invite anyone by link: the share sheet sends a localized invitation message plus an iCloud link. The invitee taps it, the shared project downloads **with all previous photos**, and both people contribute frames to the same story. Storage lives in the owner's iCloud; nothing touches third-party servers.
 
 ### Recently Deleted
-Deleted projects rest in a Settings trash for 30 days; deleted saved timelapses for **7 days** — both with per-item restore or immediate permanent deletion.
+Deleted projects and individual photos rest in a Settings trash for 30 days; deleted saved timelapses for **7 days** — all with per-item restore or immediate permanent deletion.
 
 ### Settings
 Membership (paywall/restore) · Account (Sign in with Apple) · feature toggles (smart alignment default, iCloud backup) · **iCloud Status panel** (sign-in, iCloud account, backup, cloud-vs-local store — green/orange dots) · Theme gallery (7 themes) · **App language picker** (globe icon, instant switch) · Recently Deleted · reminders with hour picker · stats · welcome replay · camera permissions.

@@ -49,9 +49,21 @@ final class TimelapseUITests: XCTestCase {
         XCTAssertTrue(app.navigationBars["Ayarlar"].waitForExistence(timeout: 5))
         attachScreenshot(of: app, named: "settings")
 
-        let darkroomTheme = app.buttons["theme-darkroom"]
         let settingsScroll = app.collectionViews.firstMatch
+        let showWelcomeButton = app.buttons["Karşılama ekranını göster"]
         var scrollAttempts = 0
+        while !showWelcomeButton.exists, scrollAttempts < 10 {
+            settingsScroll.swipeUp()
+            scrollAttempts += 1
+        }
+        XCTAssertTrue(showWelcomeButton.waitForExistence(timeout: 5))
+        showWelcomeButton.tap()
+        XCTAssertTrue(app.buttons["Başla"].waitForExistence(timeout: 5))
+        app.buttons["Başla"].tap()
+        XCTAssertTrue(app.navigationBars["Ayarlar"].waitForExistence(timeout: 5))
+
+        let darkroomTheme = app.buttons["theme-darkroom"]
+        scrollAttempts = 0
         while !darkroomTheme.exists, scrollAttempts < 10 {
             settingsScroll.swipeUp()
             scrollAttempts += 1

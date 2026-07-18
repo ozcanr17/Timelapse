@@ -4,10 +4,11 @@
     "CFBundleDisplayName" : {
       "comment" : "Bundle display name",
       "extractionState" : "extracted_with_value",
+      "shouldTranslate" : false,
       "localizations" : {
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Flapse"
           }
         }
@@ -16,10 +17,11 @@
     "CFBundleName" : {
       "comment" : "Bundle name",
       "extractionState" : "extracted_with_value",
+      "shouldTranslate" : false,
       "localizations" : {
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Timelapse"
           }
         }
@@ -168,7 +170,7 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Çekimlerinize yer bilgisi eklemek için konuma erişim gerekir."
           }
         },
@@ -246,7 +248,7 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Kareleri ve timelapse videolarını fotoğraflarına kaydetmek için erişim gerekir."
           }
         },
@@ -258,18 +260,84 @@
         }
       }
     },
-    "NSPhotoLibraryUsageDescription" : {
-      "comment" : "Privacy - Photo Library Usage Description",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Fotoğraflardan içe aktarırken çekim tarihi ve konum bilgisini okumak için erişim gerekir."
+      "NSPhotoLibraryUsageDescription" : {
+          "comment" : "Privacy - Photo Library Usage Description",
+          "extractionState" : "extracted_with_value",
+          "localizations" : {
+              "ar" : {
+                  "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "يلزم الوصول لقراءة تاريخ التقاط الصور وموقعها عند استيرادها."
+                  }
+              },
+              "de" : {
+                  "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Der Zugriff wird benötigt, um beim Import Aufnahmedatum und Standort der Fotos zu lesen."
+                  }
+              },
+              "en" : {
+                  "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Access is needed to read capture dates and locations when importing photos."
+                  }
+              },
+              "es" : {
+                  "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Se necesita acceso para leer la fecha y la ubicación al importar fotos."
+                  }
+              },
+              "fr" : {
+                  "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "L’accès est nécessaire pour lire la date et le lieu de prise de vue lors de l’importation des photos."
+                  }
+              },
+              "hi" : {
+                  "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "फ़ोटो इंपोर्ट करते समय उनकी तारीख और स्थान पढ़ने के लिए एक्सेस चाहिए।"
+                  }
+              },
+              "ja" : {
+                  "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "写真の読み込み時に撮影日時と位置情報を取得するため、アクセスが必要です。"
+                  }
+              },
+              "ko" : {
+                  "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "사진을 가져올 때 촬영 날짜와 위치 정보를 읽으려면 접근 권한이 필요합니다."
+                  }
+              },
+              "pt" : {
+                  "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "É necessário acesso para ler a data e a localização ao importar fotografias."
+                  }
+              },
+              "ru" : {
+                  "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Доступ нужен, чтобы при импорте фотографий считывать дату и место съёмки."
+                  }
+              },
+              "tr" : {
+                  "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Fotoğraflardan içe aktarırken çekim tarihi ve konum bilgisini okumak için erişim gerekir."
+                  }
+              },
+              "zh-Hans" : {
+                  "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "导入照片时，需要访问权限以读取拍摄日期和位置信息。"
+                  }
+              }
           }
-        }
       }
-    }
   },
   "version" : "1.0"
 }

@@ -4,6 +4,7 @@ struct WelcomeView: View {
 
     let onFinish: () -> Void
 
+    @Environment(\.dismiss) private var dismiss
     @Environment(\.theme) private var theme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var isAnimating = false
@@ -72,7 +73,10 @@ struct WelcomeView: View {
             .scrollBounceBehavior(.basedOnSize)
         }
         .safeAreaInset(edge: .bottom) {
-            Button("Başla") { onFinish() }
+            Button("Başla") {
+                onFinish()
+                dismiss()
+            }
                 .buttonStyle(.timelapsePrimary)
                 .padding(.horizontal, 24)
                 .padding(.top, 8)

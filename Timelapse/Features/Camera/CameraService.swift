@@ -63,7 +63,7 @@ final class CameraService: NSObject, CameraServiceProtocol, @unchecked Sendable 
                 }
                 if let connection = self.photoOutput.connection(with: .video), connection.isVideoMirroringSupported {
                     connection.automaticallyAdjustsVideoMirroring = false
-                    connection.isVideoMirrored = false
+                    connection.isVideoMirrored = self.currentInput?.device.position == .front
                 }
                 let settings = AVCapturePhotoSettings()
                 settings.photoQualityPrioritization = .speed

@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import UIKit
 
 /// Silinen projeler canlı SwiftData modelleri yerine değer kopyaları (snapshot) üzerinden
 /// listelenir; böylece kalıcı silme sırasında görünüm, bağlamdan kopmuş bir modele
@@ -13,13 +14,23 @@ struct RecentlyDeletedView: View {
         let daysRemaining: Int
     }
 
+    private struct DeletedPhotoItem: Identifiable, Equatable {
+        let id: UUID
+        let projectTitle: String
+        let capturedAt: Date
+        let daysRemaining: Int
+    }
+
     @Query(filter: #Predicate<Project> { $0.deletedAt != nil }) private var projects: [Project]
+    @Query(filter: #Predicate<Entry> { $0.deletedAt != nil }, sort: \Entry.deletedAt, order: .reverse)
+    private var deletedPhotos: [Entry]
     @Query(filter: #Predicate<SavedTimelapse> { $0.deletedAt != nil }, sort: \SavedTimelapse.deletedAt, order: .reverse)
     private var deletedTimelapses: [SavedTimelapse]
     @Environment(\.modelContext) private var modelContext
     @Environment(\.theme) private var theme
 
     @State private var pendingEraseID: UUID?
+    @State private var pendingPhotoEraseID: UUID?
     @State private var pendingTimelapseEraseID: UUID?
 
     private var deletedItems: [DeletedItem] {
@@ -39,9 +50,25 @@ struct RecentlyDeletedView: View {
             }
     }
 
+    private var deletedPhotoItems: [DeletedPhotoItem] {
+        deletedPhotos
+            .filter { !$0.isDeleted && $0.project?.deletedAt == nil }
+            .map { entry in
+                let elapsed = Calendar.current.dateComponents(
+                    [.day], from: entry.deletedAt ?? Date(), to: Date()
+                ).day ?? 0
+                return DeletedPhotoItem(
+                    id: entry.id,
+                    projectTitle: entry.project?.title ?? String(localized: "Proje", bundle: .appLanguage),
+                    capturedAt: entry.capturedAt,
+                    daysRemaining: max(0, 30 - elapsed)
+                )
+            }
+    }
+
     var body: some View {
         List {
-            if deletedItems.isEmpty && deletedTimelapses.isEmpty {
+            if deletedItems.isEmpty && deletedPhotoItems.isEmpty && deletedTimelapses.isEmpty {
                 Section {
                     VStack(spacing: 10) {
                         Image(systemName: "trash")
@@ -67,6 +94,17 @@ struct RecentlyDeletedView: View {
                     Text("Silinen projeler 30 gün saklanır, sonra kalıcı olarak silinir. iCloud yedekleme açıksa bu süre boyunca iCloud'da da saklanırlar.")
                 }
             }
+            if !deletedPhotoItems.isEmpty {
+                Section {
+                    ForEach(deletedPhotoItems) { item in
+                        photoRow(item)
+                    }
+                } header: {
+                    Text("Fotoğraflar")
+                } footer: {
+                    Text("Silinen fotoğraflar 30 gün saklanır, sonra kalıcı olarak silinir.")
+                }
+            }
             if !deletedTimelapses.isEmpty {
                 Section {
                     ForEach(deletedTimelapses) { item in
@@ -88,6 +126,14 @@ struct RecentlyDeletedView: View {
         ) {
             Button("Kalıcı Olarak Sil", role: .destructive) { confirmErase() }
             Button("Vazgeç", role: .cancel) { pendingEraseID = nil }
+        }
+        .confirmationDialog(
+            "Bu çekim kalıcı olarak silinsin mi?",
+            isPresented: photoEraseBinding,
+            titleVisibility: .visible
+        ) {
+            Button("Kalıcı Olarak Sil", role: .destructive) { confirmPhotoErase() }
+            Button("Vazgeç", role: .cancel) { pendingPhotoEraseID = nil }
         }
         .confirmationDialog(
             "Bu timelapse kalıcı olarak silinsin mi?",
@@ -131,6 +177,69 @@ struct RecentlyDeletedView: View {
                 Label("Kalıcı Olarak Sil", systemImage: "trash.fill")
             }
         }
+    }
+
+    private func photoRow(_ item: DeletedPhotoItem) -> some View {
+        HStack(spacing: 12) {
+            DeletedPhotoThumbnail(entryID: item.id)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(item.projectTitle)
+                    .font(Theme.headline(15))
+                    .foregroundStyle(theme.ink)
+                Text(item.capturedAt, format: .dateTime.day().month().year())
+                    .font(Theme.caption(12))
+                    .foregroundStyle(theme.inkMuted)
+                Text("\(item.daysRemaining) gün sonra kalıcı olarak silinecek")
+                    .font(Theme.caption(12))
+                    .foregroundStyle(theme.inkMuted)
+            }
+            Spacer()
+            Button("Geri Al") { restorePhoto(item.id) }
+                .font(Theme.caption(13))
+                .buttonStyle(.bordered)
+                .tint(theme.accent)
+        }
+        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+            Button(role: .destructive) {
+                pendingPhotoEraseID = item.id
+            } label: {
+                Label("Kalıcı Olarak Sil", systemImage: "trash.fill")
+            }
+        }
+        .contextMenu {
+            Button { restorePhoto(item.id) } label: {
+                Label("Geri Al", systemImage: "arrow.uturn.backward")
+            }
+            Button(role: .destructive) {
+                pendingPhotoEraseID = item.id
+            } label: {
+                Label("Kalıcı Olarak Sil", systemImage: "trash.fill")
+            }
+        }
+    }
+
+    private var photoEraseBinding: Binding<Bool> {
+        Binding(
+            get: { pendingPhotoEraseID != nil },
+            set: { if !$0 { pendingPhotoEraseID = nil } }
+        )
+    }
+
+    private func fetchEntry(_ id: UUID) -> Entry? {
+        let descriptor = FetchDescriptor<Entry>(predicate: #Predicate { $0.id == id })
+        return try? modelContext.fetch(descriptor).first
+    }
+
+    private func restorePhoto(_ id: UUID) {
+        guard let entry = fetchEntry(id) else { return }
+        try? ProjectRepository(context: modelContext).restoreEntry(entry)
+    }
+
+    private func confirmPhotoErase() {
+        guard let id = pendingPhotoEraseID else { return }
+        pendingPhotoEraseID = nil
+        guard let entry = fetchEntry(id) else { return }
+        try? ProjectRepository(context: modelContext).permanentlyDeleteEntry(entry)
     }
 
     private var timelapseEraseBinding: Binding<Bool> {
@@ -212,6 +321,40 @@ struct RecentlyDeletedView: View {
         let repository = ProjectRepository(context: modelContext)
         try? repository.deleteProject(project)
         try? repository.saveIfNeeded()
+    }
+}
+
+private struct DeletedPhotoThumbnail: View {
+    let entryID: UUID
+
+    @Environment(\.modelContext) private var modelContext
+    @Environment(\.theme) private var theme
+    @State private var image: UIImage?
+
+    var body: some View {
+        Group {
+            if let image {
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFill()
+            } else {
+                Image(systemName: "photo")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(theme.accent)
+            }
+        }
+        .frame(width: 52, height: 52)
+        .background(theme.accent.opacity(0.1))
+        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .task(id: entryID) {
+            let descriptor = FetchDescriptor<Entry>(predicate: #Predicate { $0.id == entryID })
+            guard let entry = try? modelContext.fetch(descriptor).first else { return }
+            image = await ImageDownsampler.cachedImage(
+                key: "deleted-\(entryID)",
+                maxPixelSize: 160,
+                load: { entry.imageData }
+            )
+        }
     }
 }
 

@@ -116,6 +116,7 @@ final class Entry {
     var latitude: Double?
     var longitude: Double?
     var placeName: String?
+    var deletedAt: Date?
 
     // Ait olduğu proje. Ters ilişki (inverse) Project tarafında tanımlı.
     // CloudKit kısıtı gereği optional.
@@ -181,7 +182,9 @@ final class Project {
 
     /// Çekimler kronolojik sırada (en eski → en yeni). Timelapse bu sırayla üretilir.
     var sortedEntries: [Entry] {
-        (entries ?? []).sorted { $0.capturedAt < $1.capturedAt }
+        (entries ?? [])
+            .filter { !$0.isDeleted && $0.deletedAt == nil }
+            .sorted { $0.capturedAt < $1.capturedAt }
     }
 
     /// En son çekimin tarihi (hiç yoksa nil).

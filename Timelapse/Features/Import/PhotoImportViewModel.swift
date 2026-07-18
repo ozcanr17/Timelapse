@@ -17,6 +17,7 @@ final class PhotoImportViewModel {
 
     private(set) var phase: Phase = .configuring
     private(set) var progress: Double = 0
+    private(set) var completedProject: Project?
 
     private let repository: ProjectRepositoryProtocol
     private let importer: PhotoLibraryImporting
@@ -50,6 +51,7 @@ final class PhotoImportViewModel {
         guard !sources.isEmpty else { return nil }
         phase = .importing
         progress = 0
+        completedProject = nil
         var created: Project?
         func discardIfNeeded() {
             guard discardProjectOnFailure, let created else { return }
@@ -68,6 +70,7 @@ final class PhotoImportViewModel {
                 return nil
             }
             try repository.addEntries(entries, to: project)
+            completedProject = project
             phase = .done(entries.count)
             return project
         } catch {

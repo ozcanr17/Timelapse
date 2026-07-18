@@ -15,7 +15,7 @@ struct EntryViewerView: View {
     @State private var selectedEntryID: UUID
     @State private var isConfirmingDelete = false
     @State private var retakeTarget: Entry?
-    @State private var cropTarget: Entry?
+    @State private var editTarget: Entry?
     @State private var shareImage: UIImage?
     @State private var showPhotosDenied = false
 
@@ -70,8 +70,8 @@ struct EntryViewerView: View {
         .fullScreenCover(item: $retakeTarget) { entry in
             CameraCaptureView(project: project, retakeEntry: entry)
         }
-        .fullScreenCover(item: $cropTarget) { entry in
-            PhotoCropView(imageData: entry.imageData) { data in
+        .fullScreenCover(item: $editTarget) { entry in
+            PhotoEditView(imageData: entry.imageData) { data in
                 let repository = ProjectRepository(context: modelContext)
                 try? repository.replaceImage(for: entry, with: data)
             }
@@ -96,8 +96,8 @@ struct EntryViewerView: View {
                     }
                     .accessibilityLabel(Text("Kareyi paylaş"))
                 }
-                Button { cropTarget = selectedEntry } label: { controlIcon("crop") }
-                    .accessibilityLabel(Text("Kareyi kırp"))
+                Button { editTarget = selectedEntry } label: { controlIcon("slider.horizontal.3") }
+                    .accessibilityLabel(Text("Fotoğrafı düzenle"))
                 Button { saveToPhotos() } label: { controlIcon("square.and.arrow.down") }
                     .accessibilityLabel(Text("Fotoğraflara kaydet"))
                 Button { isConfirmingDelete = true } label: { controlIcon("trash") }

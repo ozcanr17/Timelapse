@@ -70,7 +70,7 @@ private struct CameraSessionView: View {
                 ZStack {
                     Color.black
 
-                    CameraPreview(session: viewModel.session)
+                    CameraPreview(session: viewModel.session, position: viewModel.position)
 
                     if !hasFailed {
                         AlignmentGuideOverlay()
@@ -310,6 +310,7 @@ struct CameraControlButton: View {
 
 private struct CameraPreview: UIViewRepresentable {
     let session: AVCaptureSession
+    let position: AVCaptureDevice.Position
 
     func makeUIView(context: Context) -> PreviewView {
         let view = PreviewView()
@@ -327,7 +328,7 @@ private struct CameraPreview: UIViewRepresentable {
         guard let connection = view.videoPreviewLayer.connection,
               connection.isVideoMirroringSupported else { return }
         connection.automaticallyAdjustsVideoMirroring = false
-        connection.isVideoMirrored = false
+        connection.isVideoMirrored = position == .front
     }
 
     final class PreviewView: UIView {

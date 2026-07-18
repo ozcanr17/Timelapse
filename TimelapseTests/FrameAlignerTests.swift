@@ -45,4 +45,21 @@ final class FrameAlignerTests: XCTestCase {
         XCTAssertEqual(offset.width, 0, accuracy: 0.02)
         XCTAssertEqual(offset.height, 0, accuracy: 0.02)
     }
+
+    func testCoupleMatchingMirrorsOnlyWhenCrossedIdentityCostIsLower() {
+        XCTAssertTrue(FrameAligner.shouldMirror(sameDistance: 1.2, mirroredDistance: 0.3))
+        XCTAssertFalse(FrameAligner.shouldMirror(sameDistance: 0.3, mirroredDistance: 1.2))
+        XCTAssertFalse(FrameAligner.shouldMirror(sameDistance: 0.31, mirroredDistance: 0.30))
+    }
+
+    func testMirroredAnchorReflectsHorizontalPositionAndRoll() {
+        let anchor = FrameAnchor(center: CGPoint(x: 0.2, y: 0.4), height: 0.3, roll: 0.1)
+
+        let mirrored = FrameAligner.mirrored(anchor)
+
+        XCTAssertEqual(mirrored.center.x, 0.8, accuracy: 0.0001)
+        XCTAssertEqual(mirrored.center.y, 0.4, accuracy: 0.0001)
+        XCTAssertEqual(mirrored.height, 0.3, accuracy: 0.0001)
+        XCTAssertEqual(mirrored.roll, -0.1, accuracy: 0.0001)
+    }
 }

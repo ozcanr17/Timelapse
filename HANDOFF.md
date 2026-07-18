@@ -4,10 +4,10 @@ Written for a fresh session with zero context. Read this first, then `README.md`
 
 ## What this project is
 
-Native iOS app (Swift/SwiftUI/SwiftData/StoreKit 2/AVFoundation/Vision/ActivityKit, **no third-party deps**). "One photo a day" progress timelapses with smart alignment, streaks, background rendering with a Dynamic Island Live Activity, in-app saved-video library, photo crop editor, widgets, and freemium monetization.
+Native iOS app (Swift/SwiftUI/SwiftData/StoreKit 2/AVFoundation/Vision/ActivityKit, **no third-party deps**). "One photo a day" progress timelapses with smart alignment, streaks, background rendering with a Dynamic Island Live Activity, in-app saved-video library, photo editor, widgets, and freemium monetization.
 
 - Local path: `/Users/ridvanozcan/Desktop/workspace/Timelapse`
-- Repo: `https://github.com/ozcanr17/Timelapse.git`, branch `main`. Working tree clean at handoff; everything pushed (last commit: price halving).
+- Repo: `https://github.com/ozcanr17/Timelapse.git`, branch `main`. App changes are pushed after each batch; preserve any unrelated owner-owned working-tree changes.
 - Owner: Rıdvan Özcan (`ridvanozcan7@gmail.com`), display name **Flapse**, bundle ID **`rozcan.Flapse`** (NOT rozcan.Timelapse — old docs were stale), widget `rozcan.Flapse.Widgets`, team `5ZYCHZ39QV`, min iOS 17, tested on an iOS 26 device with Dynamic Island.
 
 ## Build & test
@@ -18,7 +18,7 @@ xcodebuild build -scheme Timelapse -destination 'platform=iOS Simulator,name=iPh
 xcodebuild test  -scheme Timelapse -destination 'platform=iOS Simulator,name=iPhone 17' -only-testing:TimelapseTests
 ```
 
-**114 unit tests**, all green at handoff. Use **iPhone 17** as destination ("iPhone 16" matches multiple runtimes and errors). SourceKit diagnostics in the IDE harness are noise ("No such module UIKit") — trust `xcodebuild` only. Release build has **zero warnings**.
+**122 unit tests**, all green at handoff. The full UI journey test is also green. Use **iPhone 17** as destination ("iPhone 16" matches multiple runtimes and errors). SourceKit diagnostics in the IDE harness are noise ("No such module UIKit") — trust `xcodebuild` only. Release build has **zero warnings**.
 
 ## House rules (from the owner — do not break)
 
@@ -49,11 +49,16 @@ The app is **technically ready for App Store submission**. State of the pipeline
 
 - **Cross-device backup preference**: `CloudBackupPreference` mirrors the Pro iCloud-backup toggle through `NSUbiquitousKeyValueStore`; a newly received preference requests one restart before SwiftData opens the cloud-backed store. Sign in with Apple is explicitly distinguished from the device-level iCloud account required by CloudKit. UI-test containers now force `cloudKitDatabase: .none` so tests cannot import real private-database records.
 - **Home/UI performance pass**: heavy tab panes moved from a simultaneously animated `ZStack` to native `TabView` lifecycle management; expensive blurred/drawing-group fire borders became lightweight, glow-free streak accents; the Home screen now prioritizes a due capture, uses a calm 2×2 stats grid, and shows a real first-project empty state. Onboarding typography, Reduce Transparency, Dynamic Type usage, tab selection, and VoiceOver duplication were improved.
-- **Capture/project polish**: front-camera preview and photo output both explicitly disable mirroring, so the saved frame no longer flips after capture. Projects sort by latest capture activity with creation date as fallback; the streak border uses a slow, glow-free angular motion and respects Reduce Motion.
+- **Capture/project polish**: front-camera preview and photo output both explicitly mirror, so the saved selfie matches the familiar on-screen view; the back camera remains unmirrored. Projects sort by latest capture activity with creation date as fallback; the streak border uses a slow, glow-free angular motion and respects Reduce Motion.
+- **Reliable presentation/import flows**: Settings welcome replay now dismisses back to Settings; completed manual imports keep their destination project before the sheet closes; PhotosPicker uses ordered current-format transfer with file/data fallbacks so authenticated hidden-library selections can be imported.
+- **Entry-level Recently Deleted**: deleting a frame now soft-deletes it for 30 days. Settings shows deleted photos alongside projects and saved videos with restore/permanent-delete actions; automatic purging and thumbnail invalidation are covered by repository tests.
+- **Couple-mode identity order**: smart group alignment compares on-device Vision face feature prints against the first reliable two-face frame and mirrors confidently swapped frames so the same people remain on their reference sides. No identity or biometric data leaves the device or is persisted.
+- **Unified photo editor**: the former crop action opens a native editor with crop/pan/zoom, horizontal flip, vertical flip, 90-degree rotation, reset and save/cancel semantics. Pixel tests cover transform direction and dimensions.
+- **Localization audit**: the app and Info.plist catalogs have complete translations for all 11 target locales, with stale machine-state entries resolved and recent jargon rewritten naturally per language.
 
 1. **Security/bug sweep round 2**: widget deep link `flapse://capture` now enforces `FeatureGate.canAddEntry` (was a free-tier bypass); `CameraService` capture continuation race fixed (delegate hops to `sessionQueue`, takes continuation atomically).
 2. **Owner-reported fixes**: PhotoImportSheet "Bitti" not dismissing — root cause: PhotosPicker inside a sheet breaks the `dismiss` environment; fix: presenters clear `activeSheet` via `onFinished` (keep this pattern). Sign-in gate dead-end fixed: pending intent (add/import) continues after sign-in OR skip.
-3. **Photo crop editor** (`Features/ProjectDetail/PhotoCropView.swift`): opened from crop icon in `EntryViewerView` top bar; pinch/drag, thirds grid, keeps original aspect (timelapse consistency), saves via `repository.replaceImage` (invalidates thumbnails). Entry viewer share image refreshes via task id keyed on `imageData?.count`.
+3. **Photo editor** (`Features/ProjectDetail/PhotoCropView.swift`): opened from the edit icon in `EntryViewerView` top bar; pinch/drag crop with thirds grid, horizontal/vertical flip and 90-degree rotation; keeps the crop aspect consistent and saves via `repository.replaceImage` (invalidates thumbnails). Entry viewer share image refreshes via task id keyed on `imageData?.count`.
 4. **Pre-launch audit fixes**: import-into-new-project rolls back the created project if import fails (was leaking an empty project consuming the free slot; 4 new tests in `PhotoImportViewModelTests`); paywall shows retry state instead of hardcoded fallback prices in Release (`loadFailed`; fallback is `#if DEBUG` only); `hasTrial` honors `isEligibleForIntroOffer`; widget fully localized.
 5. **Docs**: `YAYINLAMA_REHBERI.md` (Turkish publishing guide with ✅ status per step), `ExportOptions.plist`, AppStoreListing accuracy pass, price halving everywhere.
 
@@ -61,7 +66,7 @@ The app is **technically ready for App Store submission**. State of the pipeline
 
 - 4-tab liquid-glass shell (`MainTabView`), drag-to-select capsule bar, Projects pane `.id` reset token (bumps only on re-tap or 0.5s after leaving).
 - Background rendering (`TimelapseRenderService`) + Live Activity/Dynamic Island; `writerFailed` auto-retry on foreground (iOS kills the hardware encoder in background — never remove the retry).
-- 7-day trash for saved timelapses, 30-day for projects (Settings → Son Silinenler).
+- 7-day trash for saved timelapses, 30-day trash for projects and individual photos (Settings → Son Silinenler).
 - Smart alignment is FREE and default-on; only manual per-frame alignment is Pro. **Do not reintroduce it as a Pro bullet.**
 - Auto-capture (`AutoCaptureFlow`): always confirm, never silently auto-assign. Matcher scores mean of top-3 nearest signatures.
 - Beat sync: strictly one cut per beat via `loopedCutTimes`; **drop detection was removed — do not reintroduce without owner sign-off, and it must not be claimed in marketing copy.**
@@ -77,7 +82,7 @@ The app is **technically ready for App Store submission**. State of the pipeline
 4. **Hardware encoder dies in background** → keep the foreground retry mechanism.
 5. **Main-thread SwiftData faulting**: never read `entry.imageData` in computed props re-evaluated per body pass; cache in `@State` once or use `ImageDownsampler.cachedImage`.
 6. **Toolbar buttons on iOS 26**: plain 21pt icons in 30pt frames (`ProjectDetailView.toolbarIcon`); let the system provide glass.
-7. **Front camera mirroring** fixed at both preview-layer and photo-output connection levels — don't flip in post.
+7. **Front camera mirroring** is explicitly enabled on both preview-layer and photo-output connections; back-camera preview/output stay unmirrored. Don't flip in post.
 8. **`RenderActivityAttributes` is duplicated** in `Timelapse/Features/Export/RenderActivity.swift` and `Widgets/RenderLiveActivity.swift` — keep byte-identical.
 9. **QR in outro** must be drawn via `UIImage(cgImage:).draw` (CGContext draw mirrors it).
 10. **Monetization copy accuracy**: if gating or pricing changes, update Paywall, Welcome, Settings, README, `docs/AppStoreListing.md`, and `Products.storekit` in the same commit.
@@ -90,7 +95,7 @@ The app is **technically ready for App Store submission**. State of the pipeline
 - `Timelapse/Features/Export/TimelapseRenderService.swift` — background jobs, retry, `TimelapseLibrary`
 - `Timelapse/Features/Export/TimelapseExportSheet.swift` — studio; cached `frames` @State; review prompt
 - `Timelapse/Features/Export/TimelapseComposer.swift` — render pipeline, outro + QR
-- `Timelapse/Features/ProjectDetail/PhotoCropView.swift` — crop editor (new)
+- `Timelapse/Features/ProjectDetail/PhotoCropView.swift` — crop/flip/rotate photo editor
 - `Timelapse/Features/Import/PhotoImportSheet.swift` + `PhotoImportViewModel.swift` — import, rollback-on-failure
 - `Timelapse/Features/Auth/AuthService.swift` + `SignInGateSheet.swift` — optional sign-in, account deletion
 - `Timelapse/Features/Store/` — StoreService (intro-offer eligibility), PaywallView/ViewModel (retry state)

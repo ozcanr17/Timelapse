@@ -72,7 +72,20 @@ final class ProjectRepository: ProjectRepositoryProtocol {
     }
 
     func deleteEntry(_ entry: Entry) throws {
+        entry.deletedAt = Date()
+        try context.save()
+        ThumbnailCache.invalidateAll()
+    }
+
+    func restoreEntry(_ entry: Entry) throws {
+        entry.deletedAt = nil
+        try context.save()
+    }
+
+    func permanentlyDeleteEntry(_ entry: Entry) throws {
         context.delete(entry)
+        try saveIfNeeded()
+        ThumbnailCache.invalidateAll()
     }
 
     func deleteProject(_ project: Project) throws {
@@ -97,10 +110,21 @@ final class ProjectRepository: ProjectRepositoryProtocol {
     func purgeExpiredProjects(retentionDays: Int = 30, now: Date = Date()) throws {
         guard let cutoff = Calendar.current.date(byAdding: .day, value: -retentionDays, to: now) else { return }
         let descriptor = FetchDescriptor<Project>(
-            predicate: #Predicate { $0.deletedAt != nil && $0.deletedAt! < cutoff }
+            predicate: #Predicate { $0.deletedAt != nil }
         )
-        for project in try context.fetch(descriptor) {
+        for project in try context.fetch(descriptor) where project.deletedAt.map({ $0 < cutoff }) == true {
             try deleteProject(project)
+        }
+        try saveIfNeeded()
+    }
+
+    func purgeExpiredEntries(retentionDays: Int = 30, now: Date = Date()) throws {
+        guard let cutoff = Calendar.current.date(byAdding: .day, value: -retentionDays, to: now) else { return }
+        let descriptor = FetchDescriptor<Entry>(
+            predicate: #Predicate { $0.deletedAt != nil }
+        )
+        for entry in try context.fetch(descriptor) where entry.deletedAt.map({ $0 < cutoff }) == true {
+            context.delete(entry)
         }
         try saveIfNeeded()
     }
