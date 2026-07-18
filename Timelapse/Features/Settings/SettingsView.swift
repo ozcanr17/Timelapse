@@ -27,6 +27,7 @@ struct SettingsView: View {
     @State private var devTapCount = 0
     @State private var adminSignInMessage: String?
     @State private var isConfirmingAccountDeletion = false
+    @State private var cloudRestartRequired = UserDefaults.standard.bool(forKey: CloudBackupPreference.restartRequiredKey)
 
     private var totalEntries: Int {
         projects.reduce(0) { $0 + ($1.entries?.count ?? 0) }
@@ -104,6 +105,16 @@ struct SettingsView: View {
                             .foregroundStyle(iCloudActive ? theme.accent : theme.inkMuted)
                     }
                 }
+                if cloudRestartRequired {
+                    Label {
+                        Text("iCloud yedekleme açıldı. Projelerinin eşitlenmesi için uygulamayı kapatıp yeniden aç.")
+                            .font(Theme.caption(12))
+                            .foregroundStyle(theme.inkMuted)
+                    } icon: {
+                        Image(systemName: "arrow.clockwise.icloud")
+                            .foregroundStyle(theme.accent)
+                    }
+                }
             } header: {
                 Text("Pro Özellikler")
             } footer: {
@@ -130,9 +141,12 @@ struct SettingsView: View {
             } header: {
                 Text("iCloud Durumu")
             } footer: {
-                Text(iCloudActive
-                     ? "Fotoğrafların iCloud'a kaydediliyor; aynı hesapla giren her cihazda geri gelir."
-                     : "Fotoğrafların şu an yalnızca bu cihazda. Eşitleme için Pro + iCloud yedekleme gerekir; açtıktan sonra uygulamayı yeniden başlat.")
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Apple ile giriş ve iCloud hesabı ayrıdır. Eşitleme için bu cihazın Ayarlar uygulamasında aynı iCloud hesabı açık olmalı.")
+                    Text(iCloudActive
+                         ? "Fotoğrafların iCloud'a kaydediliyor; aynı hesapla giren her cihazda geri gelir."
+                         : "Fotoğrafların şu an yalnızca bu cihazda. Eşitleme için Pro + iCloud yedekleme gerekir; açtıktan sonra uygulamayı yeniden başlat.")
+                }
             }
 
             Section("Görünüm") {
@@ -277,6 +291,14 @@ struct SettingsView: View {
         .onChange(of: reminderHour) {
             ReminderScheduler.shared.sync(projects: projects)
         }
+        .onChange(of: cloudBackupEnabled) { _, enabled in
+            CloudBackupPreference.setEnabled(enabled)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSUbiquitousKeyValueStore.didChangeExternallyNotification)) { _ in
+            let enabled = CloudBackupPreference.refreshFromCloud()
+            cloudBackupEnabled = enabled
+            cloudRestartRequired = UserDefaults.standard.bool(forKey: CloudBackupPreference.restartRequiredKey)
+        }
         .confirmationDialog(
             "Hesap bilgilerin silinsin mi?",
             isPresented: $isConfirmingAccountDeletion,
@@ -343,9 +365,8 @@ struct SettingsView: View {
             if auth.handle(authorization) {
                 store.setAdminUnlocked(true)
             }
-            if store.isPro, let key = PremiumFeature.cloudBackup.preferenceKey,
-               !UserDefaults.standard.bool(forKey: key) {
-                UserDefaults.standard.set(true, forKey: key)
+            if store.isPro, !CloudBackupPreference.isEnabled {
+                CloudBackupPreference.setEnabled(true)
                 adminSignInMessage = String(localized: "iCloud yedekleme açıldı. Projelerinin eşitlenmesi için uygulamayı kapatıp yeniden aç.", bundle: .appLanguage)
             }
         case .failure:

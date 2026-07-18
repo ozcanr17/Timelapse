@@ -47,6 +47,9 @@ The app is **technically ready for App Store submission**. State of the pipeline
 
 ## Recent session work (2026-07-17/18, all pushed)
 
+- **Cross-device backup preference**: `CloudBackupPreference` mirrors the Pro iCloud-backup toggle through `NSUbiquitousKeyValueStore`; a newly received preference requests one restart before SwiftData opens the cloud-backed store. Sign in with Apple is explicitly distinguished from the device-level iCloud account required by CloudKit. UI-test containers now force `cloudKitDatabase: .none` so tests cannot import real private-database records.
+- **Home/UI performance pass**: heavy tab panes moved from a simultaneously animated `ZStack` to native `TabView` lifecycle management; continuous GPU-rendered fire borders became static streak accents; the Home screen now prioritizes a due capture, uses a calm 2×2 stats grid, and shows a real first-project empty state. Onboarding typography, Reduce Transparency, Dynamic Type usage, tab selection, and VoiceOver duplication were improved.
+
 1. **Security/bug sweep round 2**: widget deep link `flapse://capture` now enforces `FeatureGate.canAddEntry` (was a free-tier bypass); `CameraService` capture continuation race fixed (delegate hops to `sessionQueue`, takes continuation atomically).
 2. **Owner-reported fixes**: PhotoImportSheet "Bitti" not dismissing — root cause: PhotosPicker inside a sheet breaks the `dismiss` environment; fix: presenters clear `activeSheet` via `onFinished` (keep this pattern). Sign-in gate dead-end fixed: pending intent (add/import) continues after sign-in OR skip.
 3. **Photo crop editor** (`Features/ProjectDetail/PhotoCropView.swift`): opened from crop icon in `EntryViewerView` top bar; pinch/drag, thirds grid, keeps original aspect (timelapse consistency), saves via `repository.replaceImage` (invalidates thumbnails). Entry viewer share image refreshes via task id keyed on `imageData?.count`.

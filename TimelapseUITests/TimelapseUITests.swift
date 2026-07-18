@@ -10,6 +10,7 @@ final class TimelapseUITests: XCTestCase {
     func testFullJourney() throws {
         let app = XCUIApplication()
         app.launchArguments += ["--uitests", "-auth.appleUserID", "uitest-user", "-AppleLanguages", "(tr)", "-AppleLocale", "tr_TR"]
+        app.launchEnvironment["FLAPSE_UI_TESTS"] = "1"
         app.launch()
 
         let startButton = app.buttons["Başla"]
@@ -73,6 +74,7 @@ final class TimelapseUITests: XCTestCase {
     func testSavedTabShowsEmptyState() throws {
         let app = XCUIApplication()
         app.launchArguments += ["--uitests", "-auth.appleUserID", "uitest-user", "-AppleLanguages", "(tr)", "-AppleLocale", "tr_TR"]
+        app.launchEnvironment["FLAPSE_UI_TESTS"] = "1"
         app.launch()
 
         let startButton = app.buttons["Başla"]
@@ -92,6 +94,7 @@ final class TimelapseUITests: XCTestCase {
     func testInviteButtonDoesNotCrash() throws {
         let app = XCUIApplication()
         app.launchArguments += ["--uitests", "-auth.appleUserID", "uitest-user", "-override.debugPro", "YES", "-AppleLanguages", "(tr)", "-AppleLocale", "tr_TR"]
+        app.launchEnvironment["FLAPSE_UI_TESTS"] = "1"
         app.launch()
 
         let startButton = app.buttons["Başla"]

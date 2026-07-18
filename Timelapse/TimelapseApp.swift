@@ -6,13 +6,17 @@ struct TimelapseApp: App {
 
     @UIApplicationDelegateAdaptor(FlapseAppDelegate.self) private var appDelegate
 
+    let container: ModelContainer
+
     init() {
         LanguageOverrideBundle.activate()
+        CloudBackupPreference.prepareForLaunch()
+        let isUITesting = ProcessInfo.processInfo.arguments.contains("--uitests")
+            || ProcessInfo.processInfo.environment["FLAPSE_UI_TESTS"] == "1"
+        container = isUITesting
+            ? AppModelContainer.makeInMemory()
+            : AppModelContainer.makeProduction()
     }
-
-    let container = ProcessInfo.processInfo.arguments.contains("--uitests")
-        ? AppModelContainer.makeInMemory()
-        : AppModelContainer.makeProduction()
 
     @State private var store = StoreService()
     @Environment(\.scenePhase) private var scenePhase

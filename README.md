@@ -17,17 +17,18 @@ Flapse is a native iOS app for building day-by-day "progress" timelapses — a b
 A restrained onboarding screen introduces the core loop — smart alignment, cadence reminders, one-tap timelapse — with a privacy note ("your photos stay on your device"). The app opens in the phone's system language automatically, and ProMotion displays run the full 120 Hz.
 
 ### Navigation — floating liquid glass tab bar
-Four tabs (Home, Projects, Saved, Settings) plus a center capture button live in a custom **liquid glass** bar: a translucent capsule highlight slides between tabs, you can drag along the bar to scrub tabs, views slide in the direction of travel, and re-selecting Projects always pops back to the list.
+Four tabs (Home, Projects, Saved, Settings) plus a center capture button live in a custom **liquid glass** bar: a restrained neutral capsule follows the selected tab, you can drag along the bar to scrub tabs, and re-selecting Projects always pops back to the list. The content uses native `TabView` lifecycle management so heavy screens do not animate together during every switch.
 
 ### Home — daily dashboard
 - **Time-aware greeting** (good morning / afternoon / evening / night) with today's date.
 - **Activity hero card** — a GitHub-style contribution grid where every square is that day's actual photo, plus total frame count and today's to-do state.
 - **"Time to shoot today"** — quick rows for every project whose capture is due.
-- **Flashcard deck** — tilted, wallet-pass-style cards with live stats (active projects, total frames, longest streak, this week) and capture tips.
+- **Daily focus card** — the next due project and its latest frame lead directly into capture.
+- **Compact stats** — a calm 2×2 grid for active projects, total frames, longest streak, and this week, followed by one rotating capture tip.
 - **Recent frames** — horizontally scrolling strip of the latest photos.
 
 ### Projects
-Each project is a full-bleed photo card showing its latest frame, title, frame count, and cadence. Projects with an active day streak get an **animated fire border** burning around the card edge. In-progress and finished (unsaved) timelapse renders appear at the top of the same list; an unsaved render stays until you open and check it. Toolbar: *create project from Photos* (bulk import) and *new project*.
+Each project is a full-bleed photo card showing its latest frame, title, frame count, and cadence. Projects with an active day streak get a restrained orange border and streak badge. In-progress and finished (unsaved) timelapse renders appear at the top of the same list; an unsaved render stays until you open and check it. Toolbar: *create project from Photos* (bulk import) and *new project*.
 
 Creating a project offers **Sign in with Apple**, but sign-in is optional: people can continue without an account. Signed-in projects can use the user's own iCloud features.
 
@@ -102,6 +103,8 @@ xcodebuild -project Timelapse.xcodeproj -scheme Timelapse \
 Architecture: MVVM with protocol-based services (`ProjectRepository`, `StoreService`, `CameraService`, `SharedProjectService`, `TimelapseComposer`); tests inject fakes/in-memory stores; UI tests launch with `--uitests -auth.appleUserID …` for clean state. Rendering-quality changes are guarded by **pixel-level tests** that decode real exported videos.
 
 Before shipping builds with sharing/backup: deploy the CloudKit schema to Production in the [CloudKit Console](https://icloud.developer.apple.com). App Store listing copy lives in [`docs/AppStoreListing.md`](docs/AppStoreListing.md). Privacy & support pages live in [`docs/`](docs/) (GitHub Pages).
+
+Sign in with Apple identifies the app account but does not sign the device into iCloud. CloudKit sync requires the same iCloud account to be active in the Settings app on every device or simulator. The Pro backup preference is mirrored through iCloud key-value storage; when it arrives on a new device, restart Flapse once so SwiftData can open the CloudKit-backed store.
 
 ## Privacy
 

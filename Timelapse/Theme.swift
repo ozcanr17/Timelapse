@@ -213,9 +213,17 @@ struct LiquidGlassStyle<S: InsettableShape>: ViewModifier {
     var scrimOpacity: Double = 0
     var clear: Bool = false
     @Environment(\.theme) private var theme
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
 
     func body(content: Content) -> some View {
-        if #available(iOS 26.0, *) {
+        if reduceTransparency {
+            content
+                .background(shape.fill(theme.surface))
+                .clipShape(shape)
+                .overlay {
+                    shape.strokeBorder(theme.inkMuted.opacity(0.16), lineWidth: 0.5)
+                }
+        } else if #available(iOS 26.0, *) {
             content
                 .clipShape(shape)
                 .glassEffect(glass, in: shape)

@@ -13,14 +13,13 @@ enum AppModelContainer {
     /// PremiumFeature.cloudBackup.preferenceKey ile aynıdır; tercih yalnızca Pro
     /// kullanıcı tarafından Ayarlar'dan açılabilir. Değişiklik bir sonraki açılışta geçerli olur.
     static var iCloudBackupEnabled: Bool {
-        guard let key = PremiumFeature.cloudBackup.preferenceKey else { return false }
-        return UserDefaults.standard.bool(forKey: key)
+        CloudBackupPreference.isEnabled
     }
 
     /// Son açılışta CloudKit senkronunun gerçekten aktif olup olmadığı. Ayarlar bunu
     /// gösterir: kullanıcı iCloud'u açtı ama (ör. ücretsiz hesap/entitlement yok) yerel'e
     /// düştüyse durumu görebilir.
-    static let iCloudBackupActiveKey = "icloud.backup.active"
+    static let iCloudBackupActiveKey = CloudBackupPreference.activeKey
 
     /// Üretim: yerel diskte saklar. Kullanıcı iCloud yedeklemeyi (Pro) açtıysa ayrıca
     /// kişisel iCloud'una (CloudKit) otomatik senkron eder. CloudKit kurulamazsa uygulama
@@ -56,7 +55,8 @@ enum AppModelContainer {
     static func makeInMemory() -> ModelContainer {
         let configuration = ModelConfiguration(
             schema: schema,
-            isStoredInMemoryOnly: true
+            isStoredInMemoryOnly: true,
+            cloudKitDatabase: .none
         )
         do {
             return try ModelContainer(for: schema, configurations: [configuration])

@@ -26,7 +26,6 @@ struct MainTabView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private static let barTint = Color(light: "F5F5F7", dark: "1B1B1F").opacity(0.26)
-    private static let highlightTint = Color(light: "3C3C43", dark: "FFFFFF").opacity(0.13)
 
     private enum CaptureRoute: Identifiable {
         case project(Project)
@@ -58,11 +57,26 @@ struct MainTabView: View {
     var body: some View {
         ZStack {
             theme.canvas.ignoresSafeArea()
-            pane(.home) { HomeView() }
-            pane(.projects) { ProjectListView() }
-                .id(projectsResetToken)
-            pane(.saved) { SavedTimelapsesView() }
-            pane(.settings) { SettingsView() }
+            TabView(selection: $tab) {
+                pane {
+                    HomeView(
+                        onCapture: beginCapture,
+                        onShowProjects: { activate(barItems[1]) }
+                    )
+                }
+                .tag(Tab.home)
+
+                pane { ProjectListView() }
+                    .id(projectsResetToken)
+                    .tag(Tab.projects)
+
+                pane { SavedTimelapsesView() }
+                    .tag(Tab.saved)
+
+                pane { SettingsView() }
+                    .tag(Tab.settings)
+            }
+            .toolbar(.hidden, for: .tabBar)
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             tabBar
@@ -102,28 +116,13 @@ struct MainTabView: View {
         }
     }
 
-    private func paneIndex(_ target: Tab) -> Int {
-        switch target {
-        case .home: 0
-        case .projects: 1
-        case .saved: 2
-        case .settings: 3
-        }
-    }
-
-    private func pane<Content: View>(_ target: Tab, @ViewBuilder content: () -> Content) -> some View {
-        let isActive = tab == target
-        let direction: CGFloat = paneIndex(target) < paneIndex(tab) ? -1 : 1
-        return NavigationStack {
+    private func pane<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+        NavigationStack {
             content()
                 .toolbarBackground(.hidden, for: .navigationBar)
         }
+        .toolbar(.hidden, for: .tabBar)
         .contentMargins(.bottom, 40, for: .scrollContent)
-        .opacity(isActive ? 1 : 0)
-        .offset(x: isActive ? 0 : 32 * direction)
-        .animation(reduceMotion ? nil : .spring(response: 0.38, dampingFraction: 0.86), value: tab)
-        .allowsHitTesting(isActive)
-        .accessibilityHidden(!isActive)
     }
 
     private struct BarItem {
@@ -166,9 +165,12 @@ struct MainTabView: View {
             .overlay(alignment: .topLeading) {
                 if highlightWidth > 0 {
                     Capsule()
-                        .fill(.clear)
+                        .fill(theme.surface.opacity(0.22))
                         .frame(width: highlightWidth, height: 46)
-                        .liquidGlassCapsule(tint: Self.highlightTint, interactive: true)
+                        .overlay {
+                            Capsule()
+                                .strokeBorder(.white.opacity(0.1), lineWidth: 0.5)
+                        }
                         .offset(x: highlightX, y: 6)
                         .animation(
                             reduceMotion ? nil :
@@ -268,12 +270,13 @@ struct MainTabView: View {
         .padding(.vertical, 6)
     }
 
+    @ViewBuilder
     private func barItemView(_ item: BarItem, index: Int, reportsFrame: Bool = true) -> some View {
         let isCamera = item.tab == nil
         let isActive = item.tab != nil && item.tab == tab
         let isPreviewed = previewIndex == index
 
-        return Image(systemName: isActive || isCamera ? item.activeIcon : item.icon)
+        let icon = Image(systemName: isActive || isCamera ? item.activeIcon : item.icon)
             .font(.system(size: isCamera ? 23 : 21, weight: isCamera ? .semibold : .medium))
             .foregroundStyle(isActive ? theme.accent : .white)
             .shadow(color: .black.opacity(0.35), radius: 1, x: 0, y: 0.5)
@@ -289,10 +292,17 @@ struct MainTabView: View {
                     }
                 }
             }
-            .accessibilityIdentifier(item.identifier)
-            .accessibilityLabel(Text(item.label))
-            .accessibilityAddTraits(isActive ? [.isButton, .isSelected] : [.isButton])
-            .accessibilityAction { activate(item) }
+
+        if reportsFrame {
+            icon
+                .accessibilityIdentifier(item.identifier)
+                .accessibilityLabel(Text(item.label))
+                .accessibilityAddTraits(isActive ? [.isButton, .isSelected] : [.isButton])
+                .accessibilityAction { activate(item) }
+        } else {
+            icon
+                .accessibilityHidden(true)
+        }
     }
 
     private func captureTapped() {
@@ -305,6 +315,16 @@ struct MainTabView: View {
             captureRoute = .auto
         } else {
             showQuickPick = true
+        }
+    }
+
+    private func beginCapture(_ project: Project) {
+        let count = project.sortedEntries.filter { !$0.isDeleted }.count
+        if FeatureGate.canAddEntry(isPro: store.isPro, currentEntryCount: count) {
+            CameraService.shared.prewarm()
+            captureRoute = .project(project)
+        } else {
+            showPaywall = true
         }
     }
 

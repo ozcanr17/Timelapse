@@ -4,6 +4,17 @@ import UIKit
 
 struct HomeView: View {
 
+    let onCapture: (Project) -> Void
+    let onShowProjects: () -> Void
+
+    init(
+        onCapture: @escaping (Project) -> Void = { _ in },
+        onShowProjects: @escaping () -> Void = {}
+    ) {
+        self.onCapture = onCapture
+        self.onShowProjects = onShowProjects
+    }
+
     @Query(filter: #Predicate<Project> { $0.deletedAt == nil }, sort: \Project.createdAt, order: .reverse)
     private var projects: [Project]
     @Environment(\.theme) private var theme
@@ -33,6 +44,12 @@ struct HomeView: View {
         liveEntries.sorted { $0.capturedAt > $1.capturedAt }.prefix(10).map { $0 }
     }
 
+    private var dailyTip: LocalizedStringKey {
+        Calendar.current.component(.day, from: Date()).isMultiple(of: 2)
+            ? "Her gün aynı ışıkta çekersen geçişler daha pürüzsüz olur."
+            : "Akıllı hizalama özneyi her karede aynı yerde tutar."
+    }
+
     private var greeting: LocalizedStringKey {
         switch Calendar.current.component(.hour, from: Date()) {
         case 5..<12:  "Günaydın"
@@ -48,91 +65,106 @@ struct HomeView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
                     header
-                    ActivityHeroCard(projects: projects)
-                    if !dueProjects.isEmpty {
-                        dueSection
-                    }
-                    flashcardDeck
-                    if !recentEntries.isEmpty {
-                        recentSection
+                    if liveProjects.isEmpty {
+                        emptyState
+                    } else {
+                        if let firstDueProject = dueProjects.first {
+                            DailyCaptureCard(project: firstDueProject) {
+                                onCapture(firstDueProject)
+                            }
+                        }
+                        ActivityHeroCard(projects: projects)
+                        if dueProjects.count > 1 {
+                            dueSection
+                        }
+                        statsGrid
+                        tipCard
+                        if !recentEntries.isEmpty {
+                            recentSection
+                        }
                     }
                 }
                 .padding(20)
             }
         }
-        .navigationTitle("Flapse")
-        .navigationBarTitleDisplayMode(.inline)
+        .toolbar(.hidden, for: .navigationBar)
     }
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(greeting)
-                .font(.system(size: 28, weight: .bold, design: .default))
+                .font(.largeTitle.bold())
                 .foregroundStyle(theme.ink)
             Text(Date.now.formatted(.dateTime.weekday(.wide).day().month(.wide).locale(AppLanguage.currentLocale)))
-                .font(Theme.caption(14))
+                .font(.subheadline)
                 .foregroundStyle(theme.inkMuted)
         }
     }
 
-    private var flashcardDeck: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 14) {
-                Flashcard(
-                    icon: "square.grid.2x2.fill",
-                    value: "\(liveProjects.count)",
-                    label: "Aktif proje",
-                    tint: Color(light: "4F46E5", dark: "8B85F4"),
-                    tilt: -2.5
-                )
-                Flashcard(
-                    icon: "photo.stack.fill",
-                    value: "\(liveEntries.count)",
-                    label: "Toplam kare",
-                    tint: Color(light: "2E8B57", dark: "5FD98A"),
-                    tilt: 2
-                )
-                Flashcard(
-                    icon: "flame.fill",
-                    value: "\(longestStreak)",
-                    label: "En uzun seri",
-                    tint: Color(light: "C2560B", dark: "F09A4E"),
-                    tilt: -1.5
-                )
-                Flashcard(
-                    icon: "calendar",
-                    value: "\(weekCount)",
-                    label: "Bu hafta",
-                    tint: Color(light: "3E8E9E", dark: "7FC3D1"),
-                    tilt: 2.5
-                )
-                Flashcard(
-                    icon: "sun.max.fill",
-                    message: "Her gün aynı ışıkta çekersen geçişler daha pürüzsüz olur.",
-                    tint: Color(light: "B0722E", dark: "E0A468"),
-                    tilt: -2
-                )
-                Flashcard(
-                    icon: "wand.and.stars",
-                    message: "Akıllı hizalama özneyi her karede aynı yerde tutar.",
-                    tint: Color(light: "9A5BA6", dark: "C99BD6"),
-                    tilt: 1.5
-                )
-            }
-            .padding(.horizontal, 6)
-            .padding(.vertical, 12)
+    private var statsGrid: some View {
+        LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
+            StatTile(icon: "square.grid.2x2", value: liveProjects.count, label: "Aktif proje")
+            StatTile(icon: "photo.stack", value: liveEntries.count, label: "Toplam kare")
+            StatTile(icon: "flame", value: longestStreak, label: "En uzun seri")
+            StatTile(icon: "calendar", value: weekCount, label: "Bu hafta")
         }
-        .scrollClipDisabled()
+    }
+
+    private var tipCard: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "lightbulb")
+                .font(.headline)
+                .foregroundStyle(theme.accent)
+                .frame(width: 36, height: 36)
+                .background(theme.accent.opacity(0.1), in: Circle())
+            Text(dailyTip)
+                .font(.subheadline)
+                .foregroundStyle(theme.inkMuted)
+                .fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 0)
+        }
+        .padding(16)
+        .cardStyle()
+    }
+
+    private var emptyState: some View {
+        VStack(spacing: 20) {
+            Image(systemName: "camera.aperture")
+                .font(.system(size: 34, weight: .regular))
+                .foregroundStyle(theme.accent)
+                .frame(width: 72, height: 72)
+                .background(theme.accent.opacity(0.1), in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+
+            VStack(spacing: 8) {
+                Text("İlk hikayeni başlat")
+                    .font(.title2.bold())
+                    .foregroundStyle(theme.ink)
+                Text("Günde bir kare çek; zamanla değişimin\nkendiliğinden bir timelapse'e dönüşsün.")
+                    .font(.body)
+                    .foregroundStyle(theme.inkMuted)
+                    .multilineTextAlignment(.center)
+            }
+
+            Button("Yeni Proje", action: onShowProjects)
+                .buttonStyle(.timelapsePrimary)
+        }
+        .padding(24)
+        .frame(maxWidth: .infinity)
+        .cardStyle()
+    }
+
+    private var remainingDueProjects: ArraySlice<Project> {
+        dueProjects.dropFirst()
     }
 
     private var dueSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text("Bugün çekim zamanı")
-                .font(Theme.caption(13))
+                .font(.footnote.weight(.semibold))
                 .foregroundStyle(theme.inkMuted)
-            ForEach(dueProjects) { project in
-                NavigationLink {
-                    ProjectDetailView(project: project)
+            ForEach(remainingDueProjects) { project in
+                Button {
+                    onCapture(project)
                 } label: {
                     dueRow(project)
                 }
@@ -178,52 +210,85 @@ struct HomeView: View {
     }
 }
 
-private struct Flashcard: View {
+private struct StatTile: View {
     let icon: String
-    var value: String? = nil
-    var label: LocalizedStringKey? = nil
-    var message: LocalizedStringKey? = nil
-    let tint: Color
-    let tilt: Double
+    let value: Int
+    let label: LocalizedStringKey
 
     @Environment(\.theme) private var theme
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
+        VStack(alignment: .leading, spacing: 12) {
             Image(systemName: icon)
-                .font(.system(size: 20, weight: .semibold))
-                .foregroundStyle(tint)
-                .frame(width: 40, height: 40)
-                .background(tint.opacity(0.16), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-
-            Spacer(minLength: 10)
-
-            if let value, let label {
-                Text(value)
-                    .font(.system(size: 34, weight: .bold, design: .rounded))
-                    .monospacedDigit()
-                    .foregroundStyle(theme.ink)
-                Text(label)
-                    .font(Theme.caption(12))
-                    .foregroundStyle(theme.inkMuted)
-                    .padding(.top, 2)
-            } else if let message {
-                Text(message)
-                    .font(.system(size: 13, weight: .semibold, design: .rounded))
-                    .foregroundStyle(theme.ink)
-                    .lineSpacing(2)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
+                .font(.headline)
+                .foregroundStyle(theme.accent)
+            Text("\(value)")
+                .font(.title.bold())
+                .monospacedDigit()
+                .foregroundStyle(theme.ink)
+            Text(label)
+                .font(.caption)
+                .foregroundStyle(theme.inkMuted)
         }
         .padding(16)
-        .frame(width: 138, height: 158, alignment: .leading)
-        .liquidGlassStyle(cornerRadius: 22)
-        .overlay(
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .strokeBorder(tint.opacity(0.35), lineWidth: 1)
-        )
-        .rotationEffect(.degrees(tilt))
-        .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 5)
+        .frame(maxWidth: .infinity, minHeight: 132, alignment: .leading)
+        .cardStyle()
+    }
+}
+
+private struct DailyCaptureCard: View {
+    let project: Project
+    let action: () -> Void
+
+    @Environment(\.theme) private var theme
+    @State private var photo: UIImage?
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 14) {
+                ZStack {
+                    if let photo {
+                        Image(uiImage: photo)
+                            .resizable()
+                            .scaledToFill()
+                    } else {
+                        Theme.accent(for: project.category).opacity(0.14)
+                        Image(systemName: Theme.icon(for: project.category))
+                            .font(.title3.weight(.semibold))
+                            .foregroundStyle(Theme.accent(for: project.category))
+                    }
+                }
+                .frame(width: 64, height: 64)
+                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Bugün çekim zamanı")
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(theme.accent)
+                    Text(project.title)
+                        .font(.headline)
+                        .foregroundStyle(theme.ink)
+                        .lineLimit(1)
+                    Text("Kare çek")
+                        .font(.subheadline)
+                        .foregroundStyle(theme.inkMuted)
+                }
+                Spacer()
+                Image(systemName: "camera.fill")
+                    .font(.headline)
+                    .foregroundStyle(.white)
+                    .frame(width: 44, height: 44)
+                    .background(theme.accent, in: Circle())
+            }
+            .padding(14)
+            .contentShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .cardStyle()
+        .task(id: project.sortedEntries.last?.id) {
+            guard let last = project.sortedEntries.last(where: { !$0.isDeleted }) else { return }
+            photo = await ImageDownsampler.cachedImage(key: "daily-\(last.id)", maxPixelSize: 240) { last.imageData }
+        }
     }
 }
 
@@ -304,18 +369,18 @@ struct ActivityHeroCard: View {
         VStack(alignment: .leading, spacing: 14) {
             HStack(alignment: .firstTextBaseline) {
                 Text("AKTİVİTE")
-                    .font(Theme.caption(11))
+                    .font(.caption.weight(.semibold))
                     .foregroundStyle(theme.inkMuted)
                     .tracking(1.2)
                 Spacer()
                 (
                     Text("\(totalCaptures)")
-                        .font(.system(size: 20, weight: .bold, design: .default))
+                        .font(.title3.bold())
                         .monospacedDigit()
                         .foregroundStyle(theme.ink)
                     +
                     Text(" kare")
-                        .font(Theme.caption(13))
+                        .font(.caption)
                         .foregroundStyle(theme.inkMuted)
                 )
             }

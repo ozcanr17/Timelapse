@@ -5772,7 +5772,7 @@
         }
       }
     },
-    "DEĞİŞİMİ KARE KARE BİRİKTİR": {
+    "Değişimi kare kare biriktir": {
       "localizations": {
         "ar": {
           "stringUnit": {
@@ -5783,25 +5783,25 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "VERÄNDERUNG BILD FÜR BILD SAMMELN"
+            "value": "Veränderung Bild für Bild festhalten"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "COLLECT CHANGE, FRAME BY FRAME"
+            "value": "Capture change frame by frame"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "COLECCIONA EL CAMBIO FOTO A FOTO"
+            "value": "Guarda el cambio foto a foto"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "COLLECTIONNE LE CHANGEMENT PHOTO PAR PHOTO"
+            "value": "Capture le changement photo après photo"
           }
         },
         "hi": {
@@ -5825,13 +5825,13 @@
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "COLECIONE A MUDANÇA FOTO A FOTO"
+            "value": "Registre a mudança foto a foto"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "СОБИРАЙТЕ ПЕРЕМЕНЫ КАДР ЗА КАДРОМ"
+            "value": "Сохраняйте перемены кадр за кадром"
           }
         },
         "zh-Hans": {
@@ -8502,6 +8502,76 @@
           "stringUnit": {
             "state": "translated",
             "value": "你的照片始终安全"
+          }
+        }
+      }
+    },
+    "Apple ile giriş ve iCloud hesabı ayrıdır. Eşitleme için bu cihazın Ayarlar uygulamasında aynı iCloud hesabı açık olmalı.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تسجيل الدخول باستخدام Apple وحساب iCloud منفصلان. للمزامنة، يجب تسجيل هذا الجهاز في حساب iCloud نفسه من تطبيق الإعدادات."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mit Apple anmelden und das iCloud-Konto sind getrennt. Für die Synchronisierung muss dieses Gerät in den Einstellungen mit demselben iCloud-Konto angemeldet sein."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in with Apple and your iCloud account are separate. To sync, this device must be signed in to the same iCloud account in Settings."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Iniciar sesión con Apple y la cuenta de iCloud son independientes. Para sincronizar, este dispositivo debe usar la misma cuenta de iCloud en Ajustes."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se connecter avec Apple et le compte iCloud sont distincts. Pour synchroniser, cet appareil doit utiliser le même compte iCloud dans Réglages."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple से साइन इन और iCloud खाता अलग हैं। सिंक के लिए इस डिवाइस की सेटिंग्स में वही iCloud खाता साइन इन होना चाहिए।"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AppleでサインインとiCloudアカウントは別のものです。同期するには、このデバイスの設定で同じiCloudアカウントにサインインしてください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple로 로그인과 iCloud 계정은 별개입니다. 동기화하려면 이 기기의 설정에서 동일한 iCloud 계정으로 로그인해야 합니다."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Iniciar sessão com a Apple e a conta iCloud são separados. Para sincronizar, este dispositivo deve usar a mesma conta iCloud nos Ajustes."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вход с Apple и учётная запись iCloud — разные вещи. Для синхронизации на устройстве должна быть выбрана та же учётная запись iCloud в Настройках."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "通过 Apple 登录与 iCloud 帐户相互独立。要同步，此设备必须在“设置”中登录同一个 iCloud 帐户。"
           }
         }
       }

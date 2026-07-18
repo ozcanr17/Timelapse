@@ -49,7 +49,7 @@ struct ProjectListView: View {
             theme.canvas.ignoresSafeArea()
 
             if liveProjects.isEmpty && visibleJobs.isEmpty {
-                EmptyProjectsView(onCreate: addProjectTapped)
+                EmptyProjectsView(onCreate: addProjectTapped, onImport: importTapped)
             } else {
                 List {
                     ForEach(visibleJobs) { job in
@@ -394,53 +394,19 @@ private struct ProjectCard: View {
     }
 }
 
-/// Gün serisi olan projelerin kartını saran "alev" çerçevesi: içeri alınmış ince bir
-/// şerit, ateş renkleriyle döner ve hafifçe titreyerek gerçekten yanıyormuş hissi verir.
 private struct FireStreakBorder: View {
     let cornerRadius: CGFloat
 
-    private static let fire: [Color] = [
-        Color(red: 1.00, green: 0.30, blue: 0.10),
-        Color(red: 1.00, green: 0.62, blue: 0.12),
-        Color(red: 1.00, green: 0.86, blue: 0.35),
-        Color(red: 1.00, green: 0.45, blue: 0.10),
-        Color(red: 0.88, green: 0.18, blue: 0.08),
-        Color(red: 1.00, green: 0.70, blue: 0.20),
-        Color(red: 1.00, green: 0.30, blue: 0.10)
-    ]
-
-    @State private var spinning = false
-
     var body: some View {
-        let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-        ZStack {
-            rotatingGradient
-                .mask(shape.strokeBorder(lineWidth: 4).blur(radius: 2.5))
-                .opacity(0.85)
-            rotatingGradient
-                .mask(shape.strokeBorder(lineWidth: 2))
-        }
-        .drawingGroup()
-        .opacity(spinning ? 0.8 : 1)
-        .animation(.easeInOut(duration: 0.9).repeatForever(autoreverses: true), value: spinning)
+        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+            .strokeBorder(Color.orange.opacity(0.72), lineWidth: 2)
         .allowsHitTesting(false)
-        .onAppear { spinning = true }
-    }
-
-    private var rotatingGradient: some View {
-        GeometryReader { geo in
-            let side = max(geo.size.width, geo.size.height) * 1.5
-            AngularGradient(colors: Self.fire, center: .center)
-                .frame(width: side, height: side)
-                .rotationEffect(.degrees(spinning ? 360 : 0))
-                .animation(.linear(duration: 2.6).repeatForever(autoreverses: false), value: spinning)
-                .position(x: geo.size.width / 2, y: geo.size.height / 2)
-        }
     }
 }
 
 private struct EmptyProjectsView: View {
     let onCreate: () -> Void
+    let onImport: () -> Void
 
     @Environment(\.theme) private var theme
 
@@ -475,6 +441,13 @@ private struct EmptyProjectsView: View {
             .buttonStyle(.timelapsePrimary)
             .frame(maxWidth: 260)
             .padding(.top, 4)
+
+            Button(action: onImport) {
+                Label("Fotoğraflardan proje oluştur", systemImage: "photo.on.rectangle.angled")
+                    .font(.body.weight(.semibold))
+            }
+            .foregroundStyle(theme.accent)
+            .frame(minHeight: 44)
 
             Spacer()
             Spacer()

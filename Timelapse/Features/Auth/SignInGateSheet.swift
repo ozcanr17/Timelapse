@@ -74,8 +74,8 @@ struct SignInGateSheet: View {
             if auth.handle(authorization) {
                 store.setAdminUnlocked(true)
             }
-            if store.isPro, let key = PremiumFeature.cloudBackup.preferenceKey {
-                UserDefaults.standard.set(true, forKey: key)
+            if store.isPro {
+                CloudBackupPreference.setEnabled(true)
             }
             dismiss()
             onSignedIn()

@@ -18,25 +18,24 @@ struct WelcomeView: View {
 
             ScrollView {
                 VStack(spacing: 0) {
-                    LogoMark(size: 112)
+                    LogoMark(size: 96)
                         .rotationEffect(.degrees(isAnimating || reduceMotion ? 0 : -120))
                         .scaleEffect(isAnimating || reduceMotion ? 1 : 0.6)
                         .opacity(isAnimating ? 1 : 0)
                         .animation(reduceMotion ? nil : .spring(response: 0.9, dampingFraction: 0.7), value: isAnimating)
-                        .padding(.top, 48)
+                        .padding(.top, 32)
 
                     Text("Flapse")
-                        .font(Theme.headline(34))
+                        .font(.largeTitle.bold())
                         .foregroundStyle(theme.ink)
-                        .padding(.top, 22)
+                        .padding(.top, 16)
 
-                    Text("DEĞİŞİMİ KARE KARE BİRİKTİR")
-                        .font(Theme.caption(12))
+                    Text("Değişimi kare kare biriktir")
+                        .font(.subheadline.weight(.semibold))
                         .foregroundStyle(theme.inkMuted)
-                        .tracking(2)
-                        .padding(.top, 6)
+                        .padding(.top, 4)
 
-                    VStack(alignment: .leading, spacing: 18) {
+                    VStack(alignment: .leading, spacing: 16) {
                         WelcomeFeatureRow(
                             icon: "wand.and.stars",
                             title: "Akıllı hizalama",
@@ -53,14 +52,14 @@ struct WelcomeView: View {
                             subtitle: "Karelerin akıcı bir videoya dönüşsün; anında paylaş"
                         )
                     }
-                    .padding(24)
+                    .padding(20)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .cardStyle()
                     .padding(.horizontal, 24)
-                    .padding(.top, 36)
+                    .padding(.top, 28)
 
                     Text("Fotoğrafların cihazında kalır; sen istemeden hiçbir yere gönderilmez.")
-                        .font(Theme.caption(12))
+                        .font(.footnote)
                         .foregroundStyle(theme.inkMuted)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 40)
@@ -99,17 +98,17 @@ private struct WelcomeFeatureRow: View {
     var body: some View {
         HStack(alignment: .top, spacing: 14) {
             ZStack {
-                Circle().fill(theme.accent.opacity(0.12)).frame(width: 40, height: 40)
+                Circle().fill(theme.accent.opacity(0.1)).frame(width: 40, height: 40)
                 Image(systemName: icon)
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundStyle(theme.accent)
             }
             VStack(alignment: .leading, spacing: 3) {
                 Text(title)
-                    .font(Theme.headline(15))
+                    .font(.headline)
                     .foregroundStyle(theme.ink)
                 Text(subtitle)
-                    .font(Theme.caption(12))
+                    .font(.subheadline)
                     .foregroundStyle(theme.inkMuted)
                     .fixedSize(horizontal: false, vertical: true)
             }
