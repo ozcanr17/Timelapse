@@ -28,7 +28,7 @@ Four tabs (Home, Projects, Saved, Settings) plus a center capture button live in
 - **Recent frames** — horizontally scrolling strip of the latest photos.
 
 ### Projects
-Each project is a full-bleed photo card showing its latest frame, title, frame count, and cadence. Projects with an active day streak get a restrained orange border and streak badge. In-progress and finished (unsaved) timelapse renders appear at the top of the same list; an unsaved render stays until you open and check it. Toolbar: *create project from Photos* (bulk import) and *new project*.
+Each project is a full-bleed photo card showing its latest frame, title, frame count, and cadence. The list is ordered by latest capture activity. Projects with an active day streak get a slowly moving, glow-free orange border and streak badge. In-progress and finished (unsaved) timelapse renders appear at the top of the same list; an unsaved render stays until you open and check it. Toolbar: *create project from Photos* (bulk import) and *new project*.
 
 Creating a project offers **Sign in with Apple**, but sign-in is optional: people can continue without an account. Signed-in projects can use the user's own iCloud features.
 

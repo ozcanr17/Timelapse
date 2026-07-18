@@ -18,7 +18,7 @@ xcodebuild build -scheme Timelapse -destination 'platform=iOS Simulator,name=iPh
 xcodebuild test  -scheme Timelapse -destination 'platform=iOS Simulator,name=iPhone 17' -only-testing:TimelapseTests
 ```
 
-**112 unit tests**, all green at handoff. Use **iPhone 17** as destination ("iPhone 16" matches multiple runtimes and errors). SourceKit diagnostics in the IDE harness are noise ("No such module UIKit") — trust `xcodebuild` only. Release build has **zero warnings**.
+**114 unit tests**, all green at handoff. Use **iPhone 17** as destination ("iPhone 16" matches multiple runtimes and errors). SourceKit diagnostics in the IDE harness are noise ("No such module UIKit") — trust `xcodebuild` only. Release build has **zero warnings**.
 
 ## House rules (from the owner — do not break)
 
@@ -48,7 +48,8 @@ The app is **technically ready for App Store submission**. State of the pipeline
 ## Recent session work (2026-07-17/18, all pushed)
 
 - **Cross-device backup preference**: `CloudBackupPreference` mirrors the Pro iCloud-backup toggle through `NSUbiquitousKeyValueStore`; a newly received preference requests one restart before SwiftData opens the cloud-backed store. Sign in with Apple is explicitly distinguished from the device-level iCloud account required by CloudKit. UI-test containers now force `cloudKitDatabase: .none` so tests cannot import real private-database records.
-- **Home/UI performance pass**: heavy tab panes moved from a simultaneously animated `ZStack` to native `TabView` lifecycle management; continuous GPU-rendered fire borders became static streak accents; the Home screen now prioritizes a due capture, uses a calm 2×2 stats grid, and shows a real first-project empty state. Onboarding typography, Reduce Transparency, Dynamic Type usage, tab selection, and VoiceOver duplication were improved.
+- **Home/UI performance pass**: heavy tab panes moved from a simultaneously animated `ZStack` to native `TabView` lifecycle management; expensive blurred/drawing-group fire borders became lightweight, glow-free streak accents; the Home screen now prioritizes a due capture, uses a calm 2×2 stats grid, and shows a real first-project empty state. Onboarding typography, Reduce Transparency, Dynamic Type usage, tab selection, and VoiceOver duplication were improved.
+- **Capture/project polish**: front-camera preview and photo output both explicitly disable mirroring, so the saved frame no longer flips after capture. Projects sort by latest capture activity with creation date as fallback; the streak border uses a slow, glow-free angular motion and respects Reduce Motion.
 
 1. **Security/bug sweep round 2**: widget deep link `flapse://capture` now enforces `FeatureGate.canAddEntry` (was a free-tier bypass); `CameraService` capture continuation race fixed (delegate hops to `sessionQueue`, takes continuation atomically).
 2. **Owner-reported fixes**: PhotoImportSheet "Bitti" not dismissing — root cause: PhotosPicker inside a sheet breaks the `dismiss` environment; fix: presenters clear `activeSheet` via `onFinished` (keep this pattern). Sign-in gate dead-end fixed: pending intent (add/import) continues after sign-in OR skip.
@@ -76,7 +77,7 @@ The app is **technically ready for App Store submission**. State of the pipeline
 4. **Hardware encoder dies in background** → keep the foreground retry mechanism.
 5. **Main-thread SwiftData faulting**: never read `entry.imageData` in computed props re-evaluated per body pass; cache in `@State` once or use `ImageDownsampler.cachedImage`.
 6. **Toolbar buttons on iOS 26**: plain 21pt icons in 30pt frames (`ProjectDetailView.toolbarIcon`); let the system provide glass.
-7. **Front camera mirroring** fixed at photo-output connection level — don't flip in post.
+7. **Front camera mirroring** fixed at both preview-layer and photo-output connection levels — don't flip in post.
 8. **`RenderActivityAttributes` is duplicated** in `Timelapse/Features/Export/RenderActivity.swift` and `Widgets/RenderLiveActivity.swift` — keep byte-identical.
 9. **QR in outro** must be drawn via `UIImage(cgImage:).draw` (CGContext draw mirrors it).
 10. **Monetization copy accuracy**: if gating or pricing changes, update Paywall, Welcome, Settings, README, `docs/AppStoreListing.md`, and `Products.storekit` in the same commit.

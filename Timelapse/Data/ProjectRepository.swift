@@ -40,11 +40,15 @@ final class ProjectRepository: ProjectRepositoryProtocol {
     }
 
     func allProjects() throws -> [Project] {
-        // En yeni proje en üstte gelsin diye createdAt'e göre tersten sıralıyoruz.
         let descriptor = FetchDescriptor<Project>(
             sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
         )
-        return try context.fetch(descriptor)
+        return try context.fetch(descriptor).sorted {
+            if $0.lastActivityDate == $1.lastActivityDate {
+                return $0.createdAt > $1.createdAt
+            }
+            return $0.lastActivityDate > $1.lastActivityDate
+        }
     }
 
     func addEntry(_ entry: Entry, to project: Project) throws {

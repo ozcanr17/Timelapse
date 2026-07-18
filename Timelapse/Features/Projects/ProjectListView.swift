@@ -29,7 +29,14 @@ struct ProjectListView: View {
     }
 
     private var liveProjects: [Project] {
-        projects.filter { !$0.isDeleted && $0.deletedAt == nil }
+        projects
+            .filter { !$0.isDeleted && $0.deletedAt == nil }
+            .sorted {
+                if $0.lastActivityDate == $1.lastActivityDate {
+                    return $0.createdAt > $1.createdAt
+                }
+                return $0.lastActivityDate > $1.lastActivityDate
+            }
     }
 
     private var unlockedProjectID: UUID? {
@@ -63,9 +70,8 @@ struct ProjectListView: View {
                         .listRowBackground(Color.clear)
                         .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
                     }
-                    ForEach(projects) { project in
-                        if !project.isDeleted && project.deletedAt == nil {
-                            ProjectCard(project: project)
+                    ForEach(liveProjects) { project in
+                        ProjectCard(project: project)
                                 .overlay {
                                     if isLocked(project) {
                                         Button {
@@ -103,7 +109,6 @@ struct ProjectListView: View {
                                 .listRowSeparator(.hidden)
                                 .listRowBackground(Color.clear)
                                 .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
-                        }
                     }
                     .onDelete(perform: deleteProjects)
                 }
@@ -289,7 +294,7 @@ struct ProjectListView: View {
 
     private func deleteProjects(at offsets: IndexSet) {
         pendingDeletion = offsets.compactMap { index in
-            projects.indices.contains(index) ? projects[index] : nil
+            liveProjects.indices.contains(index) ? liveProjects[index] : nil
         }
     }
 }
@@ -397,10 +402,29 @@ private struct ProjectCard: View {
 private struct FireStreakBorder: View {
     let cornerRadius: CGFloat
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var isMoving = false
+
     var body: some View {
         RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-            .strokeBorder(Color.orange.opacity(0.72), lineWidth: 2)
-        .allowsHitTesting(false)
+            .strokeBorder(
+                AngularGradient(
+                    colors: [
+                        Color.orange.opacity(0.55),
+                        Color.orange,
+                        Color.yellow.opacity(0.78),
+                        Color.orange.opacity(0.55)
+                    ],
+                    center: .center,
+                    startAngle: .degrees(isMoving && !reduceMotion ? 360 : 0),
+                    endAngle: .degrees(isMoving && !reduceMotion ? 720 : 360)
+                ),
+                lineWidth: 2
+            )
+            .animation(reduceMotion ? nil : .linear(duration: 7).repeatForever(autoreverses: false), value: isMoving)
+            .allowsHitTesting(false)
+            .onAppear { isMoving = true }
+            .onDisappear { isMoving = false }
     }
 }
 

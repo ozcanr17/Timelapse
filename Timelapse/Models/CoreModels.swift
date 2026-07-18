@@ -189,6 +189,10 @@ final class Project {
         sortedEntries.last?.capturedAt
     }
 
+    var lastActivityDate: Date {
+        max(createdAt, lastCaptureDate ?? createdAt)
+    }
+
     /// "Çift Modu" projesi mi? Kamerada bölme kılavuzunu bu belirler.
     var isCoupleMode: Bool { category == .coupleMode }
 

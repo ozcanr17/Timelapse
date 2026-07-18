@@ -43,4 +43,34 @@ final class ProjectSortingTests: XCTestCase {
 
         XCTAssertEqual(sirali, [date(2026, 6, 5), date(2026, 6, 10), date(2026, 6, 20)])
     }
+
+    func testAllProjectsOrdersByLatestCaptureActivity() throws {
+        let context = container.mainContext
+        let olderProject = Project(
+            title: "Older project",
+            createdAt: date(2026, 6, 1)
+        )
+        let newerProject = Project(
+            title: "Newer project",
+            createdAt: date(2026, 6, 10)
+        )
+        context.insert(olderProject)
+        context.insert(newerProject)
+
+        let latestEntry = Entry(capturedAt: date(2026, 6, 20))
+        latestEntry.project = olderProject
+        context.insert(latestEntry)
+        try context.save()
+
+        let projects = try ProjectRepository(context: context).allProjects()
+
+        XCTAssertEqual(projects.map(\.id), [olderProject.id, newerProject.id])
+    }
+
+    func testLastActivityDateFallsBackToCreationDate() {
+        let creationDate = date(2026, 6, 10)
+        let project = Project(title: "New project", createdAt: creationDate)
+
+        XCTAssertEqual(project.lastActivityDate, creationDate)
+    }
 }
