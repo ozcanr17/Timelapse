@@ -9,9 +9,6 @@ struct FrameAnchor: Equatable {
     let roll: CGFloat
 }
 
-/// Hizalamanın hangi özneyi kilitleyeceği. Proje türünden türetilir:
-/// çift modu → tüm yüzlerin ortası; fitness → gövde; hamilelik → karın; diğer → öne
-/// çıkan tek yüz (yoksa belirginlik).
 enum AlignmentSubject: String, Equatable {
     case auto
     case group
@@ -49,14 +46,6 @@ enum FrameAligner {
         mirroredDistance + 0.02 < sameDistance
     }
 
-    static func mirrored(_ anchor: FrameAnchor) -> FrameAnchor {
-        FrameAnchor(
-            center: CGPoint(x: 1 - anchor.center.x, y: anchor.center.y),
-            height: anchor.height,
-            roll: -anchor.roll
-        )
-    }
-
     static func anchor(in imageData: Data, subject: AlignmentSubject = .auto) -> FrameAnchor? {
         guard let image = UIImage(data: imageData), let cgImage = image.cgImage else { return nil }
         let orientation = cgOrientation(from: image.imageOrientation)
@@ -64,12 +53,12 @@ enum FrameAligner {
 
         switch subject {
         case .group:
-            return faceBasedAnchor(handler: handler, group: true)
+            return nil
         case .auto:
-            return faceBasedAnchor(handler: handler, group: false) ?? saliencyAnchor(handler: handler)
+            return faceBasedAnchor(handler: handler) ?? saliencyAnchor(handler: handler)
         case .body, .belly:
             return bodyAnchor(handler: handler, mode: subject)
-                ?? faceBasedAnchor(handler: handler, group: false)
+                ?? faceBasedAnchor(handler: handler)
                 ?? saliencyAnchor(handler: handler)
         }
     }
@@ -93,15 +82,11 @@ enum FrameAligner {
         return CGSize(width: transform.tx / working.width, height: transform.ty / working.height)
     }
 
-    /// Yüz temelli çıpa. `group` ise (çift modu) tüm yüzlerin ortası; değilse en öne
-    /// çıkan (en büyük kutulu) yüz kilitlenir — böylece karede iki kişi olsa da odaktaki
-    /// kişi sabit kalır.
-    private static func faceBasedAnchor(handler: VNImageRequestHandler, group: Bool) -> FrameAnchor? {
+    private static func faceBasedAnchor(handler: VNImageRequestHandler) -> FrameAnchor? {
         let request = VNDetectFaceLandmarksRequest()
         try? handler.perform([request])
         guard let faces = request.results, !faces.isEmpty else { return nil }
 
-        if group { return groupAnchor(faces) }
         if faces.count == 1 { return faceAnchor(faces[0]) }
         let prominent = faces.max { lhs, rhs in
             lhs.boundingBox.width * lhs.boundingBox.height < rhs.boundingBox.width * rhs.boundingBox.height
@@ -232,16 +217,6 @@ enum FrameAligner {
             height: box.height,
             roll: CGFloat(truncating: face.roll ?? 0)
         )
-    }
-
-    private static func groupAnchor(_ faces: [VNFaceObservation]) -> FrameAnchor {
-        let centers = faces.map { CGPoint(x: $0.boundingBox.midX, y: 1 - $0.boundingBox.midY) }
-        let cx = centers.map(\.x).reduce(0, +) / CGFloat(centers.count)
-        let cy = centers.map(\.y).reduce(0, +) / CGFloat(centers.count)
-        let tops = faces.map { 1 - $0.boundingBox.maxY }
-        let bottoms = faces.map { 1 - $0.boundingBox.minY }
-        let span = (bottoms.max() ?? 1) - (tops.min() ?? 0)
-        return FrameAnchor(center: CGPoint(x: cx, y: cy), height: max(span, 0.1), roll: 0)
     }
 
     private static func midpoint(_ a: CGPoint?, _ b: CGPoint?) -> CGPoint? {

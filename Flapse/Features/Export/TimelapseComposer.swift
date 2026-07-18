@@ -231,6 +231,24 @@ enum TimelapseComposerError: Error, Equatable {
     case writerFailed
 }
 
+enum TimelapseFrameLayout {
+    static func losslessZoom(_ requested: CGFloat) -> CGFloat {
+        min(requested, 1)
+    }
+
+    static func aspectFitRect(for image: CGSize, canvas: CGSize) -> CGRect {
+        guard image.width > 0, image.height > 0, canvas.width > 0, canvas.height > 0 else { return .zero }
+        let scale = min(canvas.width / image.width, canvas.height / image.height)
+        let size = CGSize(width: image.width * scale, height: image.height * scale)
+        return CGRect(
+            x: (canvas.width - size.width) / 2,
+            y: (canvas.height - size.height) / 2,
+            width: size.width,
+            height: size.height
+        )
+    }
+}
+
 protocol TimelapseComposing {
     func makeVideo(
         from frames: [TimelapseFrame],
@@ -332,18 +350,19 @@ struct TimelapseComposer: TimelapseComposing {
         let mirrorFlags = useSmart && settings.alignmentSubject == .group
             ? FrameAligner.coupleMirrorFlags(for: frames.map(\.imageData))
             : Array(repeating: false, count: frames.count)
-        let anchors: [FrameAnchor?] = useSmart
-            ? frames.enumerated().map { index, frame in
+        let useGeometricAlignment = useSmart && settings.alignmentSubject != .group
+        let anchors: [FrameAnchor?] = useGeometricAlignment
+            ? frames.map { frame in
                 guard let anchor = FrameAligner.anchor(in: frame.imageData, subject: settings.alignmentSubject) else {
                     return nil
                 }
-                return mirrorFlags[index] ? FrameAligner.mirrored(anchor) : anchor
+                return anchor
             }
             : Array(repeating: nil, count: frames.count)
         let reference = anchors.compactMap { $0 }.first
 
         let offsets: [CGSize?]
-        if useSmart, reference == nil, let referenceData = frames.first?.imageData {
+        if useGeometricAlignment, reference == nil, let referenceData = frames.first?.imageData {
             offsets = frames.enumerated().map { index, frame in
                 index == 0 ? .zero : FrameAligner.translationOffset(targetData: frame.imageData, referenceData: referenceData)
             }
@@ -535,7 +554,9 @@ struct TimelapseComposer: TimelapseComposing {
 
             drawGenerativeFill(image, canvas: size, context: context.cgContext)
 
-            let zoom = settings.zoom
+            let zoom = settings.alignmentSubject == .group && settings.manualAnchor == nil
+                ? TimelapseFrameLayout.losslessZoom(settings.zoom)
+                : settings.zoom
             if zoom != 1 {
                 context.cgContext.saveGState()
                 context.cgContext.translateBy(x: size.width / 2, y: size.height / 2)
@@ -553,6 +574,8 @@ struct TimelapseComposer: TimelapseComposing {
                 }
                 image.draw(in: manualRect(for: image, manual: manual, canvas: size))
                 ctx.restoreGState()
+            } else if settings.alignmentSubject == .group {
+                image.draw(in: TimelapseFrameLayout.aspectFitRect(for: image.size, canvas: size))
             } else if settings.smartAlignment, let anchor, let reference {
                 drawAligned(image, anchor: anchor, reference: reference, canvas: size, context: context.cgContext)
             } else if settings.smartAlignment, let offset {

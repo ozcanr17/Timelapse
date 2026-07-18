@@ -52,14 +52,7 @@ final class FrameAlignerTests: XCTestCase {
         XCTAssertFalse(FrameAligner.shouldMirror(sameDistance: 0.31, mirroredDistance: 0.30))
     }
 
-    func testMirroredAnchorReflectsHorizontalPositionAndRoll() {
-        let anchor = FrameAnchor(center: CGPoint(x: 0.2, y: 0.4), height: 0.3, roll: 0.1)
-
-        let mirrored = FrameAligner.mirrored(anchor)
-
-        XCTAssertEqual(mirrored.center.x, 0.8, accuracy: 0.0001)
-        XCTAssertEqual(mirrored.center.y, 0.4, accuracy: 0.0001)
-        XCTAssertEqual(mirrored.height, 0.3, accuracy: 0.0001)
-        XCTAssertEqual(mirrored.roll, -0.1, accuracy: 0.0001)
+    func testCoupleModeDoesNotProduceGeometricAnchor() {
+        XCTAssertNil(FrameAligner.anchor(in: pattern(offsetX: 0, offsetY: 0), subject: .group))
     }
 }

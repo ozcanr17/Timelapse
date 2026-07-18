@@ -144,6 +144,32 @@ final class TimelapseComposerTests: XCTestCase {
         XCTAssertGreaterThan(midPixel.r, 0.15, "Orta karede kare ara konumda değil — morph çalışmıyor")
     }
 
+    func testCoupleLandscapeFrameFitsInsidePortraitCanvas() {
+        let rect = TimelapseFrameLayout.aspectFitRect(
+            for: CGSize(width: 1600, height: 900),
+            canvas: CGSize(width: 900, height: 1600)
+        )
+
+        XCTAssertEqual(rect.width, 900, accuracy: 0.001)
+        XCTAssertEqual(rect.height, 506.25, accuracy: 0.001)
+        XCTAssertEqual(rect.midX, 450, accuracy: 0.001)
+        XCTAssertEqual(rect.midY, 800, accuracy: 0.001)
+    }
+
+    func testCouplePortraitFrameFitsInsideLandscapeCanvas() {
+        let rect = TimelapseFrameLayout.aspectFitRect(
+            for: CGSize(width: 900, height: 1600),
+            canvas: CGSize(width: 1600, height: 900)
+        )
+
+        XCTAssertEqual(rect.width, 506.25, accuracy: 0.001)
+        XCTAssertEqual(rect.height, 900, accuracy: 0.001)
+        XCTAssertEqual(rect.midX, 800, accuracy: 0.001)
+        XCTAssertEqual(rect.midY, 450, accuracy: 0.001)
+        XCTAssertEqual(TimelapseFrameLayout.losslessZoom(0.75), 0.75)
+        XCTAssertEqual(TimelapseFrameLayout.losslessZoom(2), 1)
+    }
+
     private func pixel(in image: CGImage, x: Int, y: Int) -> (r: CGFloat, g: CGFloat, b: CGFloat)? {
         guard let data = image.dataProvider?.data as Data? else { return nil }
         let bytesPerRow = image.bytesPerRow

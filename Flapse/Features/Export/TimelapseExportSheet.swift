@@ -210,7 +210,11 @@ struct TimelapseExportSheet: View {
     private var posterPreview: some View {
         ZStack {
             if let poster {
-                Image(uiImage: poster).resizable().scaledToFill()
+                if project.isCoupleMode {
+                    Image(uiImage: poster).resizable().scaledToFit()
+                } else {
+                    Image(uiImage: poster).resizable().scaledToFill()
+                }
             }
             LinearGradient(colors: [.black.opacity(0.05), .black.opacity(0.45)], startPoint: .top, endPoint: .bottom)
             VStack(spacing: 8) {
@@ -388,7 +392,7 @@ struct TimelapseExportSheet: View {
                     .font(Theme.caption(13)).monospacedDigit()
                     .foregroundStyle(theme.ink)
             }
-            Slider(value: $zoomX, in: 0.5...2, step: 0.05)
+            Slider(value: $zoomX, in: 0.5...(project.isCoupleMode ? 1 : 2), step: 0.05)
                 .tint(theme.accent)
                 .disabled(viewModel.phase == .rendering)
                 .onChange(of: zoomX) {
