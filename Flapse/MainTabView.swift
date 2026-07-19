@@ -1,6 +1,10 @@
 import SwiftUI
 import SwiftData
 
+extension EnvironmentValues {
+    @Entry var customTabBarHidden: Binding<Bool> = .constant(false)
+}
+
 struct MainTabView: View {
 
     enum Tab: Hashable {
@@ -23,6 +27,7 @@ struct MainTabView: View {
     @State private var highlightWidth: CGFloat = 0
     @State private var isDraggingBar = false
     @State private var projectsResetToken = 0
+    @State private var isCustomTabBarHidden = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private static let barTint = Color(light: "F5F5F7", dark: "1B1B1F").opacity(0.26)
@@ -78,9 +83,14 @@ struct MainTabView: View {
             }
             .toolbar(.hidden, for: .tabBar)
         }
+        .environment(\.customTabBarHidden, $isCustomTabBarHidden)
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            tabBar
+            if !isCustomTabBarHidden {
+                tabBar
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
         }
+        .animation(reduceMotion ? nil : .smooth(duration: 0.22), value: isCustomTabBarHidden)
         .sheet(isPresented: $showQuickPick, onDismiss: presentPendingCapture) {
             QuickCaptureSheet(projects: capturableProjects) { project in
                 pendingCapture = project

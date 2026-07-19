@@ -14,6 +14,7 @@ struct ProjectDetailView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(StoreService.self) private var store
     @Environment(\.theme) private var theme
+    @Environment(\.customTabBarHidden) private var customTabBarHidden
 
     @State private var shareCardURL: URL?
     @State private var heroImage: UIImage?
@@ -119,6 +120,12 @@ struct ProjectDetailView: View {
             if isSelectingEntries {
                 selectionActionBar
             }
+        }
+        .onChange(of: isSelectingEntries, initial: true) { _, isSelecting in
+            customTabBarHidden.wrappedValue = isSelecting
+        }
+        .onDisappear {
+            customTabBarHidden.wrappedValue = false
         }
         .toolbar {
             if !liveEntries.isEmpty {
