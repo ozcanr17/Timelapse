@@ -1,4 +1,5 @@
 import AVFoundation
+import BackgroundTasks
 import Foundation
 import SwiftData
 import UIKit
@@ -112,6 +113,8 @@ final class TimelapseRenderService {
 
     private(set) var jobs: [Job] = []
     private var backgroundTasks: [UUID: UIBackgroundTaskIdentifier] = [:]
+    private var continuedTasks: [UUID: BGTask] = [:]
+    private var registeredContinuedIdentifiers: Set<String> = []
 
     var activeJobs: [Job] {
         jobs.filter { $0.viewModel.phase == .rendering }
@@ -148,6 +151,7 @@ final class TimelapseRenderService {
 
     private func rearm(_ job: Job) {
         let id = job.id
+        requestContinuedProcessing(for: job)
         if backgroundTasks[id] == nil {
             backgroundTasks[id] = UIApplication.shared.beginBackgroundTask(withName: "timelapse-render") { [weak self] in
                 Task { @MainActor in self?.endBackgroundTask(for: id) }
@@ -157,12 +161,20 @@ final class TimelapseRenderService {
         Task {
             while job.viewModel.phase == .rendering {
                 RenderActivityCenter.update(id: id, progress: job.viewModel.progress)
+                if #available(iOS 26.0, *),
+                   let task = continuedTasks[id] as? BGContinuedProcessingTask {
+                    task.progress.completedUnitCount = Int64(job.viewModel.progress * 100)
+                }
                 try? await Task.sleep(for: .seconds(1))
             }
         }
         Task {
             await job.viewModel.waitForRender()
             endBackgroundTask(for: id)
+            finishContinuedTask(for: id, success: {
+                if case .finished = job.viewModel.phase { return true }
+                return false
+            }())
             if case .finished = job.viewModel.phase {
                 RenderActivityCenter.finish(id: id, success: true)
             } else if !job.viewModel.failedInBackground {
@@ -176,6 +188,7 @@ final class TimelapseRenderService {
         job.viewModel.cancel()
         RenderActivityCenter.finish(id: projectID, success: false)
         endBackgroundTask(for: projectID)
+        finishContinuedTask(for: projectID, success: false)
     }
 
     func discard(projectID: UUID) {
@@ -197,5 +210,63 @@ final class TimelapseRenderService {
         if let task = backgroundTasks.removeValue(forKey: id) {
             UIApplication.shared.endBackgroundTask(task)
         }
+    }
+
+    private func requestContinuedProcessing(for job: Job) {
+        guard #available(iOS 26.0, *) else { return }
+        let identifier = continuedIdentifier(for: job.id)
+        if !registeredContinuedIdentifiers.contains(identifier) {
+            let registered = BGTaskScheduler.shared.register(
+                forTaskWithIdentifier: identifier,
+                using: .main
+            ) { [weak self] task in
+                guard let continuedTask = task as? BGContinuedProcessingTask else {
+                    task.setTaskCompleted(success: false)
+                    return
+                }
+                Task { @MainActor in
+                    self?.attach(continuedTask, to: job.id)
+                }
+            }
+            guard registered else { return }
+            registeredContinuedIdentifiers.insert(identifier)
+        }
+
+        let request = BGContinuedProcessingTaskRequest(
+            identifier: identifier,
+            title: job.title,
+            subtitle: String(localized: "Timelapse hazırlanıyor…", bundle: .appLanguage)
+        )
+        request.strategy = .queue
+        try? BGTaskScheduler.shared.submit(request)
+    }
+
+    @available(iOS 26.0, *)
+    private func attach(_ task: BGContinuedProcessingTask, to id: UUID) {
+        guard let job = jobs.first(where: { $0.id == id }), job.viewModel.phase == .rendering else {
+            task.setTaskCompleted(success: false)
+            return
+        }
+        continuedTasks[id] = task
+        task.progress.totalUnitCount = 100
+        task.progress.completedUnitCount = Int64(job.viewModel.progress * 100)
+        task.expirationHandler = { [weak self] in
+            Task { @MainActor in
+                self?.jobs.first(where: { $0.id == id })?.viewModel.pauseForBackgroundExpiration()
+                self?.finishContinuedTask(for: id, success: false)
+            }
+        }
+        endBackgroundTask(for: id)
+    }
+
+    private func finishContinuedTask(for id: UUID, success: Bool) {
+        if #available(iOS 26.0, *), let task = continuedTasks.removeValue(forKey: id) {
+            task.setTaskCompleted(success: success)
+        }
+        BGTaskScheduler.shared.cancel(taskRequestWithIdentifier: continuedIdentifier(for: id))
+    }
+
+    private func continuedIdentifier(for id: UUID) -> String {
+        "rozcan.Flapse.timelapse.\(id.uuidString)"
     }
 }

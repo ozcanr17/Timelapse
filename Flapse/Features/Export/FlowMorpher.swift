@@ -21,7 +21,22 @@ enum FlowMorpher {
     /// hesaplanıp uygulanır; sonuç tuval boyutuna büyütülür (geçiş anlık olduğundan
     /// yumuşaklık algıyı bozmaz, hızı 10 kat artırır).
     static func morphFrames(from source: CGImage, to target: CGImage, steps: Int, canvas: CGSize) -> [CGImage]? {
-        guard steps > 0 else { return [] }
+        var results: [CGImage] = []
+        results.reserveCapacity(steps)
+        let rendered = try? renderMorphFrames(from: source, to: target, steps: steps, canvas: canvas) {
+            results.append($0)
+        }
+        return rendered == true ? results : nil
+    }
+
+    static func renderMorphFrames(
+        from source: CGImage,
+        to target: CGImage,
+        steps: Int,
+        canvas: CGSize,
+        consume: (CGImage) throws -> Void
+    ) throws -> Bool {
+        guard steps > 0 else { return true }
         let workingLong = 384
         let aspect = CGFloat(source.width) / CGFloat(max(source.height, 1))
         let workSize = aspect >= 1
@@ -31,7 +46,7 @@ enum FlowMorpher {
         guard
             let smallSource = resized(source, to: workSize),
             let smallTarget = resized(target, to: workSize)
-        else { return nil }
+        else { return false }
 
         if let rawFlow = opticalFlow(from: smallSource, to: smallTarget),
            let sourcePixels = rgbaPixels(of: smallSource),
@@ -39,24 +54,27 @@ enum FlowMorpher {
             let width = smallSource.width
             let height = smallSource.height
             let flow = resampleFlow(rawFlow, toWidth: width, height: height)
-            var results: [CGImage] = []
-            results.reserveCapacity(steps)
-            var ok = true
             for step in 1...steps {
                 let t = Float(step) / Float(steps + 1)
                 guard let morphed = morphPixel(
                     source: sourcePixels, target: targetPixels,
                     flow: flow, width: width, height: height, t: t
                 ), let upscaled = upscale(morphed, from: CGSize(width: width, height: height), to: canvas) else {
-                    ok = false
-                    break
+                    return false
                 }
-                results.append(upscaled)
+                try autoreleasepool { try consume(upscaled) }
             }
-            if ok { return results }
+            return true
         }
 
-        return registrationMorph(source: source, target: target, small: (smallSource, smallTarget), steps: steps, canvas: canvas)
+        return try registrationMorph(
+            source: source,
+            target: target,
+            small: (smallSource, smallTarget),
+            steps: steps,
+            canvas: canvas,
+            consume: consume
+        )
     }
 
     /// Optik akış motoru yoksa (ör. simülatör) hareket-dengelemeli geçiş: iki kare
@@ -64,8 +82,9 @@ enum FlowMorpher {
     /// karıştırılır. Hizasızlıktan doğan "hayalet" ikizlenme büyük ölçüde kaybolur.
     private static func registrationMorph(
         source: CGImage, target: CGImage,
-        small: (CGImage, CGImage), steps: Int, canvas: CGSize
-    ) -> [CGImage]? {
+        small: (CGImage, CGImage), steps: Int, canvas: CGSize,
+        consume: (CGImage) throws -> Void
+    ) throws -> Bool {
         var shift = CGSize.zero
         let request = VNTranslationalImageRegistrationRequest(targetedCGImage: small.1)
         if (try? VNImageRequestHandler(cgImage: small.0, options: [:]).perform([request])) != nil,
@@ -79,7 +98,6 @@ enum FlowMorpher {
         let format = UIGraphicsImageRendererFormat()
         format.scale = 1
         format.opaque = true
-        var results: [CGImage] = []
         for step in 1...steps {
             let t = CGFloat(step) / CGFloat(steps + 1)
             let frame = UIGraphicsImageRenderer(size: canvas, format: format).image { context in
@@ -93,10 +111,10 @@ enum FlowMorpher {
                     alpha: t
                 )
             }
-            guard let cg = frame.cgImage else { return nil }
-            results.append(cg)
+            guard let cg = frame.cgImage else { return false }
+            try autoreleasepool { try consume(cg) }
         }
-        return results
+        return true
     }
 
     static func opticalFlow(from source: CGImage, to target: CGImage) -> FlowField? {

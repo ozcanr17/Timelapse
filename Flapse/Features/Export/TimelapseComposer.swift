@@ -383,21 +383,15 @@ struct TimelapseComposer: TimelapseComposing {
         let holdFrames = max(1, Int((Double(outputFPS) / Double(settings.framesPerSecond)).rounded()))
         let baseTransition = max(2, Int((0.2 * Double(outputFPS)).rounded()))
 
-        var holds = Array(repeating: holdFrames, count: frames.count)
+        let holds = Array(repeating: holdFrames, count: frames.count)
+        var beatFrameIndices: [Int64]?
         if let beats = settings.beatTimes, beats.count >= 2 {
-            var boundaries: [Double] = [0]
-            boundaries.append(contentsOf: beats)
-            var gaps: [Double] = []
-            for i in 1..<beats.count { gaps.append(beats[i] - beats[i - 1]) }
-            while boundaries.count < frames.count + 1 {
-                let gap = gaps[(boundaries.count - 1) % gaps.count]
-                boundaries.append((boundaries.last ?? 0) + gap)
+            let quantized = beats.prefix(frames.count).map {
+                Int64(($0 * Double(outputFPS)).rounded())
             }
-            var lastFrameIndex = 0
-            for i in frames.indices {
-                let endFrame = Int((boundaries[i + 1] * Double(outputFPS)).rounded())
-                holds[i] = max(2, endFrame - lastFrameIndex)
-                lastFrameIndex += holds[i]
+            if quantized.count == frames.count,
+               zip(quantized, quantized.dropFirst()).allSatisfy({ $1 > $0 }) {
+                beatFrameIndices = quantized
             }
         }
         var presentationIndex: Int64 = 0
@@ -454,25 +448,42 @@ struct TimelapseComposer: TimelapseComposing {
             let transitionBudget = transition == .morph
                 ? max(2, Int((0.30 * Double(outputFPS)).rounded()))
                 : baseTransition
-            let transitionFrames = wantsTransition ? min(holds[index] - 1, transitionBudget) : 0
-            let solidFrames = holds[index] - transitionFrames
+            let transitionFrames: Int
+            let solidFrames: Int
+            if let beatFrameIndices {
+                let targetFrame = beatFrameIndices[index]
+                if next != nil, wantsTransition {
+                    let previousBeat = index > 0 ? beatFrameIndices[index - 1] : 0
+                    let available = max(1, Int(targetFrame - max(presentationIndex, previousBeat)))
+                    transitionFrames = min(transitionBudget, available)
+                    let transitionStart = targetFrame - Int64((transitionFrames - 1) / 2)
+                    solidFrames = max(0, Int(transitionStart - presentationIndex))
+                } else {
+                    transitionFrames = 0
+                    solidFrames = max(0, Int(targetFrame - presentationIndex))
+                }
+            } else {
+                transitionFrames = wantsTransition ? min(holds[index] - 1, transitionBudget) : 0
+                solidFrames = holds[index] - transitionFrames
+            }
 
             for _ in 0..<solidFrames {
                 try autoreleasepool { try append(current) }
             }
 
             if transitionFrames > 0, let next {
-                var morphed: [CGImage]?
+                var didMorph = false
                 if transition == .morph {
-                    morphed = autoreleasepool {
-                        FlowMorpher.morphFrames(from: current, to: next, steps: transitionFrames, canvas: settings.renderSize)
+                    didMorph = try autoreleasepool {
+                        try FlowMorpher.renderMorphFrames(
+                            from: current,
+                            to: next,
+                            steps: transitionFrames,
+                            canvas: settings.renderSize
+                        ) { try append($0) }
                     }
                 }
-                if let morphed, morphed.count == transitionFrames {
-                    for frame in morphed {
-                        try autoreleasepool { try append(frame) }
-                    }
-                } else {
+                if !didMorph {
                     for step in 1...transitionFrames {
                         try autoreleasepool {
                             let t = CGFloat(step) / CGFloat(transitionFrames)

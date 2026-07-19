@@ -72,12 +72,10 @@ final class TimelapseExportViewModel {
                     if beats?.count ?? 0 < 2 { beats = nil }
                     if let raw = beats {
                         let audioDuration = (try? await AVURLAsset(url: soundtrackURL).load(.duration).seconds) ?? 0
-                        let fps = speedMultiplier.map { min(12, max(1, $0 * 4)) } ?? Double(speed.framesPerSecond)
-                        beats = AdaptiveEditEngine.cutTimes(
+                        beats = Self.loopedCutTimes(
                             beats: raw,
                             frameCount: frames.count,
-                            audioDuration: audioDuration,
-                            targetDuration: Double(frames.count) / fps
+                            audioDuration: audioDuration
                         )
                     }
                 }
@@ -126,20 +124,30 @@ final class TimelapseExportViewModel {
         }
     }
 
+    func pauseForBackgroundExpiration() {
+        guard phase == .rendering else { return }
+        failedInBackground = true
+        renderTask?.cancel()
+        phase = .idle
+    }
+
     static func loopedCutTimes(beats: [Double], frameCount: Int, audioDuration: Double) -> [Double] {
-        guard beats.count >= 2, frameCount >= 2 else { return beats }
-        var extended = beats
+        let source = beats.filter { $0.isFinite && $0 > 0 }.sorted().reduce(into: [Double]()) { result, value in
+            if result.last.map({ value - $0 > 0.01 }) ?? true { result.append(value) }
+        }
+        guard source.count >= 2, frameCount >= 2 else { return source }
+        var extended = source
         if audioDuration > 0 {
             var offset = audioDuration
             while extended.count < frameCount {
-                for beat in beats where extended.count < frameCount {
+                for beat in source where extended.count < frameCount {
                     extended.append(beat + offset)
                 }
                 offset += audioDuration
             }
         } else {
             var gaps: [Double] = []
-            for i in 1..<beats.count { gaps.append(beats[i] - beats[i - 1]) }
+            for i in 1..<source.count { gaps.append(source[i] - source[i - 1]) }
             while extended.count < frameCount {
                 extended.append((extended.last ?? 0) + gaps[(extended.count - 1) % gaps.count])
             }

@@ -308,6 +308,10 @@ enum AudioBeatAnalyzer {
 /// kırpılır, son 1.2 saniyede yumuşakça kısılır.
 enum SoundtrackMuxer {
 
+    static func fadeDuration(for videoDuration: Double) -> Double {
+        min(1.2, max(0, videoDuration / 2))
+    }
+
     static func mux(videoURL: URL, audioURL: URL) async throws -> URL {
         try await mux(videoURL: videoURL, audioURL: audioURL, allowRetry: true)
     }
@@ -338,8 +342,16 @@ enum SoundtrackMuxer {
 
         let mix = AVMutableAudioMix()
         let parameters = AVMutableAudioMixInputParameters(track: compAudio)
-        let fadeDuration = CMTime(seconds: 1.2, preferredTimescale: 600)
+        let fadeDuration = CMTime(
+            seconds: fadeDuration(for: videoDuration.seconds),
+            preferredTimescale: 600
+        )
         let fadeStart = max(.zero, videoDuration - fadeDuration)
+        parameters.setVolumeRamp(
+            fromStartVolume: 0,
+            toEndVolume: 1,
+            timeRange: CMTimeRange(start: .zero, duration: fadeDuration)
+        )
         parameters.setVolumeRamp(fromStartVolume: 1, toEndVolume: 0, timeRange: CMTimeRange(start: fadeStart, duration: fadeDuration))
         mix.inputParameters = [parameters]
 

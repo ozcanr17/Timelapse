@@ -1258,7 +1258,6 @@ private struct TimelineEntryRow: View {
         let name = await LocationService.reverseGeocode(CLLocation(latitude: latitude, longitude: longitude))
         guard let name else { return }
         entry.placeName = name
-        try? modelContext.save()
     }
 }
 

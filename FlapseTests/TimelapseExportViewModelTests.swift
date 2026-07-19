@@ -96,6 +96,20 @@ final class TimelapseExportViewModelTests: XCTestCase {
         XCTAssertEqual(cuts, [1.0, 2.0, 3.0, 4.0])
     }
 
+    func test_loopedCutTimes_gecersizVuruslariAyiklar() {
+        let cuts = TimelapseExportViewModel.loopedCutTimes(
+            beats: [2, .nan, -1, 1, 1.005],
+            frameCount: 3,
+            audioDuration: 3
+        )
+        XCTAssertEqual(cuts, [1, 2, 4])
+    }
+
+    func test_soundtrackFade_kisaVideodaRampalarCakismaZ() {
+        XCTAssertEqual(SoundtrackMuxer.fadeDuration(for: 1), 0.5)
+        XCTAssertEqual(SoundtrackMuxer.fadeDuration(for: 8), 1.2)
+    }
+
     func test_adaptiveCutTimes_yavasVideodaVuruslariZamanaYayar() {
         let beats = stride(from: 0.5, through: 5.0, by: 0.5).map { $0 }
         let cuts = AdaptiveEditEngine.cutTimes(

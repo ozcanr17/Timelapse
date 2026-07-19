@@ -19,8 +19,13 @@
 	<true/>
 	<key>NSSupportsLiveActivities</key>
 	<true/>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>rozcan.Flapse.timelapse.*</string>
+	</array>
 	<key>UIBackgroundModes</key>
 	<array>
+		<string>processing</string>
 		<string>remote-notification</string>
 	</array>
 </dict>
