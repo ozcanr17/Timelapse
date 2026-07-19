@@ -213,6 +213,23 @@ final class ProjectRepository: ProjectRepositoryProtocol {
         try saveIfNeeded()
     }
 
+    func repairDuplicateEntryIDs() throws {
+        let entries = try context.fetch(FetchDescriptor<Entry>())
+        var winners: [String: Entry] = [:]
+        for entry in entries {
+            let key = "\(entry.project?.id.uuidString ?? "orphan")-\(entry.id.uuidString)"
+            guard let existing = winners[key] else {
+                winners[key] = entry
+                continue
+            }
+            let winner = preferredEntry(existing, entry)
+            let duplicate = winner === existing ? entry : existing
+            winners[key] = winner
+            context.delete(duplicate)
+        }
+        try saveIfNeeded()
+    }
+
     /// Bekleyen değişiklik varsa diske/Cloud'a yazar. Gereksiz kayıttan kaçınmak için
     /// önce değişiklik var mı diye bakıyoruz.
     func saveIfNeeded() throws {
@@ -240,5 +257,18 @@ final class ProjectRepository: ProjectRepositoryProtocol {
         project.cloudPurgedEntryIDs = ids
         project.sharedUpdatedAt = Date()
         scheduleSharedSync(for: project)
+    }
+
+    private func preferredEntry(_ first: Entry, _ second: Entry) -> Entry {
+        let firstDate = first.sharedUpdatedAt ?? first.capturedAt
+        let secondDate = second.sharedUpdatedAt ?? second.capturedAt
+        if firstDate != secondDate { return firstDate > secondDate ? first : second }
+        if first.imageRevision != second.imageRevision {
+            return first.imageRevision > second.imageRevision ? first : second
+        }
+        if (first.imageData != nil) != (second.imageData != nil) {
+            return first.imageData != nil ? first : second
+        }
+        return first
     }
 }

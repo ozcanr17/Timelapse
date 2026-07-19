@@ -170,6 +170,23 @@ final class ProjectRepositoryTests: XCTestCase {
         XCTAssertNotNil(project.sharedUpdatedAt)
     }
 
+    func test_ayniKimlikliCekimler_acilistaTekillestirilir() throws {
+        let project = try repository.createProject(title: "Biz", category: .person, cadence: .daily)
+        let id = UUID()
+        let older = Entry(id: id, capturedAt: Date(timeIntervalSince1970: 100), imageData: Data([0x01]))
+        let newer = Entry(id: id, capturedAt: Date(timeIntervalSince1970: 200), imageData: Data([0x02]))
+        try repository.addEntries([older, newer], to: project)
+        older.sharedUpdatedAt = Date(timeIntervalSince1970: 100)
+        newer.sharedUpdatedAt = Date(timeIntervalSince1970: 200)
+        try repository.saveIfNeeded()
+
+        try repository.repairDuplicateEntryIDs()
+
+        let remaining = try container.mainContext.fetch(FetchDescriptor<Entry>())
+        XCTAssertEqual(remaining.count, 1)
+        XCTAssertEqual(remaining.first?.imageData, Data([0x02]))
+    }
+
     func test_birdenFazlaSilinenCekim_birlikteKaliciSilinir() throws {
         let project = try repository.createProject(title: "Sakal", category: .hairAndBeard, cadence: .daily)
         let first = Entry()

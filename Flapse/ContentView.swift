@@ -10,6 +10,7 @@ struct ContentView: View {
 
     @Environment(\.modelContext) private var modelContext
     @State private var isShowingSplash = true
+    @State private var isDataReady = false
     @State private var milestoneMessage: String?
 
     private var appTheme: AppTheme {
@@ -22,7 +23,11 @@ struct ContentView: View {
 
     var body: some View {
         ZStack {
-            MainTabView()
+            if isDataReady {
+                MainTabView()
+            } else {
+                appTheme.palette.canvas.ignoresSafeArea()
+            }
 
             if isShowingSplash && hasSeenWelcome {
                 LaunchSplashView()
@@ -60,13 +65,18 @@ struct ContentView: View {
             LanguageOverrideBundle.apply(appLanguage)
         }
         .task {
+            try? ProjectRepository(context: modelContext).repairDuplicateEntryIDs()
+            isDataReady = true
             try? ProjectRepository(context: modelContext).purgeExpiredProjects(retentionDays: 30, now: Date())
             try? ProjectRepository(context: modelContext).purgeExpiredEntries(retentionDays: 30, now: Date())
             TimelapseLibrary.purgeExpired(context: modelContext)
-            await synchronizeSharedProjects()
             WidgetStateWriter.update(projects: (try? modelContext.fetch(FetchDescriptor<Project>())) ?? [])
             try? await Task.sleep(for: .seconds(1.3))
             withAnimation(.easeOut(duration: 0.4)) { isShowingSplash = false }
+            Task { @MainActor in
+                await synchronizeSharedProjects()
+                try? ProjectRepository(context: modelContext).repairDuplicateEntryIDs()
+            }
         }
         .onReceive(NotificationCenter.default.publisher(for: .flapseMilestone)) { notification in
             guard let message = notification.object as? String else { return }

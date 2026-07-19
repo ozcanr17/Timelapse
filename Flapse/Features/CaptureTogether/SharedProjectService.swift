@@ -288,7 +288,7 @@ final class SharedProjectService {
         comparedTo remoteRecords: [CKRecord]? = nil
     ) async throws {
         let rootID = CKRecord.ID(recordName: snapshot.rootRecordName, zoneID: snapshot.zoneID)
-        let remoteByID = Dictionary(uniqueKeysWithValues: (remoteRecords ?? []).map { ($0.recordID, $0) })
+        let remoteByID = recordsByID(remoteRecords ?? [])
         let remoteRootDate = remoteByID[rootID]?["updatedAt"] as? Date ?? .distantPast
         if remoteRecords == nil || snapshot.updatedAt > remoteRootDate {
             let root = projectRecord(
@@ -348,15 +348,21 @@ final class SharedProjectService {
     }
 
     private func records(in zoneID: CKRecordZone.ID, database: CKDatabase) async throws -> [CKRecord] {
-        var output: [CKRecord] = []
+        var output: [CKRecord.ID: CKRecord] = [:]
         var token: CKServerChangeToken?
         repeat {
             let changes = try await database.recordZoneChanges(inZoneWith: zoneID, since: token)
-            output.append(contentsOf: changes.modificationResultsByID.compactMap { try? $0.value.get().record })
+            for record in changes.modificationResultsByID.compactMap({ try? $0.value.get().record }) {
+                if let existing = output[record.recordID],
+                   (existing.modificationDate ?? .distantPast) > (record.modificationDate ?? .distantPast) {
+                    continue
+                }
+                output[record.recordID] = record
+            }
             token = changes.changeToken
             if !changes.moreComing { break }
         } while true
-        return output
+        return Array(output.values)
     }
 
     private func makeSnapshot(
@@ -449,7 +455,17 @@ final class SharedProjectService {
             project.deletedAt = snapshot.deletedAt
             project.sharedUpdatedAt = snapshot.updatedAt
         }
-        let localByID = Dictionary(uniqueKeysWithValues: (project.entries ?? []).map { ($0.id, $0) })
+        var localByID: [UUID: Entry] = [:]
+        for entry in project.entries ?? [] {
+            if let existing = localByID[entry.id] {
+                let existingDate = existing.sharedUpdatedAt ?? existing.capturedAt
+                let candidateDate = entry.sharedUpdatedAt ?? entry.capturedAt
+                if candidateDate > existingDate { localByID[entry.id] = entry }
+            } else {
+                localByID[entry.id] = entry
+            }
+        }
+        var claimedLegacyEntries: Set<ObjectIdentifier> = []
         for remote in snapshot.entries {
             guard !purgedEntryIDs.contains(remote.id) else { continue }
             if let local = localByID[remote.id] {
@@ -470,8 +486,10 @@ final class SharedProjectService {
             } else {
                 if remote.isLegacy,
                    let local = (project.entries ?? []).first(where: {
-                       abs($0.capturedAt.timeIntervalSince(remote.capturedAt)) < 1
+                       !claimedLegacyEntries.contains(ObjectIdentifier($0))
+                           && abs($0.capturedAt.timeIntervalSince(remote.capturedAt)) < 1
                    }) {
+                    claimedLegacyEntries.insert(ObjectIdentifier(local))
                     local.id = remote.id
                     local.sharedUpdatedAt = remote.updatedAt
                     local.sharedImageUpdatedAt = remote.imageUpdatedAt
@@ -493,6 +511,18 @@ final class SharedProjectService {
                 context.insert(entry)
             }
         }
+    }
+
+    private func recordsByID(_ records: [CKRecord]) -> [CKRecord.ID: CKRecord] {
+        var result: [CKRecord.ID: CKRecord] = [:]
+        for record in records {
+            if let existing = result[record.recordID],
+               (existing.modificationDate ?? .distantPast) > (record.modificationDate ?? .distantPast) {
+                continue
+            }
+            result[record.recordID] = record
+        }
+        return result
     }
 
     private nonisolated static func sharedImageData(_ data: Data?) -> Data? {
