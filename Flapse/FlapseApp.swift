@@ -36,6 +36,8 @@ struct FlapseApp: App {
                 let projects = (try? container.mainContext.fetch(FetchDescriptor<Project>())) ?? []
                 ReminderScheduler.shared.sync(projects: projects)
                 WidgetStateWriter.update(projects: projects)
+            } else if phase == .active {
+                NotificationCenter.default.post(name: .flapseCloudKitChanged, object: nil)
             }
         }
     }

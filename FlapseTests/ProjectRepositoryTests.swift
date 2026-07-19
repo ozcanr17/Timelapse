@@ -55,8 +55,21 @@ final class ProjectRepositoryTests: XCTestCase {
 
         XCTAssertEqual(entry.imageData, Data([0x02]))
         XCTAssertEqual(entry.imageRevision, 1)
+        XCTAssertNotNil(entry.sharedUpdatedAt)
+        XCTAssertEqual(entry.sharedImageUpdatedAt, entry.sharedUpdatedAt)
         let entryCount = try container.mainContext.fetchCount(FetchDescriptor<Entry>())
         XCTAssertEqual(entryCount, 1)
+    }
+
+    func test_projeDuzenlenince_paylasimDegisiklikZamaniGuncellenir() throws {
+        let project = try repository.createProject(title: "Sakal", category: .hairAndBeard, cadence: .daily)
+
+        try repository.updateProject(project, title: "Yeni Başlık", category: .person, cadence: .weekly)
+
+        XCTAssertEqual(project.title, "Yeni Başlık")
+        XCTAssertEqual(project.category, .person)
+        XCTAssertEqual(project.cadence, .weekly)
+        XCTAssertNotNil(project.sharedUpdatedAt)
     }
 
     func test_cekimTarihiDegisince_zamanCizelgesiYenidenSiralanir() throws {
@@ -116,6 +129,7 @@ final class ProjectRepositoryTests: XCTestCase {
 
         XCTAssertTrue(project.sortedEntries.isEmpty)
         XCTAssertNotNil(entry.deletedAt)
+        XCTAssertNotNil(entry.sharedUpdatedAt)
         let remainingEntries = try container.mainContext.fetchCount(FetchDescriptor<Entry>())
         XCTAssertEqual(remainingEntries, 1)
     }
@@ -142,6 +156,18 @@ final class ProjectRepositoryTests: XCTestCase {
 
         let remainingEntries = try container.mainContext.fetchCount(FetchDescriptor<Entry>())
         XCTAssertEqual(remainingEntries, 0)
+    }
+
+    func test_ortakProjedeKaliciSilinenCekim_yenidenEsitlenmez() throws {
+        let project = try repository.createProject(title: "Biz", category: .person, cadence: .daily)
+        project.isCollaborative = true
+        let entry = Entry()
+        try repository.addEntry(entry, to: project)
+
+        try repository.permanentlyDeleteEntry(entry)
+
+        XCTAssertTrue(project.cloudPurgedEntryIDs.contains(entry.id))
+        XCTAssertNotNil(project.sharedUpdatedAt)
     }
 
     func test_birdenFazlaSilinenCekim_birlikteKaliciSilinir() throws {

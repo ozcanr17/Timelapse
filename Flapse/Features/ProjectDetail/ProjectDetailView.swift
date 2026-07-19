@@ -127,6 +127,13 @@ struct ProjectDetailView: View {
         .onDisappear {
             customTabBarHidden.wrappedValue = false
         }
+        .task(id: project.cloudShareRecordName) {
+            guard project.isCollaborative else { return }
+            while !Task.isCancelled {
+                await SharedProjectService.shared.synchronize(project, context: modelContext)
+                try? await Task.sleep(for: .seconds(60))
+            }
+        }
         .toolbar {
             if !liveEntries.isEmpty {
                 ToolbarItem(placement: .primaryAction) {
@@ -369,23 +376,7 @@ struct ProjectDetailView: View {
         }
 
         do {
-            var entries: [(data: Data, capturedAt: Date)] = []
-            for entry in liveEntries {
-                guard let original = entry.imageData else { continue }
-                let data = await Task.detached(priority: .userInitiated) {
-                    ImageDownsampler.image(from: original, maxPixelSize: 1600)?
-                        .jpegData(compressionQuality: 0.82) ?? original
-                }.value
-                entries.append((data: data, capturedAt: entry.capturedAt))
-            }
-            let share = try await SharedProjectService.shared.createShare(
-                title: project.title,
-                categoryRaw: project.category.rawValue,
-                cadenceRaw: project.cadence.rawValue,
-                entries: entries
-            )
-            project.isCollaborative = true
-            project.cloudShareRecordName = share.recordID.recordName
+            let share = try await SharedProjectService.shared.createShare(project: project)
             try? modelContext.save()
             preparedShare = share
             activeSheet = .cloudShare

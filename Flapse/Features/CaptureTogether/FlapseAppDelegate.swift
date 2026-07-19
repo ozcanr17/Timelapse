@@ -5,6 +5,14 @@ import CloudKit
 final class FlapseAppDelegate: NSObject, UIApplicationDelegate {
     func application(
         _ application: UIApplication,
+        didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
+    ) -> Bool {
+        application.registerForRemoteNotifications()
+        return true
+    }
+
+    func application(
+        _ application: UIApplication,
         userDidAcceptCloudKitShareWith cloudKitShareMetadata: CKShare.Metadata
     ) {
         FlapseSceneDelegate.acceptShare(cloudKitShareMetadata)
@@ -18,6 +26,19 @@ final class FlapseAppDelegate: NSObject, UIApplicationDelegate {
         let configuration = UISceneConfiguration(name: nil, sessionRole: connectingSceneSession.role)
         configuration.delegateClass = FlapseSceneDelegate.self
         return configuration
+    }
+
+    func application(
+        _ application: UIApplication,
+        didReceiveRemoteNotification userInfo: [AnyHashable: Any],
+        fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void
+    ) {
+        guard CKNotification(fromRemoteNotificationDictionary: userInfo) != nil else {
+            completionHandler(.noData)
+            return
+        }
+        NotificationCenter.default.post(name: .flapseCloudKitChanged, object: nil)
+        completionHandler(.newData)
     }
 }
 
@@ -39,5 +60,6 @@ final class FlapseSceneDelegate: NSObject, UIWindowSceneDelegate {
 
 extension Notification.Name {
     static let flapseDidAcceptShare = Notification.Name("flapseDidAcceptShare")
+    static let flapseCloudKitChanged = Notification.Name("flapseCloudKitChanged")
     static let flapseMilestone = Notification.Name("flapseMilestone")
 }

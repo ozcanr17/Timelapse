@@ -63,6 +63,7 @@ struct ContentView: View {
             try? ProjectRepository(context: modelContext).purgeExpiredProjects(retentionDays: 30, now: Date())
             try? ProjectRepository(context: modelContext).purgeExpiredEntries(retentionDays: 30, now: Date())
             TimelapseLibrary.purgeExpired(context: modelContext)
+            await synchronizeSharedProjects()
             WidgetStateWriter.update(projects: (try? modelContext.fetch(FetchDescriptor<Project>())) ?? [])
             try? await Task.sleep(for: .seconds(1.3))
             withAnimation(.easeOut(duration: 0.4)) { isShowingSplash = false }
@@ -78,6 +79,9 @@ struct ContentView: View {
         .onReceive(NotificationCenter.default.publisher(for: .flapseDidAcceptShare)) { notification in
             guard let metadata = notification.object as? CKShare.Metadata else { return }
             Task { await importSharedProject(metadata) }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .flapseCloudKitChanged)) { _ in
+            Task { await synchronizeSharedProjects() }
         }
     }
 
@@ -99,10 +103,36 @@ struct ContentView: View {
             cadence: CaptureCadence(rawValue: snapshot.cadenceRaw) ?? .daily
         ) else { return }
         project.isCollaborative = true
+        project.createdAt = snapshot.createdAt
+        project.deletedAt = snapshot.deletedAt
+        project.sharedUpdatedAt = snapshot.updatedAt
         project.cloudShareRecordName = snapshot.shareRecordName
+        project.cloudRootRecordName = snapshot.rootRecordName
+        project.cloudZoneName = snapshot.zoneName
+        project.cloudOwnerName = snapshot.ownerName
 
-        let entries = snapshot.entries.map { Entry(capturedAt: $0.capturedAt, imageData: $0.data) }
+        let entries = snapshot.entries.map { remote in
+            let entry = Entry(id: remote.id, capturedAt: remote.capturedAt, imageData: remote.data)
+            entry.imageRevision = remote.imageRevision
+            entry.latitude = remote.latitude
+            entry.longitude = remote.longitude
+            entry.placeName = remote.placeName
+            entry.deletedAt = remote.deletedAt
+            entry.sharedUpdatedAt = remote.isLegacy ? Date() : remote.updatedAt
+            entry.sharedImageUpdatedAt = remote.imageUpdatedAt
+            return entry
+        }
         try? repository.addEntries(entries, to: project)
+    }
+
+    private func synchronizeSharedProjects() async {
+        let descriptor = FetchDescriptor<Project>(
+            predicate: #Predicate { $0.isCollaborative == true }
+        )
+        guard let projects = try? modelContext.fetch(descriptor) else { return }
+        for project in projects {
+            await SharedProjectService.shared.synchronize(project, context: modelContext)
+        }
     }
 
     private var needsWelcome: Binding<Bool> {

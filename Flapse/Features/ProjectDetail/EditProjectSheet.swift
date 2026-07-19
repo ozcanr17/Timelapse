@@ -84,10 +84,12 @@ struct EditProjectSheet: View {
     }
 
     private func save() {
-        project.title = sanitizedTitle
-        project.category = category
-        project.cadence = cadence
-        try? modelContext.save()
+        try? ProjectRepository(context: modelContext).updateProject(
+            project,
+            title: sanitizedTitle,
+            category: category,
+            cadence: cadence
+        )
         dismiss()
     }
 }

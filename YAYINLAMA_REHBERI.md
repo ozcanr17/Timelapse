@@ -92,8 +92,9 @@ için: App Store Connect → Users and Access → **Sandbox Testers**'dan test h
    (`docs/AppStoreListing.md` taslak metinleri içerir.)
 3. **Support URL**: `https://ozcanr17.github.io/Flapse/support`
    **Privacy Policy URL**: `https://ozcanr17.github.io/Flapse/privacy`
-4. **App Privacy** anketi: **"Data Not Collected"** — uygulamada hiç ağ kodu yok, beyan doğru.
-   (CloudKit kullanıcının kendi iCloud'udur; Apple bunu geliştiricinin topladığı veri saymaz.)
+4. **App Privacy** anketi: **"Data Not Collected"** — üçüncü taraf sunucu, analiz veya takip yok.
+   (Birlikte Çekim ve isteğe bağlı yedekleme kullanıcının kendi iCloud/CloudKit hesabını kullanır;
+   geliştirici bu verilere erişmez.)
 5. **Age rating**: tüm sorulara "None" → 4+.
 6. **App Review Information → Notes** (İngilizce öneri):
    > All data stays on device; no accounts or servers. Sign in with Apple is optional

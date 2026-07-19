@@ -118,6 +118,8 @@ final class Entry {
     var longitude: Double?
     var placeName: String?
     var deletedAt: Date?
+    var sharedUpdatedAt: Date?
+    var sharedImageUpdatedAt: Date?
 
     // Ait olduğu proje. Ters ilişki (inverse) Project tarafında tanımlı.
     // CloudKit kısıtı gereği optional.
@@ -165,7 +167,12 @@ final class Project {
     var isCollaborative: Bool = false
 
     var cloudShareRecordName: String?
+    var cloudRootRecordName: String?
+    var cloudZoneName: String?
+    var cloudOwnerName: String?
+    var cloudPurgedEntryIDsRaw: String?
     var collaboratorNamesRaw: String?
+    var sharedUpdatedAt: Date?
 
     // "Son Silinenler": silinme anı. Dolu ise proje çöp kutusundadır; 30 gün sonra
     // kalıcı silinir. CloudKit ile eşitlenir, iCloud açıkken orada da saklanır.
@@ -176,6 +183,20 @@ final class Project {
             .split(separator: "\n")
             .map(String.init)
             .filter { !$0.isEmpty }
+    }
+
+    var cloudPurgedEntryIDs: Set<UUID> {
+        get {
+            Set((cloudPurgedEntryIDsRaw ?? "")
+                .split(separator: "\n")
+                .compactMap { UUID(uuidString: String($0)) })
+        }
+        set {
+            cloudPurgedEntryIDsRaw = newValue
+                .map(\.uuidString)
+                .sorted()
+                .joined(separator: "\n")
+        }
     }
 
     // Bir proje silinince çekimleri de silinsin: .cascade.

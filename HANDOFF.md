@@ -47,6 +47,8 @@ The app is **technically ready for App Store submission**. State of the pipeline
 
 ## Recent session work (2026-07-17/18, all pushed)
 
+- **Persistent Capture Together sync**: shared projects now use stable entry UUIDs and retain CloudKit zone/root metadata. New captures, photo edits, date/location changes, project edits, soft deletes, restores and permanent-delete tombstones synchronize in both directions. The app refreshes on launch, foreground, CloudKit push and while a shared project is open; uploads are debounced, incremental and process only changed images off the main thread. Legacy snapshot shares migrate without duplicating frames, and the old 50-frame upload limit is removed.
+
 - **Cross-device backup preference**: `CloudBackupPreference` mirrors the Pro iCloud-backup toggle through `NSUbiquitousKeyValueStore`; a newly received preference requests one restart before SwiftData opens the cloud-backed store. Sign in with Apple is explicitly distinguished from the device-level iCloud account required by CloudKit. UI-test containers now force `cloudKitDatabase: .none` so tests cannot import real private-database records.
 - **Home/UI performance pass**: heavy tab panes moved from a simultaneously animated `ZStack` to native `TabView` lifecycle management; expensive blurred/drawing-group fire borders became lightweight, glow-free streak accents; the Home screen now prioritizes a due capture, uses a calm 2×2 stats grid, and shows a real first-project empty state. Onboarding typography, Reduce Transparency, Dynamic Type usage, tab selection, and VoiceOver duplication were improved.
 - **Capture/project polish**: front-camera preview and photo output both explicitly mirror, so the saved selfie matches the familiar on-screen view; the back camera remains unmirrored. Projects sort by latest capture activity with creation date as fallback; the streak border uses a slow, glow-free angular motion and respects Reduce Motion.
@@ -77,7 +79,7 @@ The app is **technically ready for App Store submission**. State of the pipeline
 - Beat sync: strictly one cut per beat via `loopedCutTimes`; **drop detection was removed — do not reintroduce without owner sign-off, and it must not be claimed in marketing copy.**
 - Camera prewarm via `CameraService.shared.prewarm()`; call `.stop()` when a capture flow is cancelled before presenting.
 - Photos saving via `PhotoLibrarySaver` (add-only auth, `.photosDeniedAlert`).
-- No networking at all — "Data Not Collected" stays accurate. CaptionWriter is on-device FoundationModels. StoreKit entitlements verified, never persisted. Admin Pro rides UserDefaults/iCloud KVS by design (`AuthService.adminEmailHashes`). `CKShare.publicPermission = .readWrite` is required for link-invite UX — revisit before marketing Birlikte Çekim broadly.
+- No third-party backend or analytics — "Data Not Collected" stays accurate. Capture Together and optional backup use the user's Apple iCloud/CloudKit account. CaptionWriter is on-device FoundationModels. StoreKit entitlements verified, never persisted. Admin Pro rides UserDefaults/iCloud KVS by design (`AuthService.adminEmailHashes`). `CKShare.publicPermission = .readWrite` is required for link-invite UX — revisit before marketing Birlikte Çekim broadly.
 
 ## Pitfalls — DO NOT repeat
 
