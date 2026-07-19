@@ -115,6 +115,7 @@ final class TimelapseRenderService {
     private var backgroundTasks: [UUID: UIBackgroundTaskIdentifier] = [:]
     private var continuedTasks: [UUID: BGTask] = [:]
     private var registeredContinuedIdentifiers: Set<String> = []
+    private var systemActivityJobs: Set<UUID> = []
 
     var activeJobs: [Job] {
         jobs.filter { $0.viewModel.phase == .rendering }
@@ -151,16 +152,20 @@ final class TimelapseRenderService {
 
     private func rearm(_ job: Job) {
         let id = job.id
-        requestContinuedProcessing(for: job)
+        let usesSystemActivity = requestContinuedProcessing(for: job)
         if backgroundTasks[id] == nil {
             backgroundTasks[id] = UIApplication.shared.beginBackgroundTask(withName: "timelapse-render") { [weak self] in
                 Task { @MainActor in self?.endBackgroundTask(for: id) }
             }
         }
-        RenderActivityCenter.start(id: id, title: job.title)
+        if !usesSystemActivity {
+            RenderActivityCenter.start(id: id, title: job.title)
+        }
         Task {
             while job.viewModel.phase == .rendering {
-                RenderActivityCenter.update(id: id, progress: job.viewModel.progress)
+                if !usesSystemActivity {
+                    RenderActivityCenter.update(id: id, progress: job.viewModel.progress)
+                }
                 if #available(iOS 26.0, *),
                    let task = continuedTasks[id] as? BGContinuedProcessingTask {
                     task.progress.completedUnitCount = Int64(job.viewModel.progress * 100)
@@ -171,14 +176,19 @@ final class TimelapseRenderService {
         Task {
             await job.viewModel.waitForRender()
             endBackgroundTask(for: id)
+            let usedSystemActivity = systemActivityJobs.contains(id)
             finishContinuedTask(for: id, success: {
                 if case .finished = job.viewModel.phase { return true }
                 return false
             }())
             if case .finished = job.viewModel.phase {
-                RenderActivityCenter.finish(id: id, success: true)
+                if !usedSystemActivity {
+                    RenderActivityCenter.finish(id: id, success: true)
+                }
             } else if !job.viewModel.failedInBackground {
-                RenderActivityCenter.finish(id: id, success: false)
+                if !usedSystemActivity {
+                    RenderActivityCenter.finish(id: id, success: false)
+                }
             }
         }
     }
@@ -186,7 +196,9 @@ final class TimelapseRenderService {
     func cancel(projectID: UUID) {
         guard let job = jobs.first(where: { $0.id == projectID }) else { return }
         job.viewModel.cancel()
-        RenderActivityCenter.finish(id: projectID, success: false)
+        if !systemActivityJobs.contains(projectID) {
+            RenderActivityCenter.finish(id: projectID, success: false)
+        }
         endBackgroundTask(for: projectID)
         finishContinuedTask(for: projectID, success: false)
     }
@@ -212,8 +224,8 @@ final class TimelapseRenderService {
         }
     }
 
-    private func requestContinuedProcessing(for job: Job) {
-        guard #available(iOS 26.0, *) else { return }
+    private func requestContinuedProcessing(for job: Job) -> Bool {
+        guard #available(iOS 26.0, *) else { return false }
         let identifier = continuedIdentifier(for: job.id)
         if !registeredContinuedIdentifiers.contains(identifier) {
             let registered = BGTaskScheduler.shared.register(
@@ -228,7 +240,7 @@ final class TimelapseRenderService {
                     self?.attach(continuedTask, to: job.id)
                 }
             }
-            guard registered else { return }
+            guard registered else { return false }
             registeredContinuedIdentifiers.insert(identifier)
         }
 
@@ -238,7 +250,13 @@ final class TimelapseRenderService {
             subtitle: String(localized: "Timelapse hazırlanıyor…", bundle: .appLanguage)
         )
         request.strategy = .queue
-        try? BGTaskScheduler.shared.submit(request)
+        do {
+            try BGTaskScheduler.shared.submit(request)
+            systemActivityJobs.insert(job.id)
+            return true
+        } catch {
+            return false
+        }
     }
 
     @available(iOS 26.0, *)
@@ -264,6 +282,7 @@ final class TimelapseRenderService {
             task.setTaskCompleted(success: success)
         }
         BGTaskScheduler.shared.cancel(taskRequestWithIdentifier: continuedIdentifier(for: id))
+        systemActivityJobs.remove(id)
     }
 
     private func continuedIdentifier(for id: UUID) -> String {

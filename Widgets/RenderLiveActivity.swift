@@ -30,6 +30,7 @@ private struct ProgressRing: View {
     let isFinished: Bool
     var size: CGFloat = 22
     var lineWidth: CGFloat = 2.5
+    var textColor: Color = .white
 
     var body: some View {
         ZStack {
@@ -47,7 +48,7 @@ private struct ProgressRing: View {
                 Text("\(Int(progress * 100))")
                     .font(.system(size: size * 0.38, weight: .bold, design: .rounded))
                     .monospacedDigit()
-                    .foregroundStyle(.white)
+                    .foregroundStyle(textColor)
             }
         }
         .frame(width: size, height: size)
@@ -96,17 +97,23 @@ struct FlapseRenderLiveActivity: Widget {
             VStack(alignment: .leading, spacing: 3) {
                 Text(context.state.isFinished ? "Timelapse hazır" : "Timelapse oluşturuluyor…")
                     .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(.primary)
                 Text(context.attributes.title)
                     .font(.system(size: 12, weight: .medium))
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
             }
             Spacer()
-            ProgressRing(progress: context.state.progress, isFinished: context.state.isFinished, size: 34, lineWidth: 3.5)
+            ProgressRing(
+                progress: context.state.progress,
+                isFinished: context.state.isFinished,
+                size: 34,
+                lineWidth: 3.5,
+                textColor: .primary
+            )
         }
         .padding(16)
-        .activityBackgroundTint(Color(red: 0.06, green: 0.07, blue: 0.09))
+        .activityBackgroundTint(.clear)
         .activitySystemActionForegroundColor(flapseGreen)
     }
 }
