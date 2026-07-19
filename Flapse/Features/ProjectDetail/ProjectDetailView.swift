@@ -3,6 +3,7 @@ import SwiftData
 import UIKit
 import CoreLocation
 import CloudKit
+import MapKit
 
 struct ProjectDetailView: View {
 
@@ -22,6 +23,8 @@ struct ProjectDetailView: View {
     @State private var preparedShare: CKShare?
     @State private var isPreparingShare = false
     @State private var isChoosingShareCard = false
+    @State private var isSelectingEntries = false
+    @State private var selectedEntryIDs: Set<UUID> = []
 
     private struct MonthKey: Hashable {
         let year: Int
@@ -40,7 +43,7 @@ struct ProjectDetailView: View {
     }
 
     private enum DetailSheet: Identifiable {
-        case export, paywall, invite, importPhotos, cloudShare, editProject, shareCard
+        case export, paywall, invite, importPhotos, cloudShare, editProject, shareCard, batchDate, batchLocation
         var id: Int { hashValue }
     }
 
@@ -67,6 +70,10 @@ struct ProjectDetailView: View {
 
     private var isCaptureDue: Bool {
         project.cadence.isCaptureDue(lastCapture: liveEntries.last?.capturedAt)
+    }
+
+    private var selectedEntries: [Entry] {
+        liveEntries.filter { selectedEntryIDs.contains($0.id) }
     }
 
     var body: some View {
@@ -108,6 +115,11 @@ struct ProjectDetailView: View {
         }
         .background(theme.canvas.ignoresSafeArea())
         .navigationBarTitleDisplayMode(.inline)
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            if isSelectingEntries {
+                selectionActionBar
+            }
+        }
         .toolbar {
             if !liveEntries.isEmpty {
                 ToolbarItem(placement: .primaryAction) {
@@ -202,6 +214,30 @@ struct ProjectDetailView: View {
                 } else {
                     ActivityView(activityItems: [inviteText])
                 }
+            case .batchDate:
+                BatchDateEditSheet(
+                    count: selectedEntries.count,
+                    initialDate: selectedEntries.first?.capturedAt ?? .now
+                ) { date, preservingTime in
+                    try? ProjectRepository(context: modelContext).updateCapturedAt(
+                        for: selectedEntries,
+                        to: date,
+                        preservingTime: preservingTime
+                    )
+                    finishSelection()
+                }
+                .presentationDetents([.large])
+            case .batchLocation:
+                BatchLocationEditSheet(count: selectedEntries.count) { location in
+                    try? ProjectRepository(context: modelContext).updateLocation(
+                        for: selectedEntries,
+                        latitude: location?.latitude,
+                        longitude: location?.longitude,
+                        placeName: location?.placeName
+                    )
+                    finishSelection()
+                }
+                .presentationDetents([.medium, .large])
             }
         }
         .background {
@@ -571,10 +607,32 @@ struct ProjectDetailView: View {
     private var timeline: some View {
         let entries = displayedEntries
         return LazyVStack(alignment: .leading, spacing: 0) {
-            Text("Zaman Çizelgesi")
-                .font(Theme.headline(18))
-                .foregroundStyle(theme.ink)
-                .padding(.bottom, 12)
+            HStack {
+                Text(isSelectingEntries ? "\(selectedEntryIDs.count) seçildi" : "Zaman Çizelgesi")
+                    .font(Theme.headline(18))
+                    .foregroundStyle(theme.ink)
+                Spacer()
+                if isSelectingEntries {
+                    Button(areAllDisplayedEntriesSelected ? "Temizle" : "Tümü") {
+                        toggleAllDisplayedEntries()
+                    }
+                    .font(Theme.headline(14))
+                    .foregroundStyle(accent)
+                    Button("Bitti") {
+                        finishSelection()
+                    }
+                    .font(Theme.headline(14))
+                    .foregroundStyle(accent)
+                } else {
+                    Button("Seç") {
+                        withAnimation(.easeInOut(duration: 0.2)) { isSelectingEntries = true }
+                    }
+                    .font(Theme.headline(14))
+                    .foregroundStyle(accent)
+                    .accessibilityIdentifier("timelineSelectButton")
+                }
+            }
+            .padding(.bottom, 12)
 
             monthFilterBar
                 .padding(.bottom, 18)
@@ -583,11 +641,25 @@ struct ProjectDetailView: View {
                 TimelineEntryRow(
                     entry: entry,
                     accent: accent,
-                    isLast: index == entries.count - 1
+                    isLast: index == entries.count - 1,
+                    isSelecting: isSelectingEntries,
+                    isSelected: selectedEntryIDs.contains(entry.id)
                 ) {
-                    activeCover = .viewer(entry)
+                    if isSelectingEntries {
+                        toggleSelection(entry)
+                    } else {
+                        activeCover = .viewer(entry)
+                    }
                 }
                 .contextMenu {
+                    if !isSelectingEntries {
+                        Button {
+                            isSelectingEntries = true
+                            selectedEntryIDs.insert(entry.id)
+                        } label: {
+                            Label("Seç", systemImage: "checkmark.circle")
+                        }
+                    }
                     Button {
                         activeCover = .viewer(entry)
                     } label: {
@@ -606,6 +678,68 @@ struct ProjectDetailView: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var selectionActionBar: some View {
+        HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("\(selectedEntryIDs.count) fotoğraf")
+                    .font(Theme.headline(15))
+                    .foregroundStyle(theme.ink)
+                Text("Toplu düzenle")
+                    .font(Theme.caption(11))
+                    .foregroundStyle(theme.inkMuted)
+            }
+            Spacer()
+            Button {
+                activeSheet = .batchDate
+            } label: {
+                Label("Tarih", systemImage: "calendar.badge.clock")
+            }
+            .buttonStyle(BatchMetadataButtonStyle(accent: accent))
+            .accessibilityIdentifier("batchDateButton")
+            Button {
+                activeSheet = .batchLocation
+            } label: {
+                Label("Konum", systemImage: "mappin.and.ellipse")
+            }
+            .buttonStyle(BatchMetadataButtonStyle(accent: accent))
+            .accessibilityIdentifier("batchLocationButton")
+        }
+        .disabled(selectedEntryIDs.isEmpty)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background(.ultraThinMaterial)
+        .overlay(alignment: .top) { Divider() }
+    }
+
+    private func toggleSelection(_ entry: Entry) {
+        if selectedEntryIDs.contains(entry.id) {
+            selectedEntryIDs.remove(entry.id)
+        } else {
+            selectedEntryIDs.insert(entry.id)
+        }
+        UISelectionFeedbackGenerator().selectionChanged()
+    }
+
+    private var areAllDisplayedEntriesSelected: Bool {
+        !displayedEntries.isEmpty && displayedEntries.allSatisfy { selectedEntryIDs.contains($0.id) }
+    }
+
+    private func toggleAllDisplayedEntries() {
+        if areAllDisplayedEntriesSelected {
+            selectedEntryIDs.subtract(displayedEntries.map(\.id))
+        } else {
+            selectedEntryIDs.formUnion(displayedEntries.map(\.id))
+        }
+        UISelectionFeedbackGenerator().selectionChanged()
+    }
+
+    private func finishSelection() {
+        withAnimation(.easeInOut(duration: 0.2)) {
+            isSelectingEntries = false
+            selectedEntryIDs.removeAll()
+        }
     }
 
     private var lockedCount: Int {
@@ -700,6 +834,228 @@ struct ProjectDetailView: View {
     }
 }
 
+private struct BatchMetadataButtonStyle: ButtonStyle {
+    let accent: Color
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(Theme.headline(13))
+            .foregroundStyle(.white)
+            .padding(.horizontal, 13)
+            .frame(height: 42)
+            .background(accent.opacity(configuration.isPressed ? 0.72 : 1), in: Capsule())
+            .opacity(configuration.isPressed ? 0.85 : 1)
+    }
+}
+
+private struct BatchDateEditSheet: View {
+    let count: Int
+    let onSave: (Date, Bool) -> Void
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var date: Date
+    @State private var preservingTime = true
+
+    init(count: Int, initialDate: Date, onSave: @escaping (Date, Bool) -> Void) {
+        self.count = count
+        self.onSave = onSave
+        _date = State(initialValue: initialDate)
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    DatePicker("Tarih", selection: $date, displayedComponents: .date)
+                        .datePickerStyle(.graphical)
+                    Toggle("Fotoğrafların saatlerini koru", isOn: $preservingTime)
+                    if !preservingTime {
+                        DatePicker("Saat", selection: $date, displayedComponents: .hourAndMinute)
+                    }
+                } footer: {
+                    Text(preservingTime
+                         ? "Seçilen \(count) fotoğraf aynı güne taşınır; kendi saatleri korunur."
+                         : "Seçilen \(count) fotoğrafa aynı tarih ve saat uygulanır.")
+                }
+            }
+            .navigationTitle("Tarihi Düzenle")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Vazgeç") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Uygula") {
+                        onSave(date, preservingTime)
+                        dismiss()
+                    }
+                }
+            }
+        }
+    }
+}
+
+private struct BatchLocationResult: Identifiable, Equatable {
+    let id: String
+    let name: String
+    let subtitle: String
+    let latitude: Double
+    let longitude: Double
+
+    var resolved: ResolvedLocation {
+        ResolvedLocation(latitude: latitude, longitude: longitude, placeName: name)
+    }
+}
+
+private struct BatchLocationEditSheet: View {
+    let count: Int
+    let onSave: (ResolvedLocation?) -> Void
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var query = ""
+    @State private var results: [BatchLocationResult] = []
+    @State private var isSearching = false
+    @State private var isLocating = false
+    @State private var showLocationError = false
+    @State private var searchTask: Task<Void, Never>?
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Section {
+                    Button {
+                        useCurrentLocation()
+                    } label: {
+                        Label {
+                            Text(isLocating ? "Konum alınıyor…" : "Mevcut Konumumu Kullan")
+                        } icon: {
+                            if isLocating {
+                                ProgressView()
+                            } else {
+                                Image(systemName: "location.fill")
+                            }
+                        }
+                    }
+                    .disabled(isLocating)
+
+                    Button(role: .destructive) {
+                        onSave(nil)
+                        dismiss()
+                    } label: {
+                        Label("Konumu Kaldır", systemImage: "mappin.slash")
+                    }
+                }
+
+                Section("Konum Ara") {
+                    HStack {
+                        Image(systemName: "magnifyingglass")
+                            .foregroundStyle(.secondary)
+                        TextField("Şehir, semt veya yer", text: $query)
+                            .textInputAutocapitalization(.words)
+                            .submitLabel(.search)
+                    }
+                    if isSearching {
+                        HStack {
+                            Spacer()
+                            ProgressView()
+                            Spacer()
+                        }
+                    }
+                    ForEach(results) { result in
+                        Button {
+                            onSave(result.resolved)
+                            dismiss()
+                        } label: {
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text(result.name)
+                                    .foregroundStyle(.primary)
+                                if !result.subtitle.isEmpty {
+                                    Text(result.subtitle)
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                        .lineLimit(1)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            .navigationTitle("\(count) Fotoğrafın Konumu")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Vazgeç") { dismiss() }
+                }
+            }
+            .onChange(of: query) { _, newValue in
+                scheduleSearch(newValue)
+            }
+            .onDisappear {
+                searchTask?.cancel()
+            }
+            .alert("Konum Alınamadı", isPresented: $showLocationError) {
+                Button("Ayarları Aç") {
+                    guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
+                    UIApplication.shared.open(url)
+                }
+                Button("Vazgeç", role: .cancel) {}
+            } message: {
+                Text("Konum iznini kontrol edebilir veya yukarıdaki arama alanından bir yer seçebilirsin.")
+            }
+        }
+    }
+
+    private func scheduleSearch(_ value: String) {
+        searchTask?.cancel()
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.count >= 2 else {
+            results = []
+            isSearching = false
+            return
+        }
+        searchTask = Task {
+            try? await Task.sleep(for: .milliseconds(350))
+            guard !Task.isCancelled else { return }
+            isSearching = true
+            let request = MKLocalSearch.Request()
+            request.naturalLanguageQuery = trimmed
+            let response = try? await MKLocalSearch(request: request).start()
+            guard !Task.isCancelled else { return }
+            results = (response?.mapItems ?? []).prefix(12).map { item in
+                let placemark = item.placemark
+                let name = item.name ?? placemark.locality ?? trimmed
+                let subtitle = [placemark.subLocality, placemark.locality, placemark.administrativeArea]
+                    .compactMap { $0 }
+                    .filter { $0 != name }
+                    .joined(separator: ", ")
+                return BatchLocationResult(
+                    id: "\(placemark.coordinate.latitude)-\(placemark.coordinate.longitude)-\(name)",
+                    name: name,
+                    subtitle: subtitle,
+                    latitude: placemark.coordinate.latitude,
+                    longitude: placemark.coordinate.longitude
+                )
+            }
+            isSearching = false
+        }
+    }
+
+    private func useCurrentLocation() {
+        guard !isLocating else { return }
+        isLocating = true
+        Task {
+            let location = await LocationService().currentLocation()
+            isLocating = false
+            guard let location else {
+                showLocationError = true
+                return
+            }
+            onSave(location)
+            dismiss()
+        }
+    }
+}
+
 /// Sistem paylaşım sayfasını (UIActivityViewController) SwiftUI'da sunar — çift modu
 /// davetini paylaşmak için.
 private struct ActivityView: UIViewControllerRepresentable {
@@ -766,6 +1122,8 @@ private struct TimelineEntryRow: View {
     let entry: Entry
     let accent: Color
     let isLast: Bool
+    let isSelecting: Bool
+    let isSelected: Bool
     let onTap: () -> Void
 
     @Environment(\.theme) private var theme
@@ -836,18 +1194,28 @@ private struct TimelineEntryRow: View {
             .frame(height: cardHeight)
             .clipped()
             .overlay(alignment: .topLeading) { locationTag }
+            .overlay(alignment: .topTrailing) {
+                if isSelecting {
+                    Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                        .font(.system(size: 24, weight: .semibold))
+                        .foregroundStyle(isSelected ? accent : .white)
+                        .shadow(color: .black.opacity(0.35), radius: 3)
+                        .padding(10)
+                }
+            }
             .overlay(alignment: .bottomLeading) { timeStamp }
             .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
             .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .strokeBorder(theme.ink.opacity(0.06), lineWidth: 1)
+                    .strokeBorder(isSelected ? accent : theme.ink.opacity(0.06), lineWidth: isSelected ? 3 : 1)
             )
             .shadow(color: .black.opacity(0.08), radius: 6, x: 0, y: 3)
         }
         .buttonStyle(.plain)
         .padding(.bottom, rowGap)
         .accessibilityIdentifier("timelineCard")
+        .accessibilityValue(isSelected ? Text("Seçili") : Text("Seçili değil"))
         .task(id: entry.imageCacheKey) {
             photo = await ImageDownsampler.cachedImage(key: "row-\(entry.imageCacheKey)", maxPixelSize: 900) { entry.imageData }
             await resolvePlaceIfNeeded()

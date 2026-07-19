@@ -70,6 +70,43 @@ final class ProjectRepositoryTests: XCTestCase {
         XCTAssertEqual(project.sortedEntries.map(\.id), [second.id, first.id])
     }
 
+    func test_topluTarihDegisikligi_gunuDegistiripSaatleriKorur() throws {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let first = Entry(capturedAt: calendar.date(from: DateComponents(year: 2026, month: 1, day: 2, hour: 9, minute: 15))!)
+        let second = Entry(capturedAt: calendar.date(from: DateComponents(year: 2026, month: 1, day: 3, hour: 18, minute: 45))!)
+        let target = calendar.date(from: DateComponents(year: 2026, month: 7, day: 19, hour: 12))!
+
+        try repository.updateCapturedAt(for: [first, second], to: target, preservingTime: true, calendar: calendar)
+
+        let firstComponents = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: first.capturedAt)
+        let secondComponents = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: second.capturedAt)
+        XCTAssertEqual(firstComponents, DateComponents(year: 2026, month: 7, day: 19, hour: 9, minute: 15))
+        XCTAssertEqual(secondComponents, DateComponents(year: 2026, month: 7, day: 19, hour: 18, minute: 45))
+    }
+
+    func test_topluKonumDegisikligi_tumSecimeUygulanirVeKaldirilir() throws {
+        let first = Entry()
+        let second = Entry()
+
+        try repository.updateLocation(
+            for: [first, second],
+            latitude: 41.0082,
+            longitude: 28.9784,
+            placeName: "İstanbul"
+        )
+
+        XCTAssertEqual(first.latitude, 41.0082)
+        XCTAssertEqual(second.longitude, 28.9784)
+        XCTAssertEqual(first.placeName, "İstanbul")
+
+        try repository.updateLocation(for: [first, second], latitude: nil, longitude: nil, placeName: nil)
+
+        XCTAssertNil(first.latitude)
+        XCTAssertNil(second.longitude)
+        XCTAssertNil(first.placeName)
+    }
+
     func test_cekimSilinince_sonSilinenlereTasinir() throws {
         let project = try repository.createProject(title: "Sakal", category: .hairAndBeard, cadence: .daily)
         let entry = Entry()

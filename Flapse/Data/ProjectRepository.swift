@@ -76,6 +76,47 @@ final class ProjectRepository: ProjectRepositoryProtocol {
         try context.save()
     }
 
+    func updateCapturedAt(for entries: [Entry], to date: Date, preservingTime: Bool) throws {
+        try updateCapturedAt(for: entries, to: date, preservingTime: preservingTime, calendar: .current)
+    }
+
+    func updateCapturedAt(
+        for entries: [Entry],
+        to date: Date,
+        preservingTime: Bool,
+        calendar: Calendar = .current
+    ) throws {
+        let selectedDay = calendar.dateComponents([.year, .month, .day], from: date)
+        for entry in entries {
+            if preservingTime {
+                let time = calendar.dateComponents([.hour, .minute, .second, .nanosecond], from: entry.capturedAt)
+                var components = selectedDay
+                components.hour = time.hour
+                components.minute = time.minute
+                components.second = time.second
+                components.nanosecond = time.nanosecond
+                entry.capturedAt = calendar.date(from: components) ?? date
+            } else {
+                entry.capturedAt = date
+            }
+        }
+        try context.save()
+    }
+
+    func updateLocation(
+        for entries: [Entry],
+        latitude: Double?,
+        longitude: Double?,
+        placeName: String?
+    ) throws {
+        for entry in entries {
+            entry.latitude = latitude
+            entry.longitude = longitude
+            entry.placeName = placeName
+        }
+        try context.save()
+    }
+
     func deleteEntry(_ entry: Entry) throws {
         entry.deletedAt = Date()
         try context.save()
