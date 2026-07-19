@@ -17,6 +17,7 @@ struct EntryViewerView: View {
     @State private var isConfirmingDelete = false
     @State private var retakeTarget: Entry?
     @State private var editTarget: Entry?
+    @State private var dateEditTarget: Entry?
     @State private var shareImage: UIImage?
     @State private var showPhotosDenied = false
 
@@ -27,7 +28,9 @@ struct EntryViewerView: View {
     }
 
     private var entries: [Entry] {
-        let live = sourceEntries.filter { !$0.isDeleted }
+        let live = sourceEntries
+            .filter { !$0.isDeleted }
+            .sorted { $0.capturedAt < $1.capturedAt }
         guard !store.isPro else { return live }
         return Array(live.suffix(FeatureGate.freeEntryLimit))
     }
@@ -83,6 +86,13 @@ struct EntryViewerView: View {
                 let repository = ProjectRepository(context: modelContext)
                 try? repository.replaceImage(for: entry, with: data)
             }
+        }
+        .sheet(item: $dateEditTarget) { entry in
+            EntryDateEditSheet(entry: entry) { date in
+                try? ProjectRepository(context: modelContext).updateCapturedAt(for: entry, to: date)
+                selectedEntryID = entry.id
+            }
+            .presentationDetents([.large])
         }
         .photosDeniedAlert(isPresented: $showPhotosDenied)
     }
@@ -159,16 +169,33 @@ struct EntryViewerView: View {
     private var metadataBar: some View {
         if let entry = selectedEntry {
             VStack(spacing: 6) {
-                Text(entry.capturedAt, format: .dateTime.weekday(.wide).day().month().year())
-                    .font(Theme.headline(15))
-                HStack(spacing: 16) {
-                    Label(entry.capturedAt.formatted(.dateTime.hour().minute().locale(AppLanguage.currentLocale)), systemImage: "clock")
-                    if let place = entry.placeName, !place.isEmpty {
-                        Label(place, systemImage: "mappin.and.ellipse").lineLimit(1)
+                Button {
+                    dateEditTarget = entry
+                } label: {
+                    HStack(spacing: 12) {
+                        VStack(spacing: 6) {
+                            Text(entry.capturedAt, format: .dateTime.weekday(.wide).day().month().year())
+                                .font(Theme.headline(15))
+                            Label(
+                                entry.capturedAt.formatted(.dateTime.hour().minute().locale(AppLanguage.currentLocale)),
+                                systemImage: "clock"
+                            )
+                            .font(Theme.caption(13))
+                            .foregroundStyle(.white.opacity(0.85))
+                        }
+                        Image(systemName: "calendar.badge.clock")
+                            .font(.system(size: 17, weight: .semibold))
+                            .foregroundStyle(theme.accent)
                     }
                 }
-                .font(Theme.caption(13))
-                .foregroundStyle(.white.opacity(0.85))
+                .buttonStyle(.plain)
+                .accessibilityLabel(Text("Düzenle"))
+                if let place = entry.placeName, !place.isEmpty {
+                    Label(place, systemImage: "mappin.and.ellipse")
+                        .font(Theme.caption(13))
+                        .foregroundStyle(.white.opacity(0.85))
+                        .lineLimit(1)
+                }
             }
             .foregroundStyle(.white)
             .padding(.horizontal, 18)
@@ -210,6 +237,43 @@ struct EntryViewerView: View {
             dismiss()
         } else {
             selectedEntryID = remaining[min(index, remaining.count - 1)].id
+        }
+    }
+}
+
+private struct EntryDateEditSheet: View {
+    let entry: Entry
+    let onSave: (Date) -> Void
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var date: Date
+
+    init(entry: Entry, onSave: @escaping (Date) -> Void) {
+        self.entry = entry
+        self.onSave = onSave
+        _date = State(initialValue: entry.capturedAt)
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                DatePicker("Düzenle", selection: $date, displayedComponents: .date)
+                    .datePickerStyle(.graphical)
+                DatePicker("Saat", selection: $date, displayedComponents: .hourAndMinute)
+            }
+            .navigationTitle("Düzenle")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Vazgeç") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Kaydet") {
+                        onSave(date)
+                        dismiss()
+                    }
+                }
+            }
         }
     }
 }

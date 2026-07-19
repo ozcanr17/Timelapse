@@ -360,8 +360,8 @@ struct PhotoEditView: View {
 enum PhotoCropAspect: String, CaseIterable, Identifiable {
     case free
     case nineSixteen
-    case fourThree
     case threeFour
+    case fourThree
     case sixteenNine
 
     var id: String { rawValue }

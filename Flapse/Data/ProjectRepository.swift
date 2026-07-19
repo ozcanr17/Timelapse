@@ -71,6 +71,11 @@ final class ProjectRepository: ProjectRepositoryProtocol {
         try context.save()
     }
 
+    func updateCapturedAt(for entry: Entry, to date: Date) throws {
+        entry.capturedAt = date
+        try context.save()
+    }
+
     func deleteEntry(_ entry: Entry) throws {
         entry.deletedAt = Date()
         try context.save()

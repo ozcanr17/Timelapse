@@ -59,6 +59,17 @@ final class ProjectRepositoryTests: XCTestCase {
         XCTAssertEqual(entryCount, 1)
     }
 
+    func test_cekimTarihiDegisince_zamanCizelgesiYenidenSiralanir() throws {
+        let project = try repository.createProject(title: "Sakal", category: .hairAndBeard, cadence: .daily)
+        let first = Entry(capturedAt: Date(timeIntervalSince1970: 200))
+        let second = Entry(capturedAt: Date(timeIntervalSince1970: 300))
+        try repository.addEntries([first, second], to: project)
+
+        try repository.updateCapturedAt(for: second, to: Date(timeIntervalSince1970: 100))
+
+        XCTAssertEqual(project.sortedEntries.map(\.id), [second.id, first.id])
+    }
+
     func test_cekimSilinince_sonSilinenlereTasinir() throws {
         let project = try repository.createProject(title: "Sakal", category: .hairAndBeard, cadence: .daily)
         let entry = Entry()
