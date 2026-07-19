@@ -1,4 +1,5 @@
 import XCTest
+import UIKit
 @testable import Flapse
 
 @MainActor
@@ -93,5 +94,39 @@ final class TimelapseExportViewModelTests: XCTestCase {
         let beats = [1.0, 2.0]
         let cuts = TimelapseExportViewModel.loopedCutTimes(beats: beats, frameCount: 4, audioDuration: 0)
         XCTAssertEqual(cuts, [1.0, 2.0, 3.0, 4.0])
+    }
+
+    func test_adaptiveCutTimes_yavasVideodaVuruslariZamanaYayar() {
+        let beats = stride(from: 0.5, through: 5.0, by: 0.5).map { $0 }
+        let cuts = AdaptiveEditEngine.cutTimes(
+            beats: beats,
+            frameCount: 4,
+            audioDuration: 6,
+            targetDuration: 4
+        )
+
+        XCTAssertEqual(cuts.count, 4)
+        XCTAssertEqual(cuts.first, 0.5)
+        XCTAssertGreaterThanOrEqual(cuts.last ?? 0, 4)
+        XCTAssertTrue(zip(cuts, cuts.dropFirst()).allSatisfy(<))
+    }
+
+    func test_adaptiveTransition_benzerKarelerdeAkiskanGecisSecer() throws {
+        let image = try XCTUnwrap(solidImage(.systemBlue))
+        XCTAssertEqual(AdaptiveEditEngine.transition(from: image, to: image), .morph)
+    }
+
+    func test_adaptiveTransition_cokFarkliKarelerdeKesmeSecer() throws {
+        let dark = try XCTUnwrap(solidImage(.black))
+        let light = try XCTUnwrap(solidImage(.white))
+        XCTAssertEqual(AdaptiveEditEngine.transition(from: dark, to: light), .cut)
+    }
+
+    private func solidImage(_ color: UIColor) -> Data? {
+        let renderer = UIGraphicsImageRenderer(size: CGSize(width: 32, height: 32))
+        return renderer.image { context in
+            color.setFill()
+            context.fill(CGRect(x: 0, y: 0, width: 32, height: 32))
+        }.pngData()
     }
 }

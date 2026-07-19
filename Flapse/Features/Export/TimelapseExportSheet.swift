@@ -505,7 +505,7 @@ struct TimelapseExportSheet: View {
             .pickerStyle(.segmented)
             .disabled(viewModel.phase == .rendering)
             .onChange(of: transition) {
-                if transition == .morph, !store.isPro {
+                if transition == .morph || transition == .adaptive, !store.isPro {
                     transition = .smooth
                     showPaywall = true
                 }

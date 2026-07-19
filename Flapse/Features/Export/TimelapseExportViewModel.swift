@@ -72,12 +72,24 @@ final class TimelapseExportViewModel {
                     if beats?.count ?? 0 < 2 { beats = nil }
                     if let raw = beats {
                         let audioDuration = (try? await AVURLAsset(url: soundtrackURL).load(.duration).seconds) ?? 0
-                        beats = Self.loopedCutTimes(beats: raw, frameCount: frames.count, audioDuration: audioDuration)
+                        let fps = speedMultiplier.map { min(12, max(1, $0 * 4)) } ?? Double(speed.framesPerSecond)
+                        beats = AdaptiveEditEngine.cutTimes(
+                            beats: raw,
+                            frameCount: frames.count,
+                            audioDuration: audioDuration,
+                            targetDuration: Double(frames.count) / fps
+                        )
                     }
                 }
+                let transitionPlan = transition == .adaptive
+                    ? await Task.detached(priority: .userInitiated) {
+                        AdaptiveEditEngine.transitionPlan(for: frames)
+                    }.value
+                    : nil
                 let settings = TimelapseExportSettings.current(
                     isPro: isPro, speed: speed, speedMultiplier: speedMultiplier, aspect: aspect, zoom: zoom, overlay: overlay,
-                    smartAlignment: smartAlignment, manualAnchor: manualAnchor, manualAnchors: manualAnchors, transition: transition,
+                    smartAlignment: smartAlignment, manualAnchor: manualAnchor, manualAnchors: manualAnchors,
+                    transition: transition, transitionPlan: transitionPlan,
                     alignmentSubject: alignmentSubject,
                     soundtrackURL: soundtrackURL,
                     beatTimes: beats

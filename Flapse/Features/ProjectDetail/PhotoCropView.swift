@@ -361,6 +361,7 @@ enum PhotoCropAspect: String, CaseIterable, Identifiable {
     case free
     case nineSixteen
     case threeFour
+    case square
     case fourThree
     case sixteenNine
 
@@ -372,6 +373,7 @@ enum PhotoCropAspect: String, CaseIterable, Identifiable {
         case .nineSixteen: "9:16"
         case .fourThree: "4:3"
         case .threeFour: "3:4"
+        case .square: "1:1"
         case .sixteenNine: "16:9"
         }
     }
@@ -382,6 +384,7 @@ enum PhotoCropAspect: String, CaseIterable, Identifiable {
         case .nineSixteen: 9.0 / 16.0
         case .fourThree: 4.0 / 3.0
         case .threeFour: 3.0 / 4.0
+        case .square: 1
         case .sixteenNine: 16.0 / 9.0
         }
     }

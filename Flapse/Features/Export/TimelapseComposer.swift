@@ -139,7 +139,7 @@ struct TimelapseOverlayOptions: Equatable {
 }
 
 /// Videoya girecek tek kare: görsel veri + çekildiği tarih (tarih bindirmesi için).
-struct TimelapseFrame: Equatable {
+struct TimelapseFrame: Equatable, Sendable {
     let imageData: Data
     let capturedAt: Date
 }
@@ -149,6 +149,7 @@ enum TimelapseTransition: String, CaseIterable, Identifiable {
     case cut        // efekt yok (sert kesme)
     case smooth     // kısa çapraz geçiş (crossfade)
     case morph      // optik akışla akışkan dönüşüm (AI)
+    case adaptive
 
     var id: String { rawValue }
 
@@ -157,6 +158,7 @@ enum TimelapseTransition: String, CaseIterable, Identifiable {
         case .cut:    String(localized: "Efekt yok", bundle: .appLanguage)
         case .smooth: String(localized: "Yumuşak", bundle: .appLanguage)
         case .morph:  String(localized: "Akışkan", bundle: .appLanguage)
+        case .adaptive: String(localized: "Akıllı", bundle: .appLanguage)
         }
     }
 }
@@ -182,6 +184,7 @@ struct TimelapseExportSettings: Equatable {
     var manualAnchors: [ManualAlignment]? = nil
     /// Kareler arası geçiş.
     var transition: TimelapseTransition = .cut
+    var transitionPlan: [TimelapseTransition]? = nil
     /// Akıllı Hizalama'nın hangi özneyi kilitleyeceği (yüz / gövde / karın / grup).
     var alignmentSubject: AlignmentSubject = .auto
     /// Kare ölçeği: 1 = doğal doldurma; <1 uzaklaşır (kenar boşluğu siyah), >1 yakınlaşır.
@@ -202,6 +205,7 @@ struct TimelapseExportSettings: Equatable {
         manualAnchor: ManualAlignment? = nil,
         manualAnchors: [ManualAlignment]? = nil,
         transition: TimelapseTransition = .cut,
+        transitionPlan: [TimelapseTransition]? = nil,
         alignmentSubject: AlignmentSubject = .auto,
         soundtrackURL: URL? = nil,
         beatTimes: [Double]? = nil
@@ -217,6 +221,7 @@ struct TimelapseExportSettings: Equatable {
             manualAnchor: manualAnchor,
             manualAnchors: manualAnchors,
             transition: transition,
+            transitionPlan: transitionPlan,
             alignmentSubject: alignmentSubject,
             zoom: CGFloat(min(2, max(0.5, zoom))),
             soundtrackURL: soundtrackURL,
@@ -442,8 +447,11 @@ struct TimelapseComposer: TimelapseComposing {
             try abortIfCancelled()
             let next = try index + 1 < frames.count ? autoreleasepool { try keyframe(index + 1) } : nil
 
-            let wantsTransition = settings.transition != .cut
-            let transitionBudget = settings.transition == .morph
+            let transition = settings.transition == .adaptive
+                ? settings.transitionPlan.flatMap { index < $0.count ? $0[index] : nil } ?? .smooth
+                : settings.transition
+            let wantsTransition = transition != .cut
+            let transitionBudget = transition == .morph
                 ? max(2, Int((0.30 * Double(outputFPS)).rounded()))
                 : baseTransition
             let transitionFrames = wantsTransition ? min(holds[index] - 1, transitionBudget) : 0
@@ -455,7 +463,7 @@ struct TimelapseComposer: TimelapseComposing {
 
             if transitionFrames > 0, let next {
                 var morphed: [CGImage]?
-                if settings.transition == .morph {
+                if transition == .morph {
                     morphed = autoreleasepool {
                         FlowMorpher.morphFrames(from: current, to: next, steps: transitionFrames, canvas: settings.renderSize)
                     }

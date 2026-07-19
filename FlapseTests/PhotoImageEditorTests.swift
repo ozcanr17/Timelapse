@@ -61,6 +61,11 @@ final class PhotoImageEditorTests: XCTestCase {
         XCTAssertEqual(rect.midY, 200, accuracy: 0.001)
     }
 
+    func testSquareAspectIsBetweenPortraitAndLandscapeOptions() {
+        XCTAssertEqual(PhotoCropAspect.square.ratio(for: CGSize(width: 400, height: 300)), 1)
+        XCTAssertEqual(PhotoCropAspect.allCases, [.free, .nineSixteen, .threeFour, .square, .fourThree, .sixteenNine])
+    }
+
     func testCropOffsetMovesVisibleRectWithoutLeavingImage() {
         let imageSize = CGSize(width: 400, height: 300)
         let displaySize = CGSize(width: 180, height: 320)
