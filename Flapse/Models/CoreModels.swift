@@ -177,6 +177,7 @@ final class Project {
     // "Son Silinenler": silinme anı. Dolu ise proje çöp kutusundadır; 30 gün sonra
     // kalıcı silinir. CloudKit ile eşitlenir, iCloud açıkken orada da saklanır.
     var deletedAt: Date?
+    var isHidden: Bool = false
 
     var collaboratorNames: [String] {
         (collaboratorNamesRaw ?? "")

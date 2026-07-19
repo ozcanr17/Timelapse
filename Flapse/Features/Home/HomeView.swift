@@ -20,7 +20,7 @@ struct HomeView: View {
     @Environment(\.theme) private var theme
 
     private var liveProjects: [Project] {
-        projects.filter { !$0.isDeleted && $0.deletedAt == nil }
+        projects.filter { !$0.isDeleted && $0.deletedAt == nil && !$0.isHidden }
     }
 
     private var liveEntries: [Entry] {
@@ -73,7 +73,7 @@ struct HomeView: View {
                                 onCapture(firstDueProject)
                             }
                         }
-                        ActivityHeroCard(projects: projects)
+                        ActivityHeroCard(projects: liveProjects)
                         if dueProjects.count > 1 {
                             dueSection
                         }
@@ -352,7 +352,7 @@ struct ActivityHeroCard: View {
     @Environment(\.theme) private var theme
 
     private var liveProjects: [Project] {
-        projects.filter { !$0.isDeleted && $0.deletedAt == nil }
+        projects.filter { !$0.isDeleted && $0.deletedAt == nil && !$0.isHidden }
     }
 
     private var liveEntries: [Entry] {

@@ -104,6 +104,83 @@
         }
       }
     },
+    "NSFaceIDUsageDescription" : {
+      "comment": "Privacy - Face ID Usage Description",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يُستخدم Face ID لفتح المشاريع ومقاطع التايم لابس المخفية."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Face ID wird verwendet, um ausgeblendete Projekte und Timelapses zu öffnen."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Face ID is used to open hidden projects and timelapses."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Face ID se usa para abrir proyectos y timelapses ocultos."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Face ID est utilisé pour ouvrir les projets et timelapses masqués."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "छिपे हुए प्रोजेक्ट और टाइमलैप्स खोलने के लिए Face ID का उपयोग किया जाता है।"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "非表示のプロジェクトとタイムラプスを開くためにFace IDを使用します。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "가려진 프로젝트와 타임랩스를 열기 위해 Face ID를 사용합니다."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O Face ID é usado para abrir projetos e timelapses ocultos."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Face ID используется для открытия скрытых проектов и таймлапсов."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gizlenen proje ve timelapse'leri açmak için Face ID kullanılır."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "面容 ID 用于打开隐藏的项目和延时摄影。"
+          }
+        }
+      }
+    },
     "NSLocationWhenInUseUsageDescription" : {
       "comment" : "Privacy - Location When In Use Usage Description",
       "extractionState" : "extracted_with_value",

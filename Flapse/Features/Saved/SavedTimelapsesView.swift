@@ -5,7 +5,7 @@ import SwiftData
 
 struct SavedTimelapsesView: View {
 
-    @Query(filter: #Predicate<SavedTimelapse> { $0.deletedAt == nil }, sort: \SavedTimelapse.createdAt, order: .reverse)
+    @Query(filter: #Predicate<SavedTimelapse> { $0.deletedAt == nil && $0.isHidden == false }, sort: \SavedTimelapse.createdAt, order: .reverse)
     private var items: [SavedTimelapse]
     @Environment(\.modelContext) private var modelContext
     @Environment(\.theme) private var theme
@@ -135,6 +135,11 @@ struct SavedTimelapsesView: View {
             } label: {
                 Label("Fotoğraflara kaydet", systemImage: "square.and.arrow.down")
             }
+            Button {
+                TimelapseLibrary.setHidden(true, for: item, context: modelContext)
+            } label: {
+                Label("Gizle", systemImage: "eye.slash")
+            }
             Button(role: .destructive) {
                 pendingDeletion = item
             } label: {
@@ -154,7 +159,7 @@ struct SavedTimelapsesView: View {
     }
 }
 
-private struct SavedPlayerSheet: View {
+struct SavedPlayerSheet: View {
     let item: SavedTimelapse
 
     @Environment(\.dismiss) private var dismiss

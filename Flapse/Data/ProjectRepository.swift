@@ -187,6 +187,14 @@ final class ProjectRepository: ProjectRepositoryProtocol {
         scheduleSharedSync(for: project)
     }
 
+    func setHidden(_ hidden: Bool, for project: Project) throws {
+        project.isHidden = hidden
+        try context.save()
+        let projects = try context.fetch(FetchDescriptor<Project>())
+        ReminderScheduler.shared.sync(projects: projects)
+        WidgetStateWriter.update(projects: projects)
+    }
+
     /// Saklama süresi dolan (varsayılan 30 gün) projeleri kalıcı olarak siler.
     func purgeExpiredProjects(retentionDays: Int = 30, now: Date = Date()) throws {
         guard let cutoff = Calendar.current.date(byAdding: .day, value: -retentionDays, to: now) else { return }

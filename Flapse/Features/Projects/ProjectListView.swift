@@ -28,7 +28,7 @@ struct ProjectListView: View {
         var id: Int { hashValue }
     }
 
-    private var liveProjects: [Project] {
+    private var activeProjects: [Project] {
         projects
             .filter { !$0.isDeleted && $0.deletedAt == nil }
             .map { (project: $0, activity: $0.lastActivityDate) }
@@ -41,10 +41,14 @@ struct ProjectListView: View {
             .map(\.project)
     }
 
+    private var liveProjects: [Project] {
+        activeProjects.filter { !$0.isHidden }
+    }
+
     private var unlockedProjectID: UUID? {
         FeatureGate.unlockedProjectID(
             isPro: store.isPro,
-            projects: liveProjects.map { (id: $0.id, createdAt: $0.createdAt) }
+            projects: activeProjects.map { (id: $0.id, createdAt: $0.createdAt) }
         )
     }
 
@@ -103,6 +107,18 @@ struct ProjectListView: View {
                                         }
                                         .buttonStyle(.plain)
                                         .opacity(0)
+                                    }
+                                }
+                                .contextMenu {
+                                    Button {
+                                        try? ProjectRepository(context: modelContext).setHidden(true, for: project)
+                                    } label: {
+                                        Label("Gizle", systemImage: "eye.slash")
+                                    }
+                                    Button(role: .destructive) {
+                                        pendingDeletion = [project]
+                                    } label: {
+                                        Label("Sil", systemImage: "trash")
                                     }
                                 }
                                 .accessibilityElement(children: .combine)
@@ -190,7 +206,7 @@ struct ProjectListView: View {
 
     private var visibleJobs: [TimelapseRenderService.Job] {
         (renderService.activeJobs + renderService.finishedJobs)
-            .filter { job in projects.contains { $0.id == job.id } }
+            .filter { job in liveProjects.contains { $0.id == job.id } }
     }
 
     private func openJob(_ job: TimelapseRenderService.Job) {
@@ -274,7 +290,7 @@ struct ProjectListView: View {
             activeSheet = .signIn
             return
         }
-        if FeatureGate.canCreateProject(isPro: store.isPro, currentProjectCount: liveProjects.count) {
+        if FeatureGate.canCreateProject(isPro: store.isPro, currentProjectCount: activeProjects.count) {
             activeSheet = .addProject
         } else {
             activeSheet = .paywall
@@ -287,7 +303,7 @@ struct ProjectListView: View {
             activeSheet = .signIn
             return
         }
-        if store.isPro || FeatureGate.canCreateProject(isPro: false, currentProjectCount: liveProjects.count) {
+        if store.isPro || FeatureGate.canCreateProject(isPro: false, currentProjectCount: activeProjects.count) {
             activeSheet = .importNew
         } else {
             activeSheet = .paywall

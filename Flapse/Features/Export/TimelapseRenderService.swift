@@ -50,6 +50,12 @@ enum TimelapseLibrary {
     }
 
     @MainActor
+    static func setHidden(_ hidden: Bool, for item: SavedTimelapse, context: ModelContext) {
+        item.isHidden = hidden
+        try? context.save()
+    }
+
+    @MainActor
     static func delete(_ item: SavedTimelapse, context: ModelContext) {
         try? FileManager.default.removeItem(at: item.fileURL)
         context.delete(item)

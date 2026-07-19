@@ -47,6 +47,7 @@ The app is **technically ready for App Store submission**. State of the pipeline
 
 ## Recent session work (2026-07-17/18, all pushed)
 
+- **Authenticated Hidden items**: projects and saved timelapses can be hidden from their context menus and restored from Settings → Hidden after device-owner authentication. Hidden projects are excluded from Home, Projects, quick capture, reminders, widgets and visible statistics without bypassing free-tier project limits. The protected view relocks and dismisses open private media when the app leaves the foreground.
 - **Persistent Capture Together sync**: shared projects now use stable entry UUIDs and retain CloudKit zone/root metadata. New captures, photo edits, date/location changes, project edits, soft deletes, restores and permanent-delete tombstones synchronize in both directions. The app refreshes on launch, foreground, CloudKit push and while a shared project is open; uploads are debounced, incremental and process only changed images off the main thread. Legacy snapshot shares migrate without duplicating frames, and the old 50-frame upload limit is removed.
 
 - **Cross-device backup preference**: `CloudBackupPreference` mirrors the Pro iCloud-backup toggle through `NSUbiquitousKeyValueStore`; a newly received preference requests one restart before SwiftData opens the cloud-backed store. Sign in with Apple is explicitly distinguished from the device-level iCloud account required by CloudKit. UI-test containers now force `cloudKitDatabase: .none` so tests cannot import real private-database records.

@@ -198,6 +198,15 @@ struct SettingsView: View {
                 .pickerStyle(.menu)
                 .tint(theme.inkMuted)
                 NavigationLink {
+                    HiddenItemsView()
+                } label: {
+                    Label {
+                        Text("Gizlenenler").foregroundStyle(theme.ink)
+                    } icon: {
+                        Image(systemName: "eye.slash").foregroundStyle(theme.accent)
+                    }
+                }
+                NavigationLink {
                     RecentlyDeletedView()
                 } label: {
                     Label {
@@ -265,7 +274,7 @@ struct SettingsView: View {
         .background(theme.canvas)
         .navigationTitle("Ayarlar")
         .task {
-            let descriptor = FetchDescriptor<Project>(predicate: #Predicate { $0.deletedAt == nil })
+            let descriptor = FetchDescriptor<Project>(predicate: #Predicate { $0.deletedAt == nil && $0.isHidden == false })
             projects = (try? settingsContext.fetch(descriptor)) ?? []
             let status = try? await CKContainer(identifier: SharedProjectService.containerIdentifier).accountStatus()
             cloudAccountAvailable = status == .available

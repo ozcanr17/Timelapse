@@ -9,6 +9,7 @@ final class SavedTimelapse {
     var fileName: String = ""
     var duration: Double = 0
     var deletedAt: Date? = nil
+    var isHidden: Bool = false
     @Attribute(.externalStorage) var posterData: Data? = nil
 
     init(title: String, fileName: String, duration: Double, posterData: Data?) {

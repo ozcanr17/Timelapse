@@ -72,6 +72,28 @@ final class ProjectRepositoryTests: XCTestCase {
         XCTAssertNotNil(project.sharedUpdatedAt)
     }
 
+    func test_projeGizlenipYenidenGosterilebilir() throws {
+        let project = try repository.createProject(title: "Gizli", category: .person, cadence: .daily)
+
+        try repository.setHidden(true, for: project)
+        XCTAssertTrue(project.isHidden)
+
+        try repository.setHidden(false, for: project)
+        XCTAssertFalse(project.isHidden)
+    }
+
+    func test_kaydedilenTimelapseGizlenipYenidenGosterilebilir() throws {
+        let item = SavedTimelapse(title: "Video", fileName: "video.mp4", duration: 3, posterData: nil)
+        container.mainContext.insert(item)
+        try container.mainContext.save()
+
+        TimelapseLibrary.setHidden(true, for: item, context: container.mainContext)
+        XCTAssertTrue(item.isHidden)
+
+        TimelapseLibrary.setHidden(false, for: item, context: container.mainContext)
+        XCTAssertFalse(item.isHidden)
+    }
+
     func test_cekimTarihiDegisince_zamanCizelgesiYenidenSiralanir() throws {
         let project = try repository.createProject(title: "Sakal", category: .hairAndBeard, cadence: .daily)
         let first = Entry(capturedAt: Date(timeIntervalSince1970: 200))

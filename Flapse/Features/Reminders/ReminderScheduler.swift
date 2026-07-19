@@ -22,7 +22,7 @@ final class ReminderScheduler {
         guard UserDefaults.standard.bool(forKey: Self.enabledKey) else { return }
         let hour = UserDefaults.standard.object(forKey: Self.hourKey) as? Int ?? 19
 
-        for project in projects where !project.isDeleted && project.deletedAt == nil {
+        for project in projects where !project.isDeleted && project.deletedAt == nil && !project.isHidden {
             guard let date = ReminderPlanner.nextReminderDate(
                 lastCapture: project.lastCaptureDate,
                 cadence: project.cadence,

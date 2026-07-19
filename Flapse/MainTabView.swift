@@ -43,14 +43,18 @@ struct MainTabView: View {
         }
     }
 
-    private var liveProjects: [Project] {
+    private var activeProjects: [Project] {
         projects.filter { !$0.isDeleted && $0.deletedAt == nil }
+    }
+
+    private var liveProjects: [Project] {
+        activeProjects.filter { !$0.isHidden }
     }
 
     private var unlockedProjectID: UUID? {
         FeatureGate.unlockedProjectID(
             isPro: store.isPro,
-            projects: liveProjects.map { (id: $0.id, createdAt: $0.createdAt) }
+            projects: activeProjects.map { (id: $0.id, createdAt: $0.createdAt) }
         )
     }
 

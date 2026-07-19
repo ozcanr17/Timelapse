@@ -11,7 +11,7 @@ enum WidgetStateWriter {
 
     static func update(projects: [Project]) {
         guard let defaults = UserDefaults(suiteName: suiteName) else { return }
-        let live = projects.filter { !$0.isDeleted && $0.deletedAt == nil }
+        let live = projects.filter { !$0.isDeleted && $0.deletedAt == nil && !$0.isHidden }
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date())
         let dates = live.flatMap { ($0.entries ?? []).filter { !$0.isDeleted && $0.deletedAt == nil }.map(\.capturedAt) }

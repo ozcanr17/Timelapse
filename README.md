@@ -73,6 +73,9 @@ Invite anyone by link: the share sheet sends a localized invitation message plus
 ### Recently Deleted
 Deleted projects and individual photos rest in a Settings trash for 30 days; deleted saved timelapses for **7 days** — all with per-item restore or immediate permanent deletion.
 
+### Hidden items
+Projects and saved timelapses can be hidden from their context menus. Hidden content is removed from Home, Projects, Saved, widgets, reminders and quick capture, and is available under Settings only after Face ID, Touch ID or the device passcode succeeds. The vault locks again whenever Flapse leaves the foreground.
+
 ### Settings
 Membership (paywall/restore) · Account (Sign in with Apple) · feature toggles (smart alignment default, iCloud backup) · **iCloud Status panel** (sign-in, iCloud account, backup, cloud-vs-local store — green/orange dots) · Theme gallery (7 themes) · **App language picker** (globe icon, instant switch) · Recently Deleted · reminders with hour picker · stats · welcome replay · camera permissions.
 
