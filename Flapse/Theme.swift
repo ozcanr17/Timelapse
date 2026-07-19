@@ -16,10 +16,12 @@ enum AppTheme: String, CaseIterable, Identifiable {
     case filmNegative = "film_negative"
     case daylight
     case bright
-    case cyber
-    case darkroom
     case fjord
     case lavender
+    case paper
+    case coastal
+    case cyber
+    case darkroom
 
     static let storageKey = "appTheme"
 
@@ -34,12 +36,14 @@ enum AppTheme: String, CaseIterable, Identifiable {
         case .darkroom:     String(localized: "Karanlık Oda", bundle: .appLanguage)
         case .fjord:        String(localized: "Fiyort", bundle: .appLanguage)
         case .lavender:     String(localized: "Lavanta", bundle: .appLanguage)
+        case .paper:        String(localized: "Kâğıt", bundle: .appLanguage)
+        case .coastal:      String(localized: "Sahil", bundle: .appLanguage)
         }
     }
 
     var preferredColorScheme: ColorScheme? {
         switch self {
-        case .daylight: .light
+        case .daylight, .bright, .lavender, .paper, .coastal: .light
         case .darkroom, .cyber: .dark
         default: nil
         }
@@ -67,12 +71,12 @@ enum AppTheme: String, CaseIterable, Identifiable {
             )
         case .bright:
             ThemePalette(
-                accent: Color(light: "4F46E5", dark: "8B85F4"),
-                secondary: Color(light: "F97066", dark: "FDA29B"),
-                canvas: Color(light: "FBFBFE", dark: "0F1017"),
-                surface: Color(light: "FFFFFF", dark: "1A1B23"),
-                ink: Color(light: "111322", dark: "F0F1F7"),
-                inkMuted: Color(light: "667085", dark: "9CA1B0")
+                accent: Color(light: "C5522D", dark: "C5522D"),
+                secondary: Color(light: "6B7A3A", dark: "6B7A3A"),
+                canvas: Color(light: "FFF4E6", dark: "FFF4E6"),
+                surface: Color(light: "FFFCF7", dark: "FFFCF7"),
+                ink: Color(light: "2B1810", dark: "2B1810"),
+                inkMuted: Color(light: "80685D", dark: "80685D")
             )
         case .cyber:
             ThemePalette(
@@ -94,21 +98,39 @@ enum AppTheme: String, CaseIterable, Identifiable {
             )
         case .fjord:
             ThemePalette(
-                accent: Color(light: "3E5C95", dark: "8FB0EA"),
-                secondary: Color(light: "2E7D6B", dark: "6FBFAB"),
-                canvas: Color(light: "F2F4F7", dark: "10141B"),
-                surface: Color(light: "FFFFFF", dark: "1B2230"),
-                ink: Color(light: "1C2430", dark: "E9EEF6"),
-                inkMuted: Color(light: "5F6B7A", dark: "97A3B4")
+                accent: Color(light: "315A79", dark: "88BDE6"),
+                secondary: Color(light: "56876D", dark: "80C29D"),
+                canvas: Color(light: "EDF2F2", dark: "0D1820"),
+                surface: Color(light: "F9FCFB", dark: "172832"),
+                ink: Color(light: "172D3A", dark: "EDF6F8"),
+                inkMuted: Color(light: "65787E", dark: "9BB0B7")
             )
         case .lavender:
             ThemePalette(
-                accent: Color(light: "7C6BB8", dark: "AFA1E8"),
-                secondary: Color(light: "B06A8C", dark: "E0A2C0"),
-                canvas: Color(light: "F5F3F9", dark: "161320"),
-                surface: Color(light: "FFFFFF", dark: "221E30"),
-                ink: Color(light: "27223A", dark: "EFECF7"),
-                inkMuted: Color(light: "6E6885", dark: "ABA4C2")
+                accent: Color(light: "7254A3", dark: "7254A3"),
+                secondary: Color(light: "B65B7A", dark: "B65B7A"),
+                canvas: Color(light: "F5F0FA", dark: "F5F0FA"),
+                surface: Color(light: "FFFBFF", dark: "FFFBFF"),
+                ink: Color(light: "30233F", dark: "30233F"),
+                inkMuted: Color(light: "776B83", dark: "776B83")
+            )
+        case .paper:
+            ThemePalette(
+                accent: Color(light: "A43B34", dark: "A43B34"),
+                secondary: Color(light: "2F5D50", dark: "2F5D50"),
+                canvas: Color(light: "F6F0E4", dark: "F6F0E4"),
+                surface: Color(light: "FFFBF2", dark: "FFFBF2"),
+                ink: Color(light: "1E1A17", dark: "1E1A17"),
+                inkMuted: Color(light: "746B61", dark: "746B61")
+            )
+        case .coastal:
+            ThemePalette(
+                accent: Color(light: "007C91", dark: "007C91"),
+                secondary: Color(light: "D96B35", dark: "D96B35"),
+                canvas: Color(light: "EAF6F7", dark: "EAF6F7"),
+                surface: Color(light: "FBFFFF", dark: "FBFFFF"),
+                ink: Color(light: "14343A", dark: "14343A"),
+                inkMuted: Color(light: "627D80", dark: "627D80")
             )
         }
     }

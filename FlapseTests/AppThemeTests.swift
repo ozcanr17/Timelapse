@@ -1,3 +1,4 @@
+import SwiftUI
 import XCTest
 @testable import Flapse
 
@@ -16,5 +17,10 @@ final class AppThemeTests: XCTestCase {
 
     func test_varsayilanTema_filmNegatifidir() {
         XCTAssertEqual(AppTheme(rawValue: "film_negative"), .filmNegative)
+    }
+
+    func test_enAzBesTema_aydinlikGorunumuKorur() {
+        let lightThemes = AppTheme.allCases.filter { $0.preferredColorScheme == .light }
+        XCTAssertGreaterThanOrEqual(lightThemes.count, 5)
     }
 }

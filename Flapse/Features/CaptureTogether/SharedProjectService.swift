@@ -132,7 +132,9 @@ final class SharedProjectService {
     func fetchSharedProject(_ metadata: CKShare.Metadata) async throws -> SharedProjectSnapshot? {
         let zoneID = metadata.share.recordID.zoneID
         let records = try await records(in: zoneID, database: sharedDB)
-        guard let root = records.first(where: { $0.recordType == RecordType.project }) else { return nil }
+        guard let root = projectRoot(in: records, shareRecordName: metadata.share.recordID.recordName) else {
+            return nil
+        }
         try? await installSubscription(zoneID: zoneID, database: sharedDB)
         return makeSnapshot(
             records: records,
@@ -147,13 +149,20 @@ final class SharedProjectService {
             guard let reference = try await resolveReference(for: project) else { return }
             let database = database(for: reference.zoneID)
             let records = try await records(in: reference.zoneID, database: database)
-            guard let root = records.first(where: { $0.recordID.recordName == reference.rootRecordName }) else { return }
+            let root = project.cloudShareRecordName
+                .flatMap { projectRoot(in: records, shareRecordName: $0) }
+                ?? records.first(where: { $0.recordID.recordName == reference.rootRecordName })
+            guard let root else { return }
+            project.cloudRootRecordName = root.recordID.recordName
+            project.cloudZoneName = root.recordID.zoneID.zoneName
+            project.cloudOwnerName = root.recordID.zoneID.ownerName
             let remote = makeSnapshot(
                 records: records,
                 root: root,
                 shareRecordName: project.cloudShareRecordName ?? "",
                 zoneID: reference.zoneID
             )
+            repairMisassignedEntries(in: project, rootID: root.recordID, records: records, context: context)
             merge(remote, into: project, context: context)
             try context.save()
             try await upload(makeLocalSnapshot(project), to: database, comparedTo: records)
@@ -289,6 +298,11 @@ final class SharedProjectService {
     ) async throws {
         let rootID = CKRecord.ID(recordName: snapshot.rootRecordName, zoneID: snapshot.zoneID)
         let remoteByID = recordsByID(remoteRecords ?? [])
+        let safePurgedEntryIDs = Set(snapshot.purgedEntryIDs.filter { id in
+            let recordID = CKRecord.ID(recordName: id.uuidString, zoneID: snapshot.zoneID)
+            guard let remote = remoteByID[recordID] else { return true }
+            return entryRootID(for: remote) == rootID
+        })
         let remoteRootDate = remoteByID[rootID]?["updatedAt"] as? Date ?? .distantPast
         if remoteRecords == nil || snapshot.updatedAt > remoteRootDate {
             let root = projectRecord(
@@ -300,14 +314,17 @@ final class SharedProjectService {
                 createdAt: snapshot.createdAt,
                 deletedAt: snapshot.deletedAt,
                 updatedAt: snapshot.updatedAt,
-                purgedEntryIDs: snapshot.purgedEntryIDs
+                purgedEntryIDs: safePurgedEntryIDs
             )
             _ = try await database.modifyRecords(saving: [root], deleting: [], savePolicy: .changedKeys, atomically: false)
         }
 
-        let purgedRecordIDs = snapshot.purgedEntryIDs
+        let purgedRecordIDs = safePurgedEntryIDs
             .map { CKRecord.ID(recordName: $0.uuidString, zoneID: snapshot.zoneID) }
-            .filter { remoteByID[$0] != nil }
+            .filter { id in
+                guard let remote = remoteByID[id] else { return false }
+                return entryRootID(for: remote) == rootID
+            }
         if !purgedRecordIDs.isEmpty {
             _ = try await database.modifyRecords(saving: [], deleting: purgedRecordIDs)
         }
@@ -316,6 +333,7 @@ final class SharedProjectService {
             guard remoteRecords != nil else { return true }
             let id = CKRecord.ID(recordName: entry.id.uuidString, zoneID: snapshot.zoneID)
             guard let remote = remoteByID[id] else { return true }
+            guard entryRootID(for: remote) == rootID else { return false }
             let remoteDate = remote["updatedAt"] as? Date ?? remote.modificationDate ?? .distantPast
             return entry.updatedAt > remoteDate
         }
@@ -372,7 +390,9 @@ final class SharedProjectService {
         zoneID: CKRecordZone.ID
     ) -> SharedProjectSnapshot {
         let entries = records
-            .filter { $0.recordType == RecordType.entry }
+            .filter {
+                $0.recordType == RecordType.entry && entryRootID(for: $0) == root.recordID
+            }
             .compactMap { record -> SharedEntrySnapshot? in
                 guard let id = UUID(uuidString: record.recordID.recordName) else { return nil }
                 let asset = record["image"] as? CKAsset
@@ -425,7 +445,7 @@ final class SharedProjectService {
             deletedAt: project.deletedAt,
             updatedAt: project.sharedUpdatedAt ?? project.createdAt,
             purgedEntryIDs: project.cloudPurgedEntryIDs,
-            entries: (project.entries ?? []).map {
+            entries: (project.entries ?? []).filter { !$0.isDeleted }.map {
                 LocalEntrySnapshot(
                     id: $0.id,
                     data: $0.imageData,
@@ -456,7 +476,7 @@ final class SharedProjectService {
             project.sharedUpdatedAt = snapshot.updatedAt
         }
         var localByID: [UUID: Entry] = [:]
-        for entry in project.entries ?? [] {
+        for entry in project.entries ?? [] where !entry.isDeleted {
             if let existing = localByID[entry.id] {
                 let existingDate = existing.sharedUpdatedAt ?? existing.capturedAt
                 let candidateDate = entry.sharedUpdatedAt ?? entry.capturedAt
@@ -510,6 +530,40 @@ final class SharedProjectService {
                 entry.project = project
                 context.insert(entry)
             }
+        }
+    }
+
+    func projectRoot(in records: [CKRecord], shareRecordName: String) -> CKRecord? {
+        records.first {
+            $0.recordType == RecordType.project && $0.share?.recordID.recordName == shareRecordName
+        }
+    }
+
+    func entryRootID(for record: CKRecord) -> CKRecord.ID? {
+        (record["project"] as? CKRecord.Reference)?.recordID ?? record.parent?.recordID
+    }
+
+    func repairMisassignedEntries(
+        in project: Project,
+        rootID: CKRecord.ID,
+        records: [CKRecord],
+        context: ModelContext
+    ) {
+        var owners: [UUID: CKRecord.ID] = [:]
+        for record in records where record.recordType == RecordType.entry {
+            guard
+                let id = UUID(uuidString: record.recordID.recordName),
+                let owner = entryRootID(for: record)
+            else { continue }
+            owners[id] = owner
+        }
+
+        let foreignIDs = Set(owners.compactMap { $0.value == rootID ? nil : $0.key })
+        if !foreignIDs.isEmpty {
+            project.cloudPurgedEntryIDs.subtract(foreignIDs)
+        }
+        for entry in project.entries ?? [] where foreignIDs.contains(entry.id) {
+            context.delete(entry)
         }
     }
 
