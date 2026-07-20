@@ -31,6 +31,7 @@ struct FlapseDesignConceptView: View {
 
     @State private var tab: Tab
     @State private var showsProjectDetail: Bool
+    @State private var showsCamera: Bool
     @State private var capturePulse = false
 
     init() {
@@ -40,6 +41,7 @@ struct FlapseDesignConceptView: View {
             .replacingOccurrences(of: "--concept-tab=", with: "")
         _tab = State(initialValue: Tab(rawValue: requestedTab ?? "") ?? .home)
         _showsProjectDetail = State(initialValue: arguments.contains("--concept-detail"))
+        _showsCamera = State(initialValue: arguments.contains("--concept-camera"))
     }
 
     var body: some View {
@@ -47,7 +49,13 @@ struct FlapseDesignConceptView: View {
             ConceptPalette.canvas.ignoresSafeArea()
 
             Group {
-                if showsProjectDetail {
+                if showsCamera {
+                    ConceptCameraView {
+                        withAnimation(.snappy(duration: 0.28)) {
+                            showsCamera = false
+                        }
+                    }
+                } else if showsProjectDetail {
                     ConceptProjectDetailView {
                         withAnimation(.snappy(duration: 0.28)) {
                             showsProjectDetail = false
@@ -77,71 +85,233 @@ struct FlapseDesignConceptView: View {
             }
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            if !showsProjectDetail {
+            if !showsProjectDetail && !showsCamera {
                 conceptTabBar
             }
         }
-        .preferredColorScheme(.light)
+        .preferredColorScheme(showsCamera ? .dark : .light)
         .tint(ConceptPalette.accent)
     }
 
     private var conceptTabBar: some View {
-        HStack(spacing: 4) {
+        HStack(spacing: 0) {
             tabButton(.home)
             tabButton(.projects)
 
             Button {
                 capturePulse.toggle()
+                withAnimation(.snappy(duration: 0.28)) {
+                    showsCamera = true
+                }
             } label: {
                 Image(systemName: "camera.fill")
-                    .font(.system(size: 22, weight: .semibold))
-                    .foregroundStyle(.white)
-                    .frame(width: 58, height: 58)
-                    .background(ConceptPalette.ink, in: Circle())
-                    .overlay {
-                        Circle().strokeBorder(.white.opacity(0.18), lineWidth: 1)
-                    }
-                    .shadow(color: ConceptPalette.ink.opacity(0.2), radius: 16, y: 8)
+                    .font(.system(size: 23, weight: .semibold))
+                    .foregroundStyle(ConceptPalette.ink)
+                    .frame(maxWidth: .infinity, minHeight: 48)
+                    .background(ConceptPalette.accentSoft.opacity(0.72), in: Capsule())
                     .symbolEffect(.bounce, value: capturePulse)
             }
             .buttonStyle(.plain)
-            .offset(y: -15)
             .accessibilityLabel(Text(verbatim: "Kare çek"))
 
             tabButton(.saved)
             tabButton(.settings)
         }
-        .padding(.horizontal, 10)
-        .padding(.top, 9)
-        .padding(.bottom, 4)
-        .background(.ultraThinMaterial)
-        .overlay(alignment: .top) {
-            Rectangle()
-                .fill(ConceptPalette.line)
-                .frame(height: 0.5)
+        .padding(7)
+        .liquidGlassCapsule(
+            tint: Color.white.opacity(0.14),
+            interactive: true,
+            scrimOpacity: 0.05
+        )
+        .overlay {
+            Capsule()
+                .strokeBorder(.white.opacity(0.44), lineWidth: 0.7)
+                .allowsHitTesting(false)
         }
+        .shadow(color: ConceptPalette.ink.opacity(0.13), radius: 24, y: 10)
+        .padding(.horizontal, 22)
+        .padding(.top, 7)
+        .padding(.bottom, 4)
     }
 
     private func tabButton(_ item: Tab) -> some View {
         Button {
             withAnimation(.snappy(duration: 0.25)) { tab = item }
         } label: {
-            VStack(spacing: 4) {
-                Image(systemName: tab == item ? item.activeIcon : item.icon)
-                    .font(.system(size: 19, weight: .semibold))
-                    .frame(height: 22)
-                Text(verbatim: item.label)
-                    .font(.system(size: 10, weight: tab == item ? .semibold : .medium))
-            }
+            Image(systemName: tab == item ? item.activeIcon : item.icon)
+                .font(.system(size: 20, weight: .semibold))
             .foregroundStyle(tab == item ? ConceptPalette.accent : ConceptPalette.muted)
-            .frame(maxWidth: .infinity)
+                .frame(maxWidth: .infinity, minHeight: 48)
+                .background {
+                    if tab == item {
+                        Capsule()
+                            .fill(.white.opacity(0.34))
+                            .overlay {
+                                Capsule().strokeBorder(.white.opacity(0.58), lineWidth: 0.6)
+                            }
+                    }
+                }
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(Text(verbatim: item.label))
+    }
+}
+
+private struct ConceptCameraView: View {
+    let close: () -> Void
+
+    @State private var zoom = "1×"
+    @State private var alignmentEnabled = true
+    @State private var shutterPulse = false
+
+    var body: some View {
+        ZStack {
+            ConceptPhoto(
+                colors: [Color(red: 0.18, green: 0.24, blue: 0.21), Color(red: 0.58, green: 0.42, blue: 0.3)],
+                symbol: "figure.and.child.holdinghands",
+                symbolScale: 108
+            )
+            .ignoresSafeArea()
+
+            LinearGradient(
+                colors: [.black.opacity(0.5), .clear, .black.opacity(0.78)],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .ignoresSafeArea()
+
+            if alignmentEnabled {
+                RoundedRectangle(cornerRadius: 38, style: .continuous)
+                    .stroke(.white.opacity(0.3), style: StrokeStyle(lineWidth: 1, dash: [7, 7]))
+                    .frame(width: 258, height: 344)
+                    .overlay {
+                        Circle()
+                            .stroke(.white.opacity(0.22), lineWidth: 1)
+                            .frame(width: 126, height: 126)
+                            .offset(y: -58)
+                    }
+            }
+
+            VStack(spacing: 0) {
+                cameraHeader
+                Spacer()
+                cameraFooter
+            }
+        }
+    }
+
+    private var cameraHeader: some View {
+        VStack(spacing: 14) {
+            HStack {
+                cameraButton("xmark", action: close)
+                Spacer()
+                cameraButton("bolt.slash.fill") {}
+                cameraButton("timer") {}
+                cameraButton("ellipsis") {}
+            }
+
+            HStack(spacing: 7) {
+                Image(systemName: "figure.and.child.holdinghands")
+                    .font(.system(size: 11, weight: .bold))
+                Text(verbatim: "Burcu")
+                    .font(.system(size: 12, weight: .bold, design: .rounded))
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 9, weight: .bold))
+            }
+            .foregroundStyle(.white)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(.black.opacity(0.24), in: Capsule())
+        }
+        .padding(.horizontal, 18)
+        .padding(.top, 8)
+    }
+
+    private var cameraFooter: some View {
+        VStack(spacing: 18) {
+            Button {
+                alignmentEnabled.toggle()
+            } label: {
+                Label {
+                    Text(verbatim: alignmentEnabled ? "Hizalama açık" : "Hizalama kapalı")
+                } icon: {
+                    Image(systemName: alignmentEnabled ? "viewfinder.circle.fill" : "viewfinder.circle")
+                }
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(.white)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(.black.opacity(0.26), in: Capsule())
+            }
+            .buttonStyle(.plain)
+
+            HStack(spacing: 7) {
+                ForEach(["0,5", "1×", "2×"], id: \.self) { value in
+                    Button {
+                        withAnimation(.snappy(duration: 0.22)) { zoom = value }
+                    } label: {
+                        Text(verbatim: value)
+                            .font(.system(size: zoom == value ? 13 : 11, weight: .bold).monospacedDigit())
+                            .foregroundStyle(zoom == value ? .black : .white)
+                            .frame(width: 38, height: 30)
+                            .background(zoom == value ? .white : .black.opacity(0.24), in: Capsule())
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+
+            HStack {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(.ultraThinMaterial)
+                    Image(systemName: "photo.fill")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundStyle(.white)
+                }
+                .frame(width: 48, height: 48)
+
+                Spacer()
+
+                Button {
+                    shutterPulse.toggle()
+                } label: {
+                    Circle()
+                        .fill(.white)
+                        .frame(width: 76, height: 76)
+                        .overlay {
+                            Circle().strokeBorder(.black.opacity(0.16), lineWidth: 2).padding(5)
+                        }
+                        .scaleEffect(shutterPulse ? 0.93 : 1)
+                        .animation(.spring(response: 0.22, dampingFraction: 0.62), value: shutterPulse)
+                }
+                .buttonStyle(.plain)
+
+                Spacer()
+
+                cameraButton("arrow.triangle.2.circlepath.camera.fill") {}
+            }
+            .padding(.horizontal, 10)
+        }
+        .padding(.horizontal, 20)
+        .padding(.top, 18)
+        .padding(.bottom, 12)
+        .background(.ultraThinMaterial)
+    }
+
+    private func cameraButton(_ symbol: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: symbol)
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(.white)
+                .frame(width: 42, height: 42)
+                .background(.black.opacity(0.24), in: Circle())
         }
         .buttonStyle(.plain)
     }
 }
 
 private enum ConceptPalette {
-    static let canvas = Color(red: 0.965, green: 0.957, blue: 0.933)
+    static let canvas = Color(red: 0.982, green: 0.975, blue: 0.955)
     static let surface = Color.white.opacity(0.82)
     static let solidSurface = Color(red: 0.995, green: 0.992, blue: 0.98)
     static let ink = Color(red: 0.075, green: 0.105, blue: 0.094)
@@ -260,53 +430,51 @@ private struct ConceptHomeView: View {
     }
 
     private var rhythm: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(verbatim: "Ritmin")
-                        .font(.system(size: 18, weight: .bold, design: .rounded))
-                        .foregroundStyle(ConceptPalette.ink)
-                    Text(verbatim: "Bu hafta 6 kare yakaladın")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(ConceptPalette.muted)
-                }
-                Spacer()
-                Label {
-                    Text(verbatim: "18")
-                } icon: {
-                    Image(systemName: "flame.fill")
-                }
-                .font(.system(size: 14, weight: .bold))
-                .foregroundStyle(ConceptPalette.warm)
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 10) {
+                ConceptStatPill(icon: "flame.fill", value: "18", label: "Seri", tint: ConceptPalette.warm.opacity(0.18), ink: ConceptPalette.warm)
+                ConceptStatPill(icon: "photo.stack.fill", value: "142", label: "Kare", tint: ConceptPalette.accentSoft.opacity(0.72), ink: ConceptPalette.accent)
+                ConceptStatPill(icon: "waveform.path.ecg", value: "98%", label: "Ritim", tint: Color.cyan.opacity(0.13), ink: Color(red: 0.14, green: 0.52, blue: 0.58))
             }
 
-            HStack(spacing: 0) {
-                ForEach(Array(zip(["P", "S", "Ç", "P", "C", "C", "P"], [true, true, true, true, true, true, false])).indices, id: \.self) { index in
-                    let item = Array(zip(["P", "S", "Ç", "P", "C", "C", "P"], [true, true, true, true, true, true, false]))[index]
-                    VStack(spacing: 8) {
-                        ZStack {
-                            Circle()
-                                .fill(item.1 ? ConceptPalette.accent : ConceptPalette.ink.opacity(0.06))
-                            if item.1 {
-                                Image(systemName: "checkmark")
-                                    .font(.system(size: 10, weight: .bold))
-                                    .foregroundStyle(.white)
-                            } else {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    Text(verbatim: "Bu hafta")
+                        .font(.system(size: 15, weight: .bold, design: .rounded))
+                        .foregroundStyle(ConceptPalette.ink)
+                    Spacer()
+                    Text(verbatim: "6 / 7 kare")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(ConceptPalette.muted)
+                }
+                HStack(spacing: 0) {
+                    ForEach(Array(zip(["P", "S", "Ç", "P", "C", "C", "P"], [true, true, true, true, true, true, false])).indices, id: \.self) { index in
+                        let item = Array(zip(["P", "S", "Ç", "P", "C", "C", "P"], [true, true, true, true, true, true, false]))[index]
+                        VStack(spacing: 7) {
+                            ZStack {
                                 Circle()
-                                    .strokeBorder(ConceptPalette.line, lineWidth: 1)
+                                    .fill(item.1 ? ConceptPalette.ink : ConceptPalette.ink.opacity(0.04))
+                                if item.1 {
+                                    Image(systemName: "checkmark")
+                                        .font(.system(size: 9, weight: .bold))
+                                        .foregroundStyle(.white)
+                                } else {
+                                    Circle()
+                                        .strokeBorder(ConceptPalette.line, lineWidth: 1)
+                                }
                             }
+                            .frame(width: 27, height: 27)
+                            Text(verbatim: item.0)
+                                .font(.system(size: 9, weight: .semibold))
+                                .foregroundStyle(ConceptPalette.muted)
                         }
-                        .frame(width: 28, height: 28)
-                        Text(verbatim: item.0)
-                            .font(.system(size: 10, weight: .semibold))
-                            .foregroundStyle(ConceptPalette.muted)
+                        .frame(maxWidth: .infinity)
                     }
-                    .frame(maxWidth: .infinity)
                 }
             }
+            .padding(16)
+            .conceptSurface()
         }
-        .padding(18)
-        .conceptSurface()
     }
 
     private var projects: some View {
@@ -372,8 +540,15 @@ private struct ConceptProjectsView: View {
                     Spacer(minLength: 0)
                 }
 
+                Button(action: openProject) {
+                    ConceptFeaturedProjectCard()
+                }
+                .buttonStyle(.plain)
+
+                ConceptSectionHeader(title: "Diğer hikâyeler", action: "Düzenle")
+
                 LazyVGrid(columns: columns, spacing: 14) {
-                    ForEach(0..<4) { index in
+                    ForEach(1..<4) { index in
                         Button(action: openProject) {
                             ConceptProjectCard(index: index)
                         }
@@ -721,6 +896,37 @@ private struct ConceptSectionHeader: View {
     }
 }
 
+private struct ConceptStatPill: View {
+    let icon: String
+    let value: String
+    let label: String
+    let tint: Color
+    let ink: Color
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Image(systemName: icon)
+                .font(.system(size: 14, weight: .bold))
+                .foregroundStyle(ink)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(verbatim: value)
+                    .font(.system(size: 19, weight: .bold, design: .rounded).monospacedDigit())
+                    .foregroundStyle(ConceptPalette.ink)
+                Text(verbatim: label)
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(ConceptPalette.muted)
+            }
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, minHeight: 104, alignment: .leading)
+        .background(tint, in: RoundedRectangle(cornerRadius: 21, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 21, style: .continuous)
+                .strokeBorder(.white.opacity(0.66), lineWidth: 0.7)
+        }
+    }
+}
+
 private struct ConceptMiniProject: View {
     let title: String
     let detail: String
@@ -806,6 +1012,44 @@ private struct ConceptProjectCard: View {
             .font(.system(size: 11, weight: .medium))
             .foregroundStyle(ConceptPalette.muted)
         }
+    }
+}
+
+private struct ConceptFeaturedProjectCard: View {
+    var body: some View {
+        ZStack(alignment: .bottomLeading) {
+            ConceptPhoto(
+                colors: ConceptProjectData.palette(0),
+                symbol: ConceptProjectData.symbol(0),
+                symbolScale: 72
+            )
+            LinearGradient(colors: [.clear, .black.opacity(0.68)], startPoint: .center, endPoint: .bottom)
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(spacing: 7) {
+                    Circle().fill(Color(red: 1, green: 0.73, blue: 0.47)).frame(width: 7, height: 7)
+                    Text(verbatim: "BUGÜN ÇEKİM VAR")
+                        .font(.system(size: 10, weight: .bold))
+                        .tracking(0.7)
+                }
+                Text(verbatim: "Burcu")
+                    .font(.system(size: 30, weight: .bold, design: .rounded))
+                HStack {
+                    Text(verbatim: "142 kare · 18 günlük seri")
+                    Spacer()
+                    Image(systemName: "arrow.up.right")
+                        .font(.system(size: 13, weight: .bold))
+                        .frame(width: 38, height: 38)
+                        .background(.white.opacity(0.2), in: Circle())
+                }
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(.white.opacity(0.78))
+            }
+            .foregroundStyle(.white)
+            .padding(19)
+        }
+        .frame(height: 248)
+        .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+        .shadow(color: ConceptPalette.ink.opacity(0.11), radius: 20, y: 10)
     }
 }
 

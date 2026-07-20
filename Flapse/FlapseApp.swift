@@ -9,15 +9,17 @@ struct FlapseApp: App {
     let container: ModelContainer
 
     init() {
-        LanguageOverrideBundle.activate()
-        CloudBackupPreference.prepareForLaunch()
-        let isUITesting = ProcessInfo.processInfo.arguments.contains("--uitests")
-            || ProcessInfo.processInfo.environment["FLAPSE_UI_TESTS"] == "1"
         #if DEBUG
         let isDesignConcept = ProcessInfo.processInfo.arguments.contains("--design-concept")
         #else
         let isDesignConcept = false
         #endif
+        LanguageOverrideBundle.activate()
+        if !isDesignConcept {
+            CloudBackupPreference.prepareForLaunch()
+        }
+        let isUITesting = ProcessInfo.processInfo.arguments.contains("--uitests")
+            || ProcessInfo.processInfo.environment["FLAPSE_UI_TESTS"] == "1"
         container = isUITesting || isDesignConcept
             ? AppModelContainer.makeInMemory()
             : AppModelContainer.makeProduction()
