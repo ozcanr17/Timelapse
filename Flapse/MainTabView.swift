@@ -30,8 +30,6 @@ struct MainTabView: View {
     @State private var isCustomTabBarHidden = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    private static let barTint = Color(light: "F5F5F7", dark: "1B1B1F").opacity(0.26)
-
     private enum CaptureRoute: Identifiable {
         case project(Project)
         case auto
@@ -186,16 +184,25 @@ struct MainTabView: View {
     private var tabBarContent: some View {
         iconRow(reportsFrames: true)
             .coordinateSpace(name: "tabBarSpace")
-            .liquidGlassCapsule(tint: Self.barTint)
+            // Renk tint'i açık temalarda sistem camını opak bir kapsüle
+            // dönüştürüyordu. Sistem Liquid Glass materyalini doğrudan kullan.
+            .liquidGlassBarCapsule(interactive: true)
             .overlay {
                 Capsule()
-                    .strokeBorder(theme.ink.opacity(0.1), lineWidth: 0.7)
+                    .strokeBorder(
+                        LinearGradient(
+                            colors: [.white.opacity(0.34), theme.ink.opacity(0.08), .white.opacity(0.14)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 0.7
+                    )
                     .allowsHitTesting(false)
             }
             .overlay(alignment: .topLeading) {
                 if highlightWidth > 0 {
                     Capsule()
-                        .fill(theme.surface.opacity(0.22))
+                        .fill(theme.accent.opacity(0.12))
                         .frame(width: highlightWidth, height: 46)
                         .overlay {
                             Capsule()
@@ -205,17 +212,12 @@ struct MainTabView: View {
                         .animation(
                             reduceMotion ? nil :
                                 isDraggingBar
-                                ? .spring(response: 0.24, dampingFraction: 0.82)
-                                : .spring(response: 0.4, dampingFraction: 0.62),
+                                ? .interactiveSpring(response: 0.12, dampingFraction: 0.9)
+                                : .easeOut(duration: 0.08),
                             value: highlightX
                         )
                         .allowsHitTesting(false)
                 }
-            }
-            .overlay {
-                iconRow(reportsFrames: false)
-                    .allowsHitTesting(false)
-                    .accessibilityHidden(true)
             }
             .contentShape(Capsule())
         .onPreferenceChange(ItemFramePreference.self) { frames in
@@ -229,7 +231,7 @@ struct MainTabView: View {
         .simultaneousGesture(slideToSelect)
         .sensoryFeedback(.selection, trigger: previewIndex)
         .sensoryFeedback(.impact(weight: .light), trigger: tab)
-        .animation(reduceMotion ? nil : .smooth(duration: 0.2), value: previewIndex)
+        .animation(reduceMotion ? nil : .easeOut(duration: 0.08), value: previewIndex)
         .accessibilityElement(children: .contain)
     }
 

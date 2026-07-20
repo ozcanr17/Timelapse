@@ -194,7 +194,7 @@ struct HomeView: View {
                 Text(project.title)
                     .font(Theme.headline(15))
                     .foregroundStyle(theme.ink)
-                Text("\(project.sortedEntries.count) kare · \(project.cadence.displayName)")
+                Text("\((project.entries ?? []).lazy.filter { !$0.isDeleted && $0.deletedAt == nil }.count) kare · \(project.cadence.displayName)")
                     .font(Theme.caption(12))
                     .foregroundStyle(theme.inkMuted)
             }
@@ -257,7 +257,14 @@ private struct DailyCaptureCard: View {
     @Environment(\.theme) private var theme
     @State private var photo: UIImage?
 
+    private var latestEntry: Entry? {
+        (project.entries ?? []).lazy
+            .filter { !$0.isDeleted && $0.deletedAt == nil }
+            .max { $0.capturedAt < $1.capturedAt }
+    }
+
     var body: some View {
+        let last = latestEntry
         Button(action: action) {
             HStack(spacing: 14) {
                 ZStack {
@@ -299,8 +306,8 @@ private struct DailyCaptureCard: View {
         }
         .buttonStyle(.plain)
         .cardStyle()
-        .task(id: project.sortedEntries.last?.imageCacheKey) {
-            guard let last = project.sortedEntries.last(where: { !$0.isDeleted }) else { return }
+        .task(id: last?.imageCacheKey) {
+            guard let last else { return }
             photo = await ImageDownsampler.cachedImage(key: "daily-\(last.imageCacheKey)", maxPixelSize: 240) { last.imageData }
         }
     }
@@ -312,8 +319,14 @@ private struct DueRowThumb: View {
     @State private var photo: UIImage?
 
     private var accent: Color { Theme.accent(for: project.category) }
+    private var latestEntry: Entry? {
+        (project.entries ?? []).lazy
+            .filter { !$0.isDeleted && $0.deletedAt == nil }
+            .max { $0.capturedAt < $1.capturedAt }
+    }
 
     var body: some View {
+        let last = latestEntry
         ZStack {
             if let photo {
                 Image(uiImage: photo)
@@ -328,8 +341,8 @@ private struct DueRowThumb: View {
         }
         .frame(width: 38, height: 38)
         .clipShape(Circle())
-        .task(id: project.sortedEntries.last?.imageCacheKey) {
-            guard let last = project.sortedEntries.last(where: { !$0.isDeleted }) else { return }
+        .task(id: last?.imageCacheKey) {
+            guard let last else { return }
             photo = await ImageDownsampler.cachedImage(key: "due-\(last.imageCacheKey)", maxPixelSize: 150) { last.imageData }
         }
     }

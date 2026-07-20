@@ -33,16 +33,15 @@ enum ImageDownsampler {
         key: String,
         maxPixelSize: CGFloat,
         priority: TaskPriority = .userInitiated,
-        load: () -> Data?
+        load: @escaping @MainActor () -> Data?
     ) async -> UIImage? {
         let fullKey = "\(key)-\(Int(maxPixelSize))" as NSString
         if let hit = ThumbnailCache.shared.object(forKey: fullKey) { return hit }
-        guard let data = load() else { return nil }
         guard let decoded = await ThumbnailDecodeCoordinator.shared.image(
             key: fullKey as String,
-            data: data,
             maxPixelSize: maxPixelSize,
-            priority: priority
+            priority: priority,
+            load: load
         ) else { return nil }
         let cost = decoded.cgImage.map { $0.bytesPerRow * $0.height } ?? 0
         ThumbnailCache.shared.setObject(decoded, forKey: fullKey, cost: cost)
@@ -72,16 +71,21 @@ private actor ThumbnailDecodeCoordinator {
 
     func image(
         key: String,
-        data: Data,
         maxPixelSize: CGFloat,
-        priority: TaskPriority
+        priority: TaskPriority,
+        load: @escaping @MainActor () -> Data?
     ) async -> UIImage? {
         if let task = tasks[key] {
             return await task.value
         }
-        let task: Task<UIImage?, Never> = Task { [data] in
+        let task: Task<UIImage?, Never> = Task {
             await acquireDecodeSlot()
             defer { releaseDecodeSlot() }
+            guard !Task.isCancelled else { return nil }
+            // SwiftData externalStorage erişimi model context'inin aktöründe kalır;
+            // fakat slot alındıktan sonra çalıştığı için tüm görünür hücreler aynı
+            // anda büyük Data nesneleri yükleyemez.
+            guard let data = await load() else { return nil }
             guard !Task.isCancelled else { return nil }
             return await Task.detached(priority: priority) {
                 ImageDownsampler.image(from: data, maxPixelSize: maxPixelSize)
