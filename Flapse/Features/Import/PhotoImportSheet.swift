@@ -11,6 +11,11 @@ struct PhotoImportSheet: View {
         case existing(Project)
     }
 
+    enum PresentationStyle: Equatable {
+        case sheet
+        case embedded
+    }
+
     @Environment(\.dismiss) private var dismiss
     @Environment(\.theme) private var theme
 
@@ -20,16 +25,22 @@ struct PhotoImportSheet: View {
 
     private let mode: Mode
     private let maxSelection: Int?
+    private let presentationStyle: PresentationStyle
+    private let onPhaseChange: (PhotoImportViewModel.Phase) -> Void
     private let onFinished: (Project) -> Void
 
     init(
         mode: Mode,
         repository: ProjectRepositoryProtocol,
         maxSelection: Int? = nil,
+        presentationStyle: PresentationStyle = .sheet,
+        onPhaseChange: @escaping (PhotoImportViewModel.Phase) -> Void = { _ in },
         onFinished: @escaping (Project) -> Void = { _ in }
     ) {
         self.mode = mode
         self.maxSelection = maxSelection
+        self.presentationStyle = presentationStyle
+        self.onPhaseChange = onPhaseChange
         self.onFinished = onFinished
         _viewModel = State(initialValue: PhotoImportViewModel(repository: repository))
     }
@@ -47,6 +58,38 @@ struct PhotoImportSheet: View {
     }
 
     var body: some View {
+        presentationContent
+            .interactiveDismissDisabled(viewModel.phase == .importing)
+            .onChange(of: viewModel.phase, initial: true) { _, phase in
+                onPhaseChange(phase)
+            }
+            .onDisappear { notifyFinishedIfNeeded() }
+            .fullScreenCover(isPresented: $isShowingPhotoPicker) {
+                SystemPhotoPicker(maxSelectionCount: maxSelection) { photos in
+                    if !photos.isEmpty {
+                        selection = photos
+                    }
+                    isShowingPhotoPicker = false
+                } onCancel: {
+                    isShowingPhotoPicker = false
+                }
+                .ignoresSafeArea()
+            }
+    }
+
+    @ViewBuilder
+    private var presentationContent: some View {
+        if presentationStyle == .sheet {
+            navigationContent
+                .presentationDetents([.fraction(0.75)])
+                .presentationDragIndicator(.visible)
+                .presentationBackground(theme.canvas)
+        } else {
+            navigationContent
+        }
+    }
+
+    private var navigationContent: some View {
         NavigationStack {
             content
                 .background(theme.canvas)
@@ -59,24 +102,6 @@ struct PhotoImportSheet: View {
                         }
                     }
                 }
-        }
-        .interactiveDismissDisabled(viewModel.phase == .importing)
-        .presentationDetents([.fraction(0.75)])
-        .presentationDragIndicator(.visible)
-        .presentationCornerRadius(0)
-        .presentationBackground(theme.canvas)
-        .flapsePagePresentationSizing()
-        .onDisappear { notifyFinishedIfNeeded() }
-        .fullScreenCover(isPresented: $isShowingPhotoPicker) {
-            SystemPhotoPicker(maxSelectionCount: maxSelection) { photos in
-                if !photos.isEmpty {
-                    selection = photos
-                }
-                isShowingPhotoPicker = false
-            } onCancel: {
-                isShowingPhotoPicker = false
-            }
-            .ignoresSafeArea()
         }
     }
 
@@ -297,6 +322,102 @@ struct PhotoImportSheet: View {
     private var navigationTitle: String {
         if case .existing = mode { return String(localized: "Fotoğraf Ekle", bundle: .appLanguage) }
         return String(localized: "Fotoğraflardan Oluştur", bundle: .appLanguage)
+    }
+}
+
+/// iOS 26's system sheet keeps a platform-defined horizontal margin even when
+/// its corner radius is zero. The existing-project import flow intentionally
+/// uses a transparent full-screen presentation with an edge-attached panel so
+/// the panel is exactly as wide as the display while the project stays visible.
+struct EdgeAttachedPhotoImportCover: View {
+    let project: Project
+    let repository: ProjectRepositoryProtocol
+    let maxSelection: Int?
+    let onFinished: (Project) -> Void
+
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.theme) private var theme
+    @State private var canDismiss = true
+    @State private var dragOffset: CGFloat = 0
+
+    var body: some View {
+        GeometryReader { proxy in
+            ZStack(alignment: .bottom) {
+                Color.black.opacity(0.22)
+                    .ignoresSafeArea()
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        if canDismiss { dismiss() }
+                    }
+
+                PhotoImportSheet(
+                    mode: .existing(project),
+                    repository: repository,
+                    maxSelection: maxSelection,
+                    presentationStyle: .embedded,
+                    onPhaseChange: { phase in
+                        canDismiss = phase != .importing
+                    },
+                    onFinished: onFinished
+                )
+                .frame(width: proxy.size.width)
+                .frame(height: panelHeight(in: proxy.size.height))
+                .background(theme.canvas)
+                .clipShape(
+                    UnevenRoundedRectangle(
+                        topLeadingRadius: 28,
+                        topTrailingRadius: 28,
+                        style: .continuous
+                    )
+                )
+                .overlay(alignment: .top) { dragHandle }
+                .offset(y: dragOffset)
+                .accessibilityElement(children: .contain)
+                .accessibilityIdentifier("photoImportPanel")
+            }
+            .frame(width: proxy.size.width, height: proxy.size.height)
+        }
+        .ignoresSafeArea()
+        .presentationBackground(.clear)
+    }
+
+    private var dragHandle: some View {
+        ZStack(alignment: .top) {
+            Color.clear
+                .contentShape(Rectangle())
+
+            Capsule()
+                .fill(theme.inkMuted.opacity(0.5))
+                .frame(width: 44, height: 5)
+                .padding(.top, 8)
+        }
+        .frame(height: 28)
+        .gesture(
+            DragGesture(minimumDistance: 4)
+                .onChanged { value in
+                    guard canDismiss else { return }
+                    dragOffset = max(0, value.translation.height)
+                }
+                .onEnded { value in
+                    guard canDismiss else {
+                        dragOffset = 0
+                        return
+                    }
+                    if value.translation.height > 90 || value.predictedEndTranslation.height > 180 {
+                        dismiss()
+                    } else {
+                        withAnimation(.snappy(duration: 0.24)) {
+                            dragOffset = 0
+                        }
+                    }
+                }
+        )
+        .accessibilityLabel(Text("Kapatmak için aşağı kaydır"))
+        .accessibilityAddTraits(.isButton)
+    }
+
+    private func panelHeight(in availableHeight: CGFloat) -> CGFloat {
+        min(availableHeight, max(420, availableHeight * 0.75))
     }
 }
 

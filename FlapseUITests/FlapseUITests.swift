@@ -146,6 +146,48 @@ final class FlapseUITests: XCTestCase {
     }
 
     @MainActor
+    func testPhotoImportPanelIsEdgeAttached() throws {
+        let app = XCUIApplication()
+        app.launchArguments += ["--uitests", "-auth.appleUserID", "uitest-user", "-override.debugPro", "YES", "-AppleLanguages", "(tr)", "-AppleLocale", "tr_TR"]
+        app.launchEnvironment["FLAPSE_UI_TESTS"] = "1"
+        app.launch()
+
+        let startButton = app.buttons["Başla"]
+        if startButton.waitForExistence(timeout: 5) {
+            startButton.tap()
+        }
+
+        let projectsTab = app.buttons["projectsTab"]
+        XCTAssertTrue(projectsTab.waitForExistence(timeout: 5))
+        projectsTab.tap()
+
+        let addButton = app.buttons["addProjectButton"]
+        XCTAssertTrue(addButton.waitForExistence(timeout: 5))
+        addButton.tap()
+
+        let titleField = app.textFields.firstMatch
+        XCTAssertTrue(titleField.waitForExistence(timeout: 5))
+        titleField.tap()
+        titleField.typeText("Panel Testi")
+        app.buttons["Kaydet"].tap()
+
+        let card = app.buttons["projectCard-Panel Testi"]
+        XCTAssertTrue(card.waitForExistence(timeout: 5))
+        card.tap()
+
+        let importButton = app.buttons["importButton"]
+        XCTAssertTrue(importButton.waitForExistence(timeout: 5))
+        importButton.tap()
+
+        let panel = app.otherElements["photoImportPanel"]
+        XCTAssertTrue(panel.waitForExistence(timeout: 5))
+        XCTAssertEqual(panel.frame.minX, app.frame.minX, accuracy: 1)
+        XCTAssertEqual(panel.frame.maxX, app.frame.maxX, accuracy: 1)
+        XCTAssertEqual(panel.frame.height, app.frame.height * 0.75, accuracy: 2)
+        attachScreenshot(of: app, named: "photo-import-edge-attached")
+    }
+
+    @MainActor
     private func attachScreenshot(of app: XCUIApplication, named name: String) {
         let attachment = XCTAttachment(screenshot: app.screenshot())
         attachment.name = name

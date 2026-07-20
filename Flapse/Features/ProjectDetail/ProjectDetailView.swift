@@ -20,6 +20,7 @@ struct ProjectDetailView: View {
     @State private var heroImage: UIImage?
     @State private var activeSheet: DetailSheet?
     @State private var activeCover: DetailCover?
+    @State private var isShowingPhotoImport = false
     @State private var monthFilter: MonthKey?
     @State private var preparedShare: CKShare?
     @State private var isPreparingShare = false
@@ -49,7 +50,7 @@ struct ProjectDetailView: View {
     }
 
     private enum DetailSheet: Identifiable {
-        case export, paywall, invite, importPhotos, cloudShare, editProject, shareCard, batchDate, batchLocation
+        case export, paywall, invite, cloudShare, editProject, shareCard, batchDate, batchLocation
         var id: Int { hashValue }
     }
 
@@ -220,13 +221,6 @@ struct ProjectDetailView: View {
                 if let shareCardURL {
                     ActivityView(activityItems: [shareCardURL])
                 }
-            case .importPhotos:
-                PhotoImportSheet(
-                    mode: .existing(project),
-                    repository: ProjectRepository(context: modelContext),
-                    maxSelection: store.isPro ? nil : max(0, FeatureGate.freeEntryLimit - liveEntries.count),
-                    onFinished: { _ in activeSheet = nil }
-                )
             case .cloudShare:
                 if let preparedShare, let url = preparedShare.url {
                     ActivityView(activityItems: [inviteMessage, url])
@@ -269,6 +263,14 @@ struct ProjectDetailView: View {
                         EntryViewerView(project: project, initialEntry: entry, entries: liveEntries)
                     }
                 }
+        }
+        .fullScreenCover(isPresented: $isShowingPhotoImport) {
+            EdgeAttachedPhotoImportCover(
+                project: project,
+                repository: ProjectRepository(context: modelContext),
+                maxSelection: store.isPro ? nil : max(0, FeatureGate.freeEntryLimit - liveEntries.count),
+                onFinished: { _ in isShowingPhotoImport = false }
+            )
         }
     }
 
@@ -354,7 +356,7 @@ struct ProjectDetailView: View {
     /// sistem paylaşım sayfasını açar (Pro). Ücretsiz kullanıcı paywall görür.
     private func importTapped() {
         if store.isPro || liveEntries.count < FeatureGate.freeEntryLimit {
-            activeSheet = .importPhotos
+            isShowingPhotoImport = true
         } else {
             activeSheet = .paywall
         }

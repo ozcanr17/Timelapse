@@ -392,15 +392,6 @@ struct CardBackground: ViewModifier {
 }
 
 extension View {
-    @ViewBuilder
-    func flapsePagePresentationSizing() -> some View {
-        if #available(iOS 18.0, *) {
-            presentationSizing(.page)
-        } else {
-            self
-        }
-    }
-
     func liquidGlassStyle(
         cornerRadius: CGFloat = Theme.cornerRadius,
         tint: Color? = nil,
