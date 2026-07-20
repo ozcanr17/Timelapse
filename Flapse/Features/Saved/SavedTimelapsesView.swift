@@ -92,7 +92,7 @@ struct SavedTimelapsesView: View {
                 ZStack {
                     RoundedRectangle(cornerRadius: 14, style: .continuous)
                         .fill(theme.inkMuted.opacity(0.12))
-                    SavedTimelapsePoster(item: item)
+                    SavedTimelapseThumbnail(item: item, maxPixelSize: 500)
                     Image(systemName: "play.circle.fill")
                         .font(.system(size: 34))
                         .foregroundStyle(.white.opacity(0.9))
@@ -153,29 +153,6 @@ struct SavedTimelapsesView: View {
                 showPhotosDenied = true
             }
             UINotificationFeedbackGenerator().notificationOccurred(outcome == .saved ? .success : .error)
-        }
-    }
-}
-
-private struct SavedTimelapsePoster: View {
-    let item: SavedTimelapse
-
-    @State private var image: UIImage?
-
-    var body: some View {
-        Group {
-            if let image {
-                Image(uiImage: image)
-                    .resizable()
-                    .scaledToFill()
-            }
-        }
-        .task(id: item.id) {
-            image = await ImageDownsampler.cachedImage(
-                key: "saved-video-\(item.id.uuidString)",
-                maxPixelSize: 500,
-                load: { item.posterData }
-            )
         }
     }
 }

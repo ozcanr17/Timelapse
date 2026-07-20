@@ -37,8 +37,11 @@ struct RecentlyDeletedView: View {
     @Query(filter: #Predicate<SavedTimelapse> { $0.deletedAt != nil }, sort: \SavedTimelapse.deletedAt, order: .reverse)
     private var deletedTimelapses: [SavedTimelapse]
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.scenePhase) private var scenePhase
     @Environment(\.theme) private var theme
 
+    @State private var isUnlocked = false
+    @State private var isAuthenticating = false
     @State private var pendingEraseID: UUID?
     @State private var pendingPhotoEraseID: UUID?
     @State private var pendingPhotoGroupEraseID: UUID?
@@ -154,8 +157,27 @@ struct RecentlyDeletedView: View {
                 }
             }
         }
+        .opacity(isUnlocked ? 1 : 0)
+        .allowsHitTesting(isUnlocked)
+        .overlay {
+            if !isUnlocked {
+                lockedContent
+            }
+        }
         .navigationTitle("Son Silinenler")
         .navigationBarTitleDisplayMode(.inline)
+        .privacySensitive()
+        .task {
+            if !isUnlocked { await unlock() }
+        }
+        .onChange(of: scenePhase) { _, phase in
+            guard phase == .background else { return }
+            isUnlocked = false
+            pendingEraseID = nil
+            pendingPhotoEraseID = nil
+            pendingPhotoGroupEraseID = nil
+            pendingTimelapseEraseID = nil
+        }
         .confirmationDialog(
             "Proje ve içindeki tüm çekimler kalıcı olarak silinsin mi?",
             isPresented: eraseBinding,
@@ -187,6 +209,54 @@ struct RecentlyDeletedView: View {
         ) {
             Button("Kalıcı Olarak Sil", role: .destructive) { confirmTimelapseErase() }
             Button("Vazgeç", role: .cancel) { pendingTimelapseEraseID = nil }
+        }
+    }
+
+    private var lockedContent: some View {
+        VStack(spacing: 20) {
+            Image(systemName: "trash.slash")
+                .font(.system(size: 40, weight: .regular))
+                .foregroundStyle(theme.accent)
+                .frame(width: 88, height: 88)
+                .background(theme.surface, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+
+            VStack(spacing: 8) {
+                Text("Son Silinenler")
+                    .font(.title2.bold())
+                    .foregroundStyle(theme.ink)
+                Text("Face ID veya cihaz parolanla aç.")
+                    .font(.body)
+                    .foregroundStyle(theme.inkMuted)
+                    .multilineTextAlignment(.center)
+            }
+
+            Button {
+                Task { await unlock() }
+            } label: {
+                if isAuthenticating {
+                    ProgressView()
+                        .frame(minWidth: 110)
+                } else {
+                    Label("Kilidi Aç", systemImage: "lock.open")
+                        .frame(minWidth: 110)
+                }
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
+            .disabled(isAuthenticating)
+        }
+        .padding(32)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(theme.canvas)
+    }
+
+    private func unlock() async {
+        guard !isAuthenticating else { return }
+        isAuthenticating = true
+        let didAuthenticate = await DeviceOwnerAuthentication.authenticate()
+        isAuthenticating = false
+        if didAuthenticate {
+            isUnlocked = true
         }
     }
 

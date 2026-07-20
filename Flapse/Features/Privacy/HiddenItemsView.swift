@@ -173,7 +173,7 @@ struct HiddenItemsView: View {
 
     private func hiddenTimelapseRow(_ item: SavedTimelapse) -> some View {
         HStack(spacing: 12) {
-            HiddenTimelapseThumbnail(item: item)
+            SavedTimelapseThumbnail(item: item, maxPixelSize: 240)
             .frame(width: 64, height: 44)
             .background(theme.surface)
             .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
@@ -224,34 +224,6 @@ struct HiddenItemsView: View {
         isAuthenticating = false
         if didAuthenticate {
             isUnlocked = true
-        }
-    }
-}
-
-private struct HiddenTimelapseThumbnail: View {
-    let item: SavedTimelapse
-
-    @Environment(\.theme) private var theme
-    @State private var image: UIImage?
-
-    var body: some View {
-        ZStack {
-            theme.surface
-            if let image {
-                Image(uiImage: image)
-                    .resizable()
-                    .scaledToFill()
-            } else {
-                Image(systemName: "film")
-                    .foregroundStyle(theme.inkMuted)
-            }
-        }
-        .task(id: item.id) {
-            image = await ImageDownsampler.cachedImage(
-                key: "hidden-video-\(item.id.uuidString)",
-                maxPixelSize: 240,
-                load: { item.posterData }
-            )
         }
     }
 }

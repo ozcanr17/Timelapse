@@ -21,18 +21,34 @@ enum TimelapseLibrary {
 
         let asset = AVURLAsset(url: destination)
         let duration = (try? await asset.load(.duration).seconds) ?? 0
-        var posterData: Data?
-        let generator = AVAssetImageGenerator(asset: asset)
-        generator.appliesPreferredTrackTransform = true
-        generator.maximumSize = CGSize(width: 640, height: 640)
-        if let cgImage = try? await generator.image(at: .zero).image {
-            posterData = UIImage(cgImage: cgImage).jpegData(compressionQuality: 0.8)
-        }
+        let posterData = await makePosterData(videoURL: destination, duration: duration)
 
         let item = SavedTimelapse(title: title, fileName: fileName, duration: duration, posterData: posterData)
         context.insert(item)
         try context.save()
         return item
+    }
+
+    static func makePosterData(videoURL: URL, duration: Double? = nil) async -> Data? {
+        let asset = AVURLAsset(url: videoURL)
+        let resolvedDuration: Double
+        if let duration {
+            resolvedDuration = duration
+        } else {
+            resolvedDuration = (try? await asset.load(.duration).seconds) ?? 0
+        }
+        let generator = AVAssetImageGenerator(asset: asset)
+        generator.appliesPreferredTrackTransform = true
+        generator.maximumSize = CGSize(width: 640, height: 640)
+        generator.requestedTimeToleranceBefore = .positiveInfinity
+        generator.requestedTimeToleranceAfter = .positiveInfinity
+        let sampleSecond = resolvedDuration.isFinite ? min(max(resolvedDuration * 0.05, 0.05), 0.25) : 0.1
+        let sampleTime = CMTime(seconds: sampleSecond, preferredTimescale: 600)
+        if let cgImage = try? await generator.image(at: sampleTime).image {
+            return UIImage(cgImage: cgImage).jpegData(compressionQuality: 0.8)
+        }
+        guard let cgImage = try? await generator.image(at: .zero).image else { return nil }
+        return UIImage(cgImage: cgImage).jpegData(compressionQuality: 0.8)
     }
 
     static let retentionDays = 7

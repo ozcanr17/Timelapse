@@ -185,6 +185,11 @@ struct MainTabView: View {
         iconRow(reportsFrames: true)
             .coordinateSpace(name: "tabBarSpace")
             .liquidGlassCapsule(tint: Self.barTint)
+            .overlay {
+                Capsule()
+                    .strokeBorder(theme.ink.opacity(0.1), lineWidth: 0.7)
+                    .allowsHitTesting(false)
+            }
             .overlay(alignment: .topLeading) {
                 if highlightWidth > 0 {
                     Capsule()
@@ -298,8 +303,8 @@ struct MainTabView: View {
 
         let icon = Image(systemName: isActive || isCamera ? item.activeIcon : item.icon)
             .font(.system(size: isCamera ? 23 : 21, weight: isCamera ? .semibold : .medium))
-            .foregroundStyle(isActive ? theme.accent : .white)
-            .shadow(color: .black.opacity(0.35), radius: 1, x: 0, y: 0.5)
+            .foregroundStyle(isActive ? theme.accent : theme.ink.opacity(isCamera ? 0.78 : 0.62))
+            .shadow(color: theme.surface.opacity(0.8), radius: 1, x: 0, y: 0.5)
             .frame(maxWidth: .infinity, minHeight: 46)
             .scaleEffect(isPreviewed && !reduceMotion ? 1.08 : 1)
             .background {
