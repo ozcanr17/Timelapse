@@ -341,7 +341,7 @@ struct SettingsView: View {
         .listStyle(.insetGrouped)
         .listSectionSpacing(18)
         .scrollContentBackground(.hidden)
-        .background(theme.canvas)
+        .background { FlapseScreenBackdrop() }
         .navigationTitle("Ayarlar")
         .task {
             let descriptor = FetchDescriptor<Project>(predicate: #Predicate { $0.deletedAt == nil && $0.isHidden == false })

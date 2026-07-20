@@ -194,6 +194,40 @@ enum Theme {
     static let cornerRadius: CGFloat = 20
 }
 
+/// Ana ekranlarda aynı görsel dili kuran, temaya uyumlu yumuşak renk alanı.
+/// İçerikten bağımsız olduğu için kaydırma ve etkileşim performansını etkilemez.
+struct FlapseScreenBackdrop: View {
+    @Environment(\.theme) private var theme
+
+    var body: some View {
+        ZStack {
+            theme.canvas
+
+            RadialGradient(
+                colors: [theme.accent.opacity(0.16), .clear],
+                center: .topTrailing,
+                startRadius: 0,
+                endRadius: 420
+            )
+
+            RadialGradient(
+                colors: [theme.secondary.opacity(0.1), .clear],
+                center: .bottomLeading,
+                startRadius: 0,
+                endRadius: 520
+            )
+
+            LinearGradient(
+                colors: [.white.opacity(0.035), .clear, theme.surface.opacity(0.035)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        }
+        .ignoresSafeArea()
+        .allowsHitTesting(false)
+    }
+}
+
 extension Color {
     init(light: String, dark: String) {
         self.init(uiColor: UIColor { trait in
@@ -307,6 +341,15 @@ struct CardBackground: ViewModifier {
 }
 
 extension View {
+    @ViewBuilder
+    func flapsePagePresentationSizing() -> some View {
+        if #available(iOS 18.0, *) {
+            presentationSizing(.page)
+        } else {
+            self
+        }
+    }
+
     func liquidGlassStyle(
         cornerRadius: CGFloat = Theme.cornerRadius,
         tint: Color? = nil,

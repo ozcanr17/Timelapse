@@ -78,9 +78,6 @@ private struct CameraSessionView: View {
                         AlignmentGuideOverlay()
                     }
 
-                    if !hasFailed, coupleMode {
-                        CoupleSplitOverlay()
-                    }
                 }
             }
             .ignoresSafeArea()
@@ -266,47 +263,9 @@ private struct CameraSessionView: View {
 
 private struct AlignmentGuideOverlay: View {
     var body: some View {
-        ZStack {
-            ThirdsGridShape()
-                .stroke(.white.opacity(0.28), lineWidth: 1)
-            CenterCrossShape()
-                .stroke(.white.opacity(0.45), style: StrokeStyle(lineWidth: 1.5, lineCap: .round))
-        }
+        ThirdsGridShape()
+            .stroke(.white.opacity(0.28), lineWidth: 1)
         .allowsHitTesting(false)
-    }
-}
-
-/// Çift modu (couple mode) kılavuzu: kareyi ikiye bölen dikey çizgi ve her yarı için
-/// "kişi" etiketi. İki kişinin zamanla aynı çerçevede hizalanmasını kolaylaştırır.
-private struct CoupleSplitOverlay: View {
-    var body: some View {
-        GeometryReader { geo in
-            ZStack {
-                Rectangle()
-                    .fill(.white.opacity(0.55))
-                    .frame(width: 1.5)
-                    .frame(maxHeight: .infinity)
-
-                HStack(spacing: 0) {
-                    coupleLabel("1")
-                    coupleLabel("2")
-                }
-                .frame(width: geo.size.width)
-                .padding(.top, 12)
-                .frame(maxHeight: .infinity, alignment: .top)
-            }
-        }
-        .allowsHitTesting(false)
-    }
-
-    private func coupleLabel(_ text: String) -> some View {
-        Text(text)
-            .font(.system(size: 12, weight: .bold))
-            .foregroundStyle(.white)
-            .frame(width: 22, height: 22)
-            .background(.black.opacity(0.35), in: Circle())
-            .overlay(Circle().strokeBorder(.white.opacity(0.6), lineWidth: 1))
-            .frame(maxWidth: .infinity)
     }
 }
 
@@ -319,19 +278,6 @@ private struct ThirdsGridShape: Shape {
             path.move(to: CGPoint(x: 0, y: rect.height * fraction))
             path.addLine(to: CGPoint(x: rect.width, y: rect.height * fraction))
         }
-        return path
-    }
-}
-
-private struct CenterCrossShape: Shape {
-    func path(in rect: CGRect) -> Path {
-        let center = CGPoint(x: rect.midX, y: rect.midY)
-        let arm: CGFloat = 22
-        var path = Path()
-        path.move(to: CGPoint(x: center.x - arm, y: center.y))
-        path.addLine(to: CGPoint(x: center.x + arm, y: center.y))
-        path.move(to: CGPoint(x: center.x, y: center.y - arm))
-        path.addLine(to: CGPoint(x: center.x, y: center.y + arm))
         return path
     }
 }

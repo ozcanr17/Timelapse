@@ -63,6 +63,9 @@ struct PhotoImportSheet: View {
         .interactiveDismissDisabled(viewModel.phase == .importing)
         .presentationDetents([.fraction(0.75)])
         .presentationDragIndicator(.visible)
+        .presentationCornerRadius(0)
+        .presentationBackground(theme.canvas)
+        .flapsePagePresentationSizing()
         .onDisappear { notifyFinishedIfNeeded() }
         .fullScreenCover(isPresented: $isShowingPhotoPicker) {
             SystemPhotoPicker(maxSelectionCount: maxSelection) { photos in
@@ -195,7 +198,7 @@ struct PhotoImportSheet: View {
 
     private var importButton: some View {
         Button(action: startImport) {
-            Text(selection.isEmpty ? "Fotoğraf seç" : "\(selection.count) fotoğrafı içe aktar")
+            Text(selection.isEmpty ? "Önce fotoğraf seç" : "İçeri aktar")
                 .font(Theme.headline(17))
         }
         .buttonStyle(.flapsePrimary)
@@ -244,18 +247,9 @@ struct PhotoImportSheet: View {
                 .font(Theme.caption(14)).foregroundStyle(theme.inkMuted)
                 .multilineTextAlignment(.center)
             Spacer()
-            VStack(spacing: 2) {
-                Text("Bitti")
-                    .font(Theme.headline(15))
-                    .foregroundStyle(theme.inkMuted)
-                Image(systemName: "chevron.compact.down")
-                    .font(.system(size: 24, weight: .semibold))
-                    .foregroundStyle(theme.accent)
-                Image(systemName: "chevron.compact.down")
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundStyle(theme.accent.opacity(0.55))
-                    .offset(y: -7)
-            }
+            Text("Geri dönmek için aşağı kaydır")
+                .font(Theme.headline(15))
+                .foregroundStyle(theme.inkMuted)
             .accessibilityElement(children: .combine)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -293,6 +287,9 @@ struct PhotoImportSheet: View {
                 _ = await viewModel.importIntoNewProject(sources: sources)
             case .existing(let project):
                 await viewModel.importInto(project: project, sources: sources)
+            }
+            if case .done = viewModel.phase {
+                dismiss()
             }
         }
     }

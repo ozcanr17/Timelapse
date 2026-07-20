@@ -59,12 +59,17 @@ struct ProjectListView: View {
 
     var body: some View {
         ZStack {
-            theme.canvas.ignoresSafeArea()
+            FlapseScreenBackdrop()
 
             if liveProjects.isEmpty && visibleJobs.isEmpty {
                 EmptyProjectsView(onCreate: addProjectTapped, onImport: importTapped)
             } else {
                 List {
+                    projectOverview
+                        .listRowSeparator(.hidden)
+                        .listRowBackground(Color.clear)
+                        .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 10, trailing: 16))
+
                     ForEach(visibleJobs) { job in
                         Button {
                             openJob(job)
@@ -173,6 +178,49 @@ struct ProjectListView: View {
         }
         .sheet(item: $resumeExportProject, onDismiss: discardCheckedJob) { project in
             TimelapseExportSheet(project: project)
+        }
+    }
+
+    private var projectOverview: some View {
+        HStack(spacing: 14) {
+            Image(systemName: "square.grid.2x2.fill")
+                .font(.system(size: 20, weight: .semibold))
+                .foregroundStyle(theme.accent)
+                .frame(width: 48, height: 48)
+                .background(theme.accent.opacity(0.12), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            VStack(alignment: .leading, spacing: 3) {
+                Text("Projeler")
+                    .font(Theme.headline(19))
+                    .foregroundStyle(theme.ink)
+                Text("\(liveProjects.count) proje")
+                    .font(Theme.caption(12))
+                    .foregroundStyle(theme.inkMuted)
+            }
+            Spacer()
+            HStack(spacing: 5) {
+                Image(systemName: "bell.fill")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(theme.accent)
+                Text("\(liveProjects.filter { $0.isCaptureDue() }.count)")
+                    .font(Theme.stamp(13))
+                    .foregroundStyle(theme.ink)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(theme.surface.opacity(0.72), in: Capsule())
+        }
+        .padding(16)
+        .background(
+            LinearGradient(
+                colors: [theme.surface.opacity(0.9), theme.accent.opacity(0.08), theme.secondary.opacity(0.07)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            ),
+            in: RoundedRectangle(cornerRadius: 24, style: .continuous)
+        )
+        .overlay {
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .strokeBorder(theme.ink.opacity(0.06), lineWidth: 0.7)
         }
     }
 

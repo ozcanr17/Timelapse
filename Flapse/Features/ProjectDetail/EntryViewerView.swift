@@ -65,8 +65,7 @@ struct EntryViewerView: View {
             VStack {
                 topBar
                 Spacer()
-                metadataBar
-                bottomBar
+                bottomDock
             }
         }
         .environment(\.colorScheme, .dark)
@@ -123,8 +122,6 @@ struct EntryViewerView: View {
                     }
                     .accessibilityLabel(Text("Kareyi paylaş"))
                 }
-                Button { editTarget = selectedEntry } label: { controlIcon("slider.horizontal.3") }
-                    .accessibilityLabel(Text("Fotoğrafı düzenle"))
                 Button { saveToPhotos() } label: { controlIcon("square.and.arrow.down") }
                     .accessibilityLabel(Text("Fotoğraflara kaydet"))
                 Button { isConfirmingDelete = true } label: { controlIcon("trash") }
@@ -166,14 +163,19 @@ struct EntryViewerView: View {
     }
 
     @ViewBuilder
-    private var metadataBar: some View {
+    private var bottomDock: some View {
         if let entry = selectedEntry {
-            VStack(spacing: 6) {
+            VStack(spacing: 12) {
                 Button {
                     dateEditTarget = entry
                 } label: {
-                    HStack(spacing: 12) {
-                        VStack(spacing: 6) {
+                    HStack(spacing: 14) {
+                        Image(systemName: "calendar.badge.clock")
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundStyle(theme.accent)
+                            .frame(width: 42, height: 42)
+                            .background(.white.opacity(0.1), in: Circle())
+                        VStack(alignment: .leading, spacing: 4) {
                             Text(entry.capturedAt, format: .dateTime.weekday(.wide).day().month().year())
                                 .font(Theme.headline(15))
                             Label(
@@ -183,41 +185,61 @@ struct EntryViewerView: View {
                             .font(Theme.caption(13))
                             .foregroundStyle(.white.opacity(0.85))
                         }
-                        Image(systemName: "calendar.badge.clock")
-                            .font(.system(size: 17, weight: .semibold))
-                            .foregroundStyle(theme.accent)
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 13, weight: .bold))
+                            .foregroundStyle(.white.opacity(0.55))
                     }
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 10)
+                    .background(.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel(Text("Düzenle"))
+                .accessibilityLabel(Text("Tarih ve saati düzenle"))
                 if let place = entry.placeName, !place.isEmpty {
                     Label(place, systemImage: "mappin.and.ellipse")
                         .font(Theme.caption(13))
                         .foregroundStyle(.white.opacity(0.85))
                         .lineLimit(1)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 12)
                 }
-            }
-            .foregroundStyle(.white)
-            .padding(.horizontal, 18)
-            .padding(.vertical, 12)
-            .background(.black.opacity(0.35), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-            .padding(.bottom, 8)
-        }
-    }
 
-    private var bottomBar: some View {
-        Button {
-            CameraService.shared.prewarm(position: CameraCaptureViewModel.initialPosition(for: project.category))
-            retakeTarget = selectedEntry
-        } label: {
-            Label("Yeniden Çek", systemImage: "camera.badge.clock")
+                HStack(spacing: 10) {
+                    Button {
+                        editTarget = entry
+                    } label: {
+                        Label("Düzenle", systemImage: "slider.horizontal.3")
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 48)
+                            .background(.white.opacity(0.12), in: Capsule())
+                    }
+                    .accessibilityLabel(Text("Fotoğrafı düzenle"))
+
+                    Button {
+                        CameraService.shared.prewarm(position: CameraCaptureViewModel.initialPosition(for: project.category))
+                        retakeTarget = entry
+                    } label: {
+                        Label("Yeniden Çek", systemImage: "camera.badge.clock")
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 48)
+                            .background(theme.accent, in: Capsule())
+                    }
+                }
                 .font(Theme.headline(15))
                 .foregroundStyle(.white)
-                .padding(.horizontal, 20)
-                .padding(.vertical, 12)
-                .background(theme.accent, in: Capsule())
+                .buttonStyle(.plain)
+            }
+            .foregroundStyle(.white)
+            .padding(12)
+            .background(.black.opacity(0.42), in: RoundedRectangle(cornerRadius: 26, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 26, style: .continuous)
+                    .strokeBorder(.white.opacity(0.15), lineWidth: 0.8)
+            }
+            .padding(.horizontal, 14)
+            .padding(.bottom, 18)
         }
-        .padding(.bottom, 20)
     }
 
     private func deleteSelected() {

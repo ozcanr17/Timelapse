@@ -67,7 +67,7 @@ struct HomeView: View {
 
     var body: some View {
         ZStack {
-            theme.canvas.ignoresSafeArea()
+            FlapseScreenBackdrop()
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
                     header
@@ -97,23 +97,36 @@ struct HomeView: View {
     }
 
     private var header: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(greeting)
-                .font(Theme.headline(32))
-                .foregroundStyle(theme.ink)
-            Text(Date.now.formatted(.dateTime.weekday(.wide).day().month(.wide).locale(AppLanguage.currentLocale)))
-                .font(.subheadline)
-                .foregroundStyle(theme.inkMuted)
+        HStack(alignment: .center, spacing: 12) {
+            VStack(alignment: .leading, spacing: 5) {
+                Text(greeting)
+                    .font(Theme.headline(34))
+                    .foregroundStyle(theme.ink)
+                Text(Date.now.formatted(.dateTime.weekday(.wide).day().month(.wide).locale(AppLanguage.currentLocale)))
+                    .font(Theme.body(14))
+                    .foregroundStyle(theme.inkMuted)
+            }
+            Spacer()
+            LogoMark(size: 46)
+                .padding(7)
+                .liquidGlassStyle(cornerRadius: 18, tint: theme.surface.opacity(0.24))
         }
+        .padding(.vertical, 4)
     }
 
     private var statsGrid: some View {
-        LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
-            StatTile(icon: "square.grid.2x2", value: liveProjects.count, label: "Aktif proje", tint: theme.accent)
-            StatTile(icon: "photo.stack", value: liveEntries.count, label: "Toplam kare", tint: theme.secondary)
-            StatTile(icon: "flame", value: longestStreak, label: "En uzun seri", tint: .orange)
-            StatTile(icon: "calendar", value: weekCount, label: "Bu hafta", tint: theme.accent.mix(with: theme.secondary, by: 0.5))
+        ScrollView(.horizontal) {
+            HStack(spacing: 12) {
+                StatTile(icon: "square.grid.2x2", value: liveProjects.count, label: "Aktif proje", tint: theme.accent)
+                StatTile(icon: "photo.stack", value: liveEntries.count, label: "Toplam kare", tint: theme.secondary)
+                StatTile(icon: "flame", value: longestStreak, label: "En uzun seri", tint: .orange)
+                StatTile(icon: "calendar", value: weekCount, label: "Bu hafta", tint: theme.accent.mix(with: theme.secondary, by: 0.5))
+            }
+            .scrollTargetLayout()
         }
+        .scrollTargetBehavior(.viewAligned)
+        .scrollIndicators(.hidden)
+        .contentMargins(.horizontal, 1, for: .scrollContent)
     }
 
     private var tipCard: some View {
@@ -240,7 +253,7 @@ private struct StatTile: View {
                 .foregroundStyle(theme.inkMuted)
         }
         .padding(16)
-        .frame(maxWidth: .infinity, minHeight: 128, alignment: .leading)
+        .frame(width: 142, height: 132, alignment: .leading)
         .background(
             LinearGradient(
                 colors: [tint.opacity(0.13), theme.surface.opacity(0.92)],

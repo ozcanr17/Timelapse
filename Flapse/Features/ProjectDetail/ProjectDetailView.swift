@@ -108,15 +108,15 @@ struct ProjectDetailView: View {
             }
             .padding(16)
         }
-        .background(theme.canvas.ignoresSafeArea())
+        .background { FlapseScreenBackdrop() }
         .navigationBarTitleDisplayMode(.inline)
         .safeAreaInset(edge: .bottom, spacing: 0) {
             if isSelectingEntries {
                 selectionActionBar
             }
         }
-        .onChange(of: isSelectingEntries, initial: true) { _, isSelecting in
-            customTabBarHidden.wrappedValue = isSelecting
+        .onAppear {
+            customTabBarHidden.wrappedValue = true
         }
         .onDisappear {
             customTabBarHidden.wrappedValue = false

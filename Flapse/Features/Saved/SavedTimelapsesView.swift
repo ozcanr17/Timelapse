@@ -15,7 +15,7 @@ struct SavedTimelapsesView: View {
 
     var body: some View {
         ZStack {
-            theme.canvas.ignoresSafeArea()
+            FlapseScreenBackdrop()
             if items.isEmpty {
                 emptyState
             } else {
@@ -73,9 +73,22 @@ struct SavedTimelapsesView: View {
 
     private var librarySection: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("Kitaplık")
-                .font(Theme.caption(13))
-                .foregroundStyle(theme.inkMuted)
+            HStack(alignment: .center) {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("Kitaplık")
+                        .font(Theme.headline(22))
+                        .foregroundStyle(theme.ink)
+                    Text("\(items.count) timelapse")
+                        .font(Theme.caption(12))
+                        .foregroundStyle(theme.inkMuted)
+                }
+                Spacer()
+                Image(systemName: "play.rectangle.on.rectangle.fill")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(theme.accent)
+                    .frame(width: 44, height: 44)
+                    .liquidGlassStyle(cornerRadius: 15, tint: theme.accent.opacity(0.08))
+            }
 
             if let featured = items.first {
                 libraryCard(featured, isFeatured: true)
