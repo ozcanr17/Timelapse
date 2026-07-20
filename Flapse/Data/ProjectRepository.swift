@@ -265,7 +265,7 @@ final class ProjectRepository: ProjectRepositoryProtocol {
     }
 
     private func scheduleSharedSync(for project: Project) {
-        guard project.isCollaborative else { return }
+        guard project.isCollaborative, SharedProjectService.isEnabledForCurrentProcess else { return }
         SharedProjectService.shared.schedulePush(for: project)
     }
 

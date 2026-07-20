@@ -2,7 +2,6 @@ import SwiftUI
 import SwiftData
 import UIKit
 import AuthenticationServices
-import CloudKit
 
 struct SettingsView: View {
 
@@ -13,7 +12,8 @@ struct SettingsView: View {
     @Environment(\.theme) private var theme
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.modelContext) private var settingsContext
-    @State private var projects: [Project] = []
+    @State private var projectCount = 0
+    @State private var entryCount = 0
 
     @AppStorage(AppTheme.storageKey) private var themeID = AppTheme.filmNegative.rawValue
     @AppStorage(ThemePreference.customEnabledKey) private var customThemeEnabled = false
@@ -34,10 +34,6 @@ struct SettingsView: View {
     @State private var adminSignInMessage: String?
     @State private var isConfirmingAccountDeletion = false
     @State private var cloudRestartRequired = UserDefaults.standard.bool(forKey: CloudBackupPreference.restartRequiredKey)
-
-    private var totalEntries: Int {
-        projects.reduce(0) { $0 + ($1.entries?.count ?? 0) }
-    }
 
     var body: some View {
         List {
@@ -195,10 +191,10 @@ struct SettingsView: View {
 
             Section("İstatistik") {
                 LabeledContent("Proje") {
-                    Text("\(projects.count)").font(Theme.body(15)).monospacedDigit()
+                    Text("\(projectCount)").font(Theme.body(15)).monospacedDigit()
                 }
                 LabeledContent("Toplam çekim") {
-                    Text("\(totalEntries)").font(Theme.body(15)).monospacedDigit()
+                    Text("\(entryCount)").font(Theme.body(15)).monospacedDigit()
                 }
             }
 
@@ -293,10 +289,8 @@ struct SettingsView: View {
         .background(theme.canvas)
         .navigationTitle("Ayarlar")
         .task {
-            let descriptor = FetchDescriptor<Project>(predicate: #Predicate { $0.deletedAt == nil && $0.isHidden == false })
-            projects = (try? settingsContext.fetch(descriptor)) ?? []
-            let status = try? await CKContainer(identifier: SharedProjectService.containerIdentifier).accountStatus()
-            cloudAccountAvailable = status == .available
+            refreshStatistics()
+            cloudAccountAvailable = await SharedProjectService.accountAvailableIfSupported()
         }
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showPaywall) {
@@ -313,17 +307,17 @@ struct SettingsView: View {
                 Task {
                     let granted = await ReminderScheduler.shared.requestAuthorization()
                     if granted {
-                        ReminderScheduler.shared.sync(projects: projects)
+                        syncReminders()
                     } else {
                         remindersEnabled = false
                     }
                 }
             } else {
-                ReminderScheduler.shared.sync(projects: projects)
+                syncReminders()
             }
         }
         .onChange(of: reminderHour) {
-            ReminderScheduler.shared.sync(projects: projects)
+            syncReminders()
         }
         .onChange(of: cloudBackupEnabled) { _, enabled in
             CloudBackupPreference.setEnabled(enabled)
@@ -399,6 +393,26 @@ struct SettingsView: View {
                 customThemeEnabled = true
             }
         )
+    }
+
+    private func refreshStatistics() {
+        let projects = FetchDescriptor<Project>(
+            predicate: #Predicate { $0.deletedAt == nil && $0.isHidden == false }
+        )
+        let entries = FetchDescriptor<Entry>(
+            predicate: #Predicate {
+                $0.deletedAt == nil && $0.project?.deletedAt == nil && $0.project?.isHidden == false
+            }
+        )
+        projectCount = (try? settingsContext.fetchCount(projects)) ?? 0
+        entryCount = (try? settingsContext.fetchCount(entries)) ?? 0
+    }
+
+    private func syncReminders() {
+        let descriptor = FetchDescriptor<Project>(
+            predicate: #Predicate { $0.deletedAt == nil && $0.isHidden == false }
+        )
+        ReminderScheduler.shared.sync(projects: (try? settingsContext.fetch(descriptor)) ?? [])
     }
 
     private var secondaryColorBinding: Binding<Color> {

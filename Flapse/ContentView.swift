@@ -115,6 +115,7 @@ struct ContentView: View {
     /// Davet kabul edilince paylaşılan projeyi (önceki kareleriyle birlikte) yerel
     /// kütüphaneye indirir. Aynı paylaşım daha önce indirildiyse yinelenmez.
     private func importSharedProject(_ metadata: CKShare.Metadata) async {
+        guard SharedProjectService.isEnabledForCurrentProcess else { return }
         guard let snapshot = try? await SharedProjectService.shared.fetchSharedProject(metadata) else { return }
 
         let shareName = snapshot.shareRecordName
@@ -153,6 +154,7 @@ struct ContentView: View {
     }
 
     private func synchronizeSharedProjects() async {
+        guard SharedProjectService.isEnabledForCurrentProcess else { return }
         let descriptor = FetchDescriptor<Project>(
             predicate: #Predicate { $0.isCollaborative == true }
         )

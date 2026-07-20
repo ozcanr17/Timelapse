@@ -134,7 +134,7 @@ struct ProjectDetailView: View {
             customTabBarHidden.wrappedValue = false
         }
         .task(id: project.cloudShareRecordName) {
-            guard project.isCollaborative else { return }
+            guard project.isCollaborative, SharedProjectService.isEnabledForCurrentProcess else { return }
             while !Task.isCancelled {
                 await SharedProjectService.shared.synchronize(project, context: modelContext)
                 try? await Task.sleep(for: .seconds(60))
@@ -377,7 +377,7 @@ struct ProjectDetailView: View {
         isPreparingShare = true
         defer { isPreparingShare = false }
 
-        guard await SharedProjectService.shared.accountAvailable() else {
+        guard await SharedProjectService.accountAvailableIfSupported() else {
             activeSheet = .invite
             return
         }

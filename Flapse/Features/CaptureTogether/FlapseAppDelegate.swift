@@ -52,6 +52,7 @@ final class FlapseSceneDelegate: NSObject, UIWindowSceneDelegate {
 
     static func acceptShare(_ metadata: CKShare.Metadata) {
         Task { @MainActor in
+            guard SharedProjectService.isEnabledForCurrentProcess else { return }
             try? await SharedProjectService.shared.accept(metadata)
             NotificationCenter.default.post(name: .flapseDidAcceptShare, object: metadata)
         }

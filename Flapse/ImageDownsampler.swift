@@ -53,8 +53,8 @@ enum ImageDownsampler {
 enum ThumbnailCache {
     static let shared: NSCache<NSString, UIImage> = {
         let cache = NSCache<NSString, UIImage>()
-        cache.countLimit = 240
-        cache.totalCostLimit = 128 * 1_024 * 1_024
+        cache.countLimit = 160
+        cache.totalCostLimit = 72 * 1_024 * 1_024
         MemoryWarningObserver.shared.onMemoryWarning = { [weak cache] in
             cache?.removeAllObjects()
         }
@@ -66,6 +66,9 @@ private actor ThumbnailDecodeCoordinator {
     static let shared = ThumbnailDecodeCoordinator()
 
     private var tasks: [String: Task<UIImage?, Never>] = [:]
+    private var activeDecodeCount = 0
+    private var slotWaiters: [CheckedContinuation<Void, Never>] = []
+    private let maximumConcurrentDecodes = 3
 
     func image(
         key: String,
@@ -76,13 +79,36 @@ private actor ThumbnailDecodeCoordinator {
         if let task = tasks[key] {
             return await task.value
         }
-        let task = Task.detached(priority: priority) {
-            ImageDownsampler.image(from: data, maxPixelSize: maxPixelSize)
+        let task: Task<UIImage?, Never> = Task { [data] in
+            await acquireDecodeSlot()
+            defer { releaseDecodeSlot() }
+            guard !Task.isCancelled else { return nil }
+            return await Task.detached(priority: priority) {
+                ImageDownsampler.image(from: data, maxPixelSize: maxPixelSize)
+            }.value
         }
         tasks[key] = task
         let image = await task.value
         tasks[key] = nil
         return image
+    }
+
+    private func acquireDecodeSlot() async {
+        if activeDecodeCount < maximumConcurrentDecodes {
+            activeDecodeCount += 1
+            return
+        }
+        await withCheckedContinuation { continuation in
+            slotWaiters.append(continuation)
+        }
+    }
+
+    private func releaseDecodeSlot() {
+        if slotWaiters.isEmpty {
+            activeDecodeCount -= 1
+        } else {
+            slotWaiters.removeFirst().resume()
+        }
     }
 }
 

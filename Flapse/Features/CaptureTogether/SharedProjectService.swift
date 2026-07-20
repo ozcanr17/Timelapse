@@ -1,5 +1,6 @@
 import CloudKit
 import Foundation
+import ImageIO
 import SwiftData
 import UIKit
 
@@ -8,6 +9,14 @@ final class SharedProjectService {
 
     static let shared = SharedProjectService()
     static let containerIdentifier = "iCloud.rozcan.Flapse"
+
+    /// UI testleri imzasız/in-memory bir uygulama süreciyle çalışabilir. Böyle bir
+    /// süreçte CKContainer oluşturmak hata döndürmek yerine SIGTRAP üretebildiği
+    /// için CloudKit'e hiç dokunmuyoruz. Normal simülatör ve cihaz davranışı değişmez.
+    static var isEnabledForCurrentProcess: Bool {
+        !ProcessInfo.processInfo.arguments.contains("--uitests")
+            && ProcessInfo.processInfo.environment["FLAPSE_UI_TESTS"] != "1"
+    }
 
     let container = CKContainer(identifier: SharedProjectService.containerIdentifier)
     private var privateDB: CKDatabase { container.privateCloudDatabase }
@@ -59,7 +68,7 @@ final class SharedProjectService {
 
     private struct LocalEntrySnapshot: Sendable {
         let id: UUID
-        let data: Data?
+        let needsImageUpload: Bool
         let capturedAt: Date
         let imageRevision: Int
         let latitude: Double?
@@ -90,6 +99,11 @@ final class SharedProjectService {
 
     func accountAvailable() async -> Bool {
         ((try? await container.accountStatus()) ?? .couldNotDetermine) == .available
+    }
+
+    static func accountAvailableIfSupported() async -> Bool {
+        guard isEnabledForCurrentProcess else { return false }
+        return await shared.accountAvailable()
     }
 
     func createShare(project: Project) async throws -> CKShare {
@@ -129,7 +143,7 @@ final class SharedProjectService {
         project.cloudOwnerName = zoneID.ownerName
 
         let snapshot = makeLocalSnapshot(project)
-        try await upload(snapshot, to: privateDB)
+        try await upload(snapshot, to: privateDB, sourceProject: project)
         try? await installSubscription(zoneID: zoneID, database: privateDB)
         return savedShare
     }
@@ -191,7 +205,12 @@ final class SharedProjectService {
             repairMisassignedEntries(in: project, rootID: root.recordID, records: records, context: context)
             merge(remote, into: project, context: context)
             try context.save()
-            try await upload(makeLocalSnapshot(project, comparedTo: records), to: database, comparedTo: records)
+            try await upload(
+                makeLocalSnapshot(project, comparedTo: records),
+                to: database,
+                comparedTo: records,
+                sourceProject: project
+            )
             try? await installSubscription(zoneID: reference.zoneID, database: database)
         } catch {
             return
@@ -212,7 +231,7 @@ final class SharedProjectService {
             let database = self.database(for: reference.zoneID)
             let records = try? await self.records(in: reference.zoneID, database: database)
             let snapshot = self.makeLocalSnapshot(project, comparedTo: records)
-            try? await self.upload(snapshot, to: database, comparedTo: records)
+            try? await self.upload(snapshot, to: database, comparedTo: records, sourceProject: project)
             self.pendingPushes[project.id] = nil
         }
     }
@@ -322,7 +341,8 @@ final class SharedProjectService {
     private func upload(
         _ snapshot: LocalProjectSnapshot,
         to database: CKDatabase,
-        comparedTo remoteRecords: [CKRecord]? = nil
+        comparedTo remoteRecords: [CKRecord]? = nil,
+        sourceProject: Project
     ) async throws {
         let rootID = CKRecord.ID(recordName: snapshot.rootRecordName, zoneID: snapshot.zoneID)
         let remoteByID = recordsByID(remoteRecords ?? [])
@@ -365,14 +385,25 @@ final class SharedProjectService {
             let remoteDate = remote["updatedAt"] as? Date ?? remote.modificationDate ?? .distantPast
             return entry.updatedAt > remoteDate
         }
-        for batch in changedEntries.chunked(into: 100) {
+        var sourceEntriesByID: [UUID: Entry] = [:]
+        for entry in sourceProject.entries ?? [] where !entry.isDeleted {
+            // Bozuk/eski veride yinelenen UUID varsa Dictionary(uniqueKeysWithValues:)
+            // trap üretmesin; en güncel nesne yeterlidir.
+            let current = sourceEntriesByID[entry.id]
+            if current == nil || entry.imageRevision >= (current?.imageRevision ?? -1) {
+                sourceEntriesByID[entry.id] = entry
+            }
+        }
+
+        // Bir iPhone fotoğrafının decode sırasında yüzlerce MB geçici bellek
+        // kullanabildiğini unutma. Küçük partiler CloudKit limitinin altında kalır
+        // ve büyük projelerde tepe belleği sınırlı tutar.
+        for batch in changedEntries.chunked(into: 8) {
             let pending = batch.map { entry in
-                let id = CKRecord.ID(recordName: entry.id.uuidString, zoneID: snapshot.zoneID)
-                let remoteImageUpdatedAt = remoteByID[id]?["imageUpdatedAt"] as? Date ?? .distantPast
-                return (entry, remoteByID[id] == nil || entry.imageUpdatedAt > remoteImageUpdatedAt)
+                (entry, entry.needsImageUpload ? sourceEntriesByID[entry.id]?.imageData : nil)
             }
             let prepared = await Task.detached(priority: .utility) {
-                pending.map { ($0.0, $0.1 ? Self.sharedImageData($0.0.data) : nil) }
+                pending.map { ($0.0, Self.sharedImageData($0.1)) }
             }.value
             let pairs = prepared.map { entry, data in
                 let id = CKRecord.ID(recordName: entry.id.uuidString, zoneID: snapshot.zoneID)
@@ -498,9 +529,9 @@ final class SharedProjectService {
                 let imageUpdatedAt = $0.sharedImageUpdatedAt ?? $0.capturedAt
                 return LocalEntrySnapshot(
                     id: $0.id,
-                    data: remoteRecords == nil || remoteByID[recordID] == nil || imageUpdatedAt > remoteImageDate
-                        ? $0.imageData
-                        : nil,
+                    needsImageUpload: remoteRecords == nil
+                        || remoteByID[recordID] == nil
+                        || imageUpdatedAt > remoteImageDate,
                     capturedAt: $0.capturedAt,
                     imageRevision: $0.imageRevision,
                     latitude: $0.latitude,
@@ -644,15 +675,20 @@ final class SharedProjectService {
     }
 
     private nonisolated static func sharedImageData(_ data: Data?) -> Data? {
-        guard let data, let image = UIImage(data: data) else { return data }
+        guard let data else { return nil }
         let maxDimension: CGFloat = 2400
-        let scale = min(1, maxDimension / max(image.size.width, image.size.height))
-        guard scale < 1 else { return data }
-        let size = CGSize(width: image.size.width * scale, height: image.size.height * scale)
-        let renderer = UIGraphicsImageRenderer(size: size)
-        return renderer.jpegData(withCompressionQuality: 0.9) { _ in
-            image.draw(in: CGRect(origin: .zero, size: size))
-        }
+        let options = [kCGImageSourceShouldCache: false] as CFDictionary
+        guard let source = CGImageSourceCreateWithData(data as CFData, options),
+              let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
+              let width = properties[kCGImagePropertyPixelWidth] as? CGFloat,
+              let height = properties[kCGImagePropertyPixelHeight] as? CGFloat
+        else { return data }
+        guard max(width, height) > maxDimension else { return data }
+
+        // UIImage(data:) önce tam çözünürlüklü bitmap oluşturuyordu. ImageIO doğrudan
+        // hedef boyutta decode ederek 48 MP karelerdeki büyük bellek sıçramasını önler.
+        guard let image = ImageDownsampler.image(from: data, maxPixelSize: maxDimension) else { return data }
+        return image.jpegData(compressionQuality: 0.9) ?? data
     }
 
     private nonisolated static func sharedEntrySnapshot(

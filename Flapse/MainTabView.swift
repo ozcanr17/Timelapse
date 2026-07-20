@@ -13,9 +13,9 @@ struct MainTabView: View {
 
     @State private var tab: Tab = .home
     @Environment(StoreService.self) private var store
+    @Environment(\.modelContext) private var modelContext
     @Environment(\.theme) private var theme
-    @Query(filter: #Predicate<Project> { $0.deletedAt == nil }, sort: \Project.createdAt, order: .reverse)
-    private var projects: [Project]
+    @State private var captureProjects: [Project] = []
 
     @State private var showQuickPick = false
     @State private var pendingCapture: Project?
@@ -44,7 +44,7 @@ struct MainTabView: View {
     }
 
     private var activeProjects: [Project] {
-        projects.filter { !$0.isDeleted && $0.deletedAt == nil }
+        captureProjects.filter { !$0.isDeleted && $0.deletedAt == nil }
     }
 
     private var liveProjects: [Project] {
@@ -117,8 +117,9 @@ struct MainTabView: View {
         .onOpenURL { url in
             guard url.scheme == "flapse", url.host == "capture" else { return }
             captureRoute = nil
+            refreshCaptureProjects()
             if let due = capturableProjects.first(where: { $0.isCaptureDue() }) {
-                let count = due.sortedEntries.filter { !$0.isDeleted }.count
+                let count = liveEntryCount(in: due)
                 if FeatureGate.canAddEntry(isPro: store.isPro, currentEntryCount: count) {
                     CameraService.shared.prewarm(position: CameraCaptureViewModel.initialPosition(for: due.category))
                     captureRoute = .project(due)
@@ -336,6 +337,7 @@ struct MainTabView: View {
     }
 
     private func captureTapped() {
+        refreshCaptureProjects()
         guard !liveProjects.isEmpty else {
             tab = .projects
             return
@@ -349,7 +351,7 @@ struct MainTabView: View {
     }
 
     private func beginCapture(_ project: Project) {
-        let count = project.sortedEntries.filter { !$0.isDeleted }.count
+        let count = liveEntryCount(in: project)
         if FeatureGate.canAddEntry(isPro: store.isPro, currentEntryCount: count) {
             CameraService.shared.prewarm(position: CameraCaptureViewModel.initialPosition(for: project.category))
             captureRoute = .project(project)
@@ -364,7 +366,7 @@ struct MainTabView: View {
             return
         }
         pendingCapture = nil
-        let count = project.sortedEntries.filter { !$0.isDeleted }.count
+        let count = liveEntryCount(in: project)
         if FeatureGate.canAddEntry(isPro: store.isPro, currentEntryCount: count) {
             CameraService.shared.prewarm(position: CameraCaptureViewModel.initialPosition(for: project.category))
             captureRoute = .project(project)
@@ -372,6 +374,18 @@ struct MainTabView: View {
             CameraService.shared.stop()
             showPaywall = true
         }
+    }
+
+    private func refreshCaptureProjects() {
+        let descriptor = FetchDescriptor<Project>(
+            predicate: #Predicate { $0.deletedAt == nil },
+            sortBy: [SortDescriptor(\Project.createdAt, order: .reverse)]
+        )
+        captureProjects = (try? modelContext.fetch(descriptor)) ?? []
+    }
+
+    private func liveEntryCount(in project: Project) -> Int {
+        (project.entries ?? []).lazy.filter { !$0.isDeleted && $0.deletedAt == nil }.count
     }
 }
 
@@ -402,7 +416,7 @@ struct QuickCaptureSheet: View {
                             }
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(project.title).font(Theme.headline(16)).foregroundStyle(theme.ink)
-                                Text("\(project.sortedEntries.count) kare")
+                                Text("\((project.entries ?? []).lazy.filter { !$0.isDeleted && $0.deletedAt == nil }.count) kare")
                                     .font(Theme.caption(12)).foregroundStyle(theme.inkMuted)
                             }
                             Spacer()
