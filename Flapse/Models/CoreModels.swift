@@ -6,7 +6,7 @@ import SwiftData
 /// Projenin neyi takip ettiğini belirtir. String tabanlı olduğu için SwiftData ve
 /// CloudKit bunu sorunsuz saklar; CaseIterable sayesinde arayüzde seçim listesi
 /// olarak gösterebiliriz.
-enum ProjectCategory: String, Codable, CaseIterable, Identifiable {
+enum ProjectCategory: String, Codable, CaseIterable, Identifiable, Sendable {
     case selfPortrait = "self"
     case person
     case child
@@ -46,7 +46,7 @@ enum ProjectCategory: String, Codable, CaseIterable, Identifiable {
 
 /// Çekim sıklığı (kadans). Hatırlatıcıların ve "çekim zamanı geldi mi?" mantığının
 /// temelini oluşturur.
-enum CaptureCadence: String, Codable, CaseIterable, Identifiable {
+enum CaptureCadence: String, Codable, CaseIterable, Identifiable, Sendable {
     case daily
     case everyOtherDay = "every_other_day"
     case weekly

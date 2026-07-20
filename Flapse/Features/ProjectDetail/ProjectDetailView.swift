@@ -1306,27 +1306,12 @@ private struct TimelineEntryRow: View {
         .accessibilityIdentifier("timelineCard")
         .accessibilityValue(isSelected ? Text("Seçili") : Text("Seçili değil"))
         .task(id: entry.imageCacheKey) {
-            guard let imageData = entry.imageData else {
-                photo = nil
-                return
-            }
-            let preview = await ImageDownsampler.cachedImage(
-                key: "row-preview-\(entry.imageCacheKey)",
-                maxPixelSize: ProjectDetailView.timelinePreviewPixelSize
-            ) { imageData }
-            guard !Task.isCancelled else { return }
-            photo = preview
-
-            await Task.yield()
             let detailed = await ImageDownsampler.cachedImage(
-                key: "row-detail-\(entry.imageCacheKey)",
-                maxPixelSize: 900,
-                priority: .utility
-            ) { imageData }
+                key: "row-\(entry.imageCacheKey)",
+                maxPixelSize: 720
+            ) { entry.imageData }
             guard !Task.isCancelled else { return }
-            if let detailed {
-                photo = detailed
-            }
+            photo = detailed
             await resolvePlaceIfNeeded()
         }
     }

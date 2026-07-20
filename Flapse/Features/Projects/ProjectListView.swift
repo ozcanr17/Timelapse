@@ -438,27 +438,10 @@ private struct ProjectCard: View {
         .contentShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .task(id: "\(last?.imageCacheKey ?? "empty")-\(isActive)") {
             guard isActive, let last else { return }
-            guard let imageData = last.imageData else {
-                photo = nil
-                return
-            }
-            let preview = await ImageDownsampler.cachedImage(
-                key: "card-preview-\(last.imageCacheKey)",
-                maxPixelSize: 420
-            ) { imageData }
-            guard !Task.isCancelled else { return }
-            photo = preview
-
-            await Task.yield()
-            let detailed = await ImageDownsampler.cachedImage(
-                key: "card-detail-\(last.imageCacheKey)",
-                maxPixelSize: 800,
-                priority: .utility
-            ) { imageData }
-            guard !Task.isCancelled else { return }
-            if let detailed {
-                photo = detailed
-            }
+            photo = await ImageDownsampler.cachedImage(
+                key: "card-\(last.imageCacheKey)",
+                maxPixelSize: 640
+            ) { last.imageData }
         }
     }
 

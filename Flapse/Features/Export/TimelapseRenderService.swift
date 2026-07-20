@@ -16,8 +16,11 @@ enum TimelapseLibrary {
     @MainActor
     static func save(videoURL: URL, title: String, context: ModelContext) async throws -> SavedTimelapse {
         let fileName = "\(UUID().uuidString).mp4"
-        let destination = directory.appendingPathComponent(fileName)
-        try FileManager.default.copyItem(at: videoURL, to: destination)
+        let destination = try await Task.detached(priority: .utility) {
+            let destination = directory.appendingPathComponent(fileName)
+            try FileManager.default.copyItem(at: videoURL, to: destination)
+            return destination
+        }.value
 
         let asset = AVURLAsset(url: destination)
         let duration = (try? await asset.load(.duration).seconds) ?? 0
@@ -25,7 +28,14 @@ enum TimelapseLibrary {
 
         let item = SavedTimelapse(title: title, fileName: fileName, duration: duration, posterData: posterData)
         context.insert(item)
-        try context.save()
+        do {
+            try context.save()
+        } catch {
+            await Task.detached(priority: .utility) {
+                try? FileManager.default.removeItem(at: destination)
+            }.value
+            throw error
+        }
         return item
     }
 
@@ -234,8 +244,8 @@ final class TimelapseRenderService {
         guard let job = jobs.first(where: { $0.id == projectID }),
               case .finished(let url) = job.viewModel.phase else { return nil }
         let saved = try? await TimelapseLibrary.save(videoURL: url, title: job.title, context: context)
-        if saved != nil, let index = jobs.firstIndex(where: { $0.id == projectID }) {
-            jobs[index].isSaved = true
+        if saved != nil {
+            jobs.removeAll { $0.id == projectID }
         }
         return saved
     }

@@ -14,22 +14,30 @@ enum WidgetStateWriter {
         let today = calendar.startOfDay(for: .now)
         var capturedDates: [Date] = []
         var projectCovers: [(project: Project, entry: Entry?)] = []
+        var recentDayCounts = Array(repeating: 0, count: 7)
+        var dueCount = 0
 
         for project in liveProjects {
-            let entries = (project.entries ?? []).filter { !$0.isDeleted && $0.deletedAt == nil }
-            capturedDates.append(contentsOf: entries.map(\.capturedAt))
-            projectCovers.append((project, entries.max { $0.capturedAt < $1.capturedAt }))
-        }
-
-        let recentDayCounts = (0..<7).map { offset in
-            let day = calendar.date(byAdding: .day, value: -offset, to: today) ?? today
-            return capturedDates.reduce(into: 0) { count, date in
-                if calendar.isDate(date, inSameDayAs: day) { count += 1 }
+            var last: Entry?
+            for entry in project.entries ?? [] where !entry.isDeleted && entry.deletedAt == nil {
+                capturedDates.append(entry.capturedAt)
+                if last == nil || entry.capturedAt > (last?.capturedAt ?? .distantPast) {
+                    last = entry
+                }
+                let day = calendar.startOfDay(for: entry.capturedAt)
+                if let offset = calendar.dateComponents([.day], from: day, to: today).day,
+                   recentDayCounts.indices.contains(offset) {
+                    recentDayCounts[offset] += 1
+                }
             }
+            if project.cadence.isCaptureDue(lastCapture: last?.capturedAt) {
+                dueCount += 1
+            }
+            projectCovers.append((project, last))
         }
         defaults.set(ActivitySummary.streak(capturedDates: capturedDates), forKey: "widget.streak")
         defaults.set(recentDayCounts.first.map { $0 > 0 } ?? false, forKey: "widget.capturedToday")
-        defaults.set(liveProjects.filter { $0.isCaptureDue() }.count, forKey: "widget.dueCount")
+        defaults.set(dueCount, forKey: "widget.dueCount")
         defaults.set(capturedDates.count, forKey: "widget.totalCaptures")
         defaults.set(liveProjects.count, forKey: "widget.activeProjectCount")
         defaults.set(recentDayCounts, forKey: "widget.recentDayCounts")

@@ -188,6 +188,33 @@ final class FlapseUITests: XCTestCase {
     }
 
     @MainActor
+    func testRapidTabNavigationRemainsResponsive() throws {
+        let app = XCUIApplication()
+        app.launchArguments += ["--uitests", "-auth.appleUserID", "uitest-user", "-AppleLanguages", "(tr)", "-AppleLocale", "tr_TR"]
+        app.launchEnvironment["FLAPSE_UI_TESTS"] = "1"
+        app.launch()
+
+        let startButton = app.buttons["Başla"]
+        if startButton.waitForExistence(timeout: 5) {
+            startButton.tap()
+        }
+
+        let tabs = ["projectsTab", "savedTab", "settingsButton", "homeTab"].map { app.buttons[$0] }
+        XCTAssertTrue(tabs.allSatisfy { $0.waitForExistence(timeout: 5) })
+
+        let options = XCTMeasureOptions()
+        options.iterationCount = 3
+        measure(metrics: [XCTClockMetric()], options: options) {
+            for tab in tabs {
+                tab.tap()
+                XCTAssertTrue(tab.waitForExistence(timeout: 2))
+            }
+        }
+
+        XCTAssertTrue(app.buttons["homeTab"].isSelected)
+    }
+
+    @MainActor
     private func attachScreenshot(of app: XCUIApplication, named name: String) {
         let attachment = XCTAttachment(screenshot: app.screenshot())
         attachment.name = name

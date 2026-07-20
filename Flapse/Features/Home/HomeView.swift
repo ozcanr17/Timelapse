@@ -82,7 +82,12 @@ struct HomeView: View {
                                 onCapture(firstDueProject)
                             }
                         }
-                        ActivityHeroCard(projects: liveProjects, entries: liveEntries, isActive: isActive)
+                        ActivityHeroCard(
+                            totalCaptures: liveEntries.count,
+                            dueCount: dueProjects.count,
+                            entries: liveEntries,
+                            isActive: isActive
+                        )
                         if dueProjects.count > 1 {
                             dueSection
                         }
@@ -356,21 +361,12 @@ private struct RecentEntryThumb: View {
 }
 
 struct ActivityHeroCard: View {
-    let projects: [Project]
+    let totalCaptures: Int
+    let dueCount: Int
     let entries: [Entry]
     let isActive: Bool
 
     @Environment(\.theme) private var theme
-
-    private var liveProjects: [Project] {
-        projects.filter { !$0.isDeleted && $0.deletedAt == nil && !$0.isHidden }
-    }
-
-    private var totalCaptures: Int { entries.count }
-
-    private var dueCount: Int {
-        liveProjects.filter { $0.isCaptureDue() }.count
-    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -433,9 +429,15 @@ private struct ContributionGrid: View {
 
     private var countsByDay: [Date: Int] {
         let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        let earliest = calendar.date(byAdding: .day, value: -(weeks * 7), to: today) ?? today
         var counts: [Date: Int] = [:]
         for entry in entries {
-            counts[calendar.startOfDay(for: entry.capturedAt), default: 0] += 1
+            let day = calendar.startOfDay(for: entry.capturedAt)
+            if day < earliest { break }
+            if day <= today {
+                counts[day, default: 0] += 1
+            }
         }
         return counts
     }
@@ -446,7 +448,8 @@ private struct ContributionGrid: View {
         let earliest = calendar.date(byAdding: .day, value: -(weeks * 7), to: today) ?? today
         var hasher = Hasher()
         hasher.combine(isActive)
-        for entry in entries where entry.capturedAt >= earliest {
+        for entry in entries {
+            if entry.capturedAt < earliest { break }
             hasher.combine(entry.id)
             hasher.combine(entry.imageRevision)
             hasher.combine(entry.capturedAt)
@@ -513,7 +516,8 @@ private struct ContributionGrid: View {
         var latestByDay: [Date: Entry] = [:]
         for entry in entries {
             let day = calendar.startOfDay(for: entry.capturedAt)
-            guard day >= earliest, day <= today else { continue }
+            if day < earliest { break }
+            guard day <= today else { continue }
             if let current = latestByDay[day], current.capturedAt >= entry.capturedAt { continue }
             latestByDay[day] = entry
         }

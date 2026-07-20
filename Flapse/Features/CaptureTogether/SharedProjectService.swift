@@ -13,7 +13,10 @@ final class SharedProjectService {
     private var privateDB: CKDatabase { container.privateCloudDatabase }
     private var sharedDB: CKDatabase { container.sharedCloudDatabase }
     private var pendingPushes: [UUID: Task<Void, Never>] = [:]
+    private var synchronizationTasks: [UUID: Task<Void, Never>] = [:]
     private var zoneRecordCaches: [String: ZoneRecordCache] = [:]
+    private var zoneCacheOrder: [String] = []
+    private let zoneCacheLimit = 24
 
     enum RecordType {
         static let project = "SharedProject"
@@ -151,6 +154,21 @@ final class SharedProjectService {
     }
 
     func synchronize(_ project: Project, context: ModelContext) async {
+        if let task = synchronizationTasks[project.id] {
+            await task.value
+            return
+        }
+        let projectID = project.id
+        let task = Task { @MainActor [weak self, weak project] in
+            guard let self, let project else { return }
+            await self.performSynchronization(project, context: context)
+        }
+        synchronizationTasks[projectID] = task
+        await task.value
+        synchronizationTasks[projectID] = nil
+    }
+
+    private func performSynchronization(_ project: Project, context: ModelContext) async {
         do {
             guard let reference = try await resolveReference(for: project) else { return }
             let database = database(for: reference.zoneID)
@@ -162,16 +180,18 @@ final class SharedProjectService {
             project.cloudRootRecordName = root.recordID.recordName
             project.cloudZoneName = root.recordID.zoneID.zoneName
             project.cloudOwnerName = root.recordID.zoneID.ownerName
+            let localImageVersions = localImageVersions(for: project)
             let remote = await makeSnapshot(
                 records: records,
                 root: root,
                 shareRecordName: project.cloudShareRecordName ?? "",
-                zoneID: reference.zoneID
+                zoneID: reference.zoneID,
+                localImageVersions: localImageVersions
             )
             repairMisassignedEntries(in: project, rootID: root.recordID, records: records, context: context)
             merge(remote, into: project, context: context)
             try context.save()
-            try await upload(makeLocalSnapshot(project), to: database, comparedTo: records)
+            try await upload(makeLocalSnapshot(project, comparedTo: records), to: database, comparedTo: records)
             try? await installSubscription(zoneID: reference.zoneID, database: database)
         } catch {
             return
@@ -189,9 +209,9 @@ final class SharedProjectService {
                 let project,
                 let reference = try? await self.resolveReference(for: project)
             else { return }
-            let snapshot = self.makeLocalSnapshot(project)
             let database = self.database(for: reference.zoneID)
             let records = try? await self.records(in: reference.zoneID, database: database)
+            let snapshot = self.makeLocalSnapshot(project, comparedTo: records)
             try? await self.upload(snapshot, to: database, comparedTo: records)
             self.pendingPushes[project.id] = nil
         }
@@ -397,13 +417,23 @@ final class SharedProjectService {
                     cache.records[deletion.recordID] = nil
                 }
                 cache.changeToken = changes.changeToken
-                zoneRecordCaches[cacheKey] = cache
+                store(cache, for: cacheKey)
                 if !changes.moreComing { break }
             } while true
             return Array(cache.records.values)
         } catch let error as CKError where error.code == .changeTokenExpired && canRecoverExpiredToken {
             zoneRecordCaches[cacheKey] = nil
+            zoneCacheOrder.removeAll { $0 == cacheKey }
             return try await records(in: zoneID, database: database, canRecoverExpiredToken: false)
+        }
+    }
+
+    private func store(_ cache: ZoneRecordCache, for key: String) {
+        zoneRecordCaches[key] = cache
+        zoneCacheOrder.removeAll { $0 == key }
+        zoneCacheOrder.append(key)
+        while zoneCacheOrder.count > zoneCacheLimit {
+            zoneRecordCaches[zoneCacheOrder.removeFirst()] = nil
         }
     }
 
@@ -411,7 +441,8 @@ final class SharedProjectService {
         records: [CKRecord],
         root: CKRecord,
         shareRecordName: String,
-        zoneID: CKRecordZone.ID
+        zoneID: CKRecordZone.ID,
+        localImageVersions: [UUID: Date]? = nil
     ) async -> SharedProjectSnapshot {
         let entryRecords = records
             .filter {
@@ -419,7 +450,12 @@ final class SharedProjectService {
             }
         let entries = await Task.detached(priority: .utility) {
             entryRecords
-                .compactMap(Self.sharedEntrySnapshot)
+                .compactMap { record in
+                    let id = UUID(uuidString: record.recordID.recordName)
+                    let remoteImageDate = record["imageUpdatedAt"] as? Date ?? record.modificationDate ?? .distantPast
+                    let includeImage = id.flatMap { localImageVersions?[$0] }.map { remoteImageDate > $0 } ?? true
+                    return Self.sharedEntrySnapshot(record, includeImage: includeImage)
+                }
                 .sorted { $0.capturedAt < $1.capturedAt }
         }.value
         return SharedProjectSnapshot(
@@ -440,11 +476,12 @@ final class SharedProjectService {
         )
     }
 
-    private func makeLocalSnapshot(_ project: Project) -> LocalProjectSnapshot {
+    private func makeLocalSnapshot(_ project: Project, comparedTo remoteRecords: [CKRecord]? = nil) -> LocalProjectSnapshot {
         let zoneID = CKRecordZone.ID(
             zoneName: project.cloudZoneName ?? projectZoneID(for: project.id).zoneName,
             ownerName: project.cloudOwnerName ?? CKCurrentUserDefaultName
         )
+        let remoteByID = recordsByID(remoteRecords ?? [])
         return LocalProjectSnapshot(
             rootRecordName: project.cloudRootRecordName ?? project.id.uuidString,
             zoneID: zoneID,
@@ -456,9 +493,14 @@ final class SharedProjectService {
             updatedAt: project.sharedUpdatedAt ?? project.createdAt,
             purgedEntryIDs: project.cloudPurgedEntryIDs,
             entries: (project.entries ?? []).filter { !$0.isDeleted }.map {
-                LocalEntrySnapshot(
+                let recordID = CKRecord.ID(recordName: $0.id.uuidString, zoneID: zoneID)
+                let remoteImageDate = remoteByID[recordID]?["imageUpdatedAt"] as? Date ?? .distantPast
+                let imageUpdatedAt = $0.sharedImageUpdatedAt ?? $0.capturedAt
+                return LocalEntrySnapshot(
                     id: $0.id,
-                    data: $0.imageData,
+                    data: remoteRecords == nil || remoteByID[recordID] == nil || imageUpdatedAt > remoteImageDate
+                        ? $0.imageData
+                        : nil,
                     capturedAt: $0.capturedAt,
                     imageRevision: $0.imageRevision,
                     latitude: $0.latitude,
@@ -466,10 +508,18 @@ final class SharedProjectService {
                     placeName: $0.placeName,
                     deletedAt: $0.deletedAt,
                     updatedAt: $0.sharedUpdatedAt ?? $0.capturedAt,
-                    imageUpdatedAt: $0.sharedImageUpdatedAt ?? $0.capturedAt
+                    imageUpdatedAt: imageUpdatedAt
                 )
             }
         )
+    }
+
+    private func localImageVersions(for project: Project) -> [UUID: Date] {
+        var result: [UUID: Date] = [:]
+        for entry in project.entries ?? [] where !entry.isDeleted {
+            result[entry.id] = entry.sharedImageUpdatedAt ?? entry.capturedAt
+        }
+        return result
     }
 
     private func merge(_ snapshot: SharedProjectSnapshot, into project: Project, context: ModelContext) {
@@ -605,10 +655,13 @@ final class SharedProjectService {
         }
     }
 
-    private nonisolated static func sharedEntrySnapshot(_ record: CKRecord) -> SharedEntrySnapshot? {
+    private nonisolated static func sharedEntrySnapshot(
+        _ record: CKRecord,
+        includeImage: Bool = true
+    ) -> SharedEntrySnapshot? {
         guard let id = UUID(uuidString: record.recordID.recordName) else { return nil }
         let asset = record["image"] as? CKAsset
-        let data = asset?.fileURL.flatMap { try? Data(contentsOf: $0, options: .mappedIfSafe) }
+        let data = includeImage ? asset?.fileURL.flatMap { try? Data(contentsOf: $0, options: .mappedIfSafe) } : nil
         return SharedEntrySnapshot(
             id: id,
             data: data,

@@ -44,6 +44,7 @@ final class TimelapseExportViewModel {
     ) {
         renderTask?.cancel()
         guard frames.count >= 2 else {
+            retryAction = nil
             phase = .failed(String(localized: "Timelapse için en az 2 çekim gerekli.", bundle: .appLanguage))
             return
         }
@@ -105,19 +106,27 @@ final class TimelapseExportViewModel {
                 )
                 try Task.checkCancellation()
                 self?.phase = .finished(url)
+                self?.retryAction = nil
+                self?.renderTask = nil
             } catch is CancellationError {
             } catch {
                 guard !Task.isCancelled else { return }
                 if UIApplication.shared.applicationState != .active {
                     self?.failedInBackground = true
+                } else {
+                    self?.retryAction = nil
                 }
                 self?.phase = .failed(String(localized: "Video oluşturulamadı: \(error.localizedDescription)", bundle: .appLanguage))
+                self?.renderTask = nil
             }
         }
     }
 
     func cancel() {
         renderTask?.cancel()
+        renderTask = nil
+        retryAction = nil
+        failedInBackground = false
         if phase == .rendering {
             phase = .idle
             progress = 0
@@ -128,6 +137,7 @@ final class TimelapseExportViewModel {
         guard phase == .rendering else { return }
         failedInBackground = true
         renderTask?.cancel()
+        renderTask = nil
         phase = .idle
     }
 
@@ -160,7 +170,7 @@ final class TimelapseExportViewModel {
     }
 
     func retryAfterBackgroundFailure() -> Bool {
-        guard failedInBackground else { return false }
+        guard failedInBackground, retryAction != nil else { return false }
         failedInBackground = false
         retryAction?()
         return true

@@ -28,9 +28,20 @@ struct EntryViewerView: View {
     }
 
     private var entries: [Entry] {
-        let live = sourceEntries
-            .filter { !$0.isDeleted }
-            .sorted { $0.capturedAt < $1.capturedAt }
+        var live: [Entry] = []
+        live.reserveCapacity(sourceEntries.count)
+        var isChronological = true
+        var previousDate = Date.distantPast
+        for entry in sourceEntries where !entry.isDeleted {
+            if entry.capturedAt < previousDate {
+                isChronological = false
+            }
+            previousDate = entry.capturedAt
+            live.append(entry)
+        }
+        if !isChronological {
+            live.sort { $0.capturedAt < $1.capturedAt }
+        }
         guard !store.isPro else { return live }
         return Array(live.suffix(FeatureGate.freeEntryLimit))
     }

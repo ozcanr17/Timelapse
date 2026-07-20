@@ -12,8 +12,10 @@ struct AutoCaptureFlow: View {
 
     @State private var phase: Phase = .capturing
     @State private var lastData: Data?
+    @State private var previewImage: UIImage?
     @State private var signature: SubjectSignature = .empty
     @State private var isCreatingProject = false
+    @State private var classificationTask: Task<Void, Never>?
 
     private let classifier: SubjectClassifying = SubjectClassifier()
     @State private var locationService = LocationService()
@@ -71,13 +73,17 @@ struct AutoCaptureFlow: View {
                 assign(to: project)
             }
         }
+        .onDisappear {
+            classificationTask?.cancel()
+            classificationTask = nil
+        }
     }
 
     private var reviewOverlay: some View {
         ZStack {
             Color.black.opacity(0.85).ignoresSafeArea()
             VStack(spacing: 20) {
-                if let data = lastData, let image = UIImage(data: data) {
+                if let image = previewImage {
                     Image(uiImage: image)
                         .resizable()
                         .scaledToFit()
@@ -102,6 +108,7 @@ struct AutoCaptureFlow: View {
                     .accessibilityIdentifier("usePhotoButton")
                     Button {
                         lastData = nil
+                        previewImage = nil
                         withAnimation { phase = .capturing }
                     } label: {
                         Label("Tekrar Çek", systemImage: "arrow.counterclockwise")
@@ -143,7 +150,7 @@ struct AutoCaptureFlow: View {
         ZStack {
             Color.black.opacity(0.7).ignoresSafeArea()
             VStack(spacing: 18) {
-                if let data = lastData, let image = UIImage(data: data) {
+                if let image = previewImage {
                     Image(uiImage: image)
                         .resizable()
                         .scaledToFill()
@@ -181,6 +188,7 @@ struct AutoCaptureFlow: View {
                     HStack(spacing: 22) {
                         Button {
                             lastData = nil
+                            previewImage = nil
                             withAnimation { phase = .capturing }
                         } label: {
                             Label("Tekrar Çek", systemImage: "arrow.counterclockwise")
@@ -238,11 +246,17 @@ struct AutoCaptureFlow: View {
     }
 
     private func handleCaptured(_ data: Data) {
+        classificationTask?.cancel()
         lastData = data
+        previewImage = nil
         withAnimation { phase = .classifying }
-        Task {
+        classificationTask = Task {
+            previewImage = await ImageDownsampler.image(from: data, maxPixelSize: 1200)
+            guard !Task.isCancelled else { return }
             await migrateSignaturesIfNeeded()
+            guard !Task.isCancelled else { return }
             let computed = await classifier.signature(for: data)
+            guard !Task.isCancelled else { return }
             signature = computed
             let sets = projects.compactMap(signatureSet(for:))
             switch ProjectMatcher.decide(for: computed, among: sets) {
@@ -255,6 +269,7 @@ struct AutoCaptureFlow: View {
             case .chooseManually:
                 withAnimation { phase = .reviewing }
             }
+            classificationTask = nil
         }
     }
 
@@ -271,6 +286,8 @@ struct AutoCaptureFlow: View {
             featurePrintData: signature.isEmpty ? nil : FeatureVector.data(from: signature.vector)
         )
         try? repository.addEntry(entry, to: project)
+        lastData = nil
+        previewImage = nil
         Task {
             if let resolved = await locationService.currentLocation() {
                 entry.latitude = resolved.latitude
