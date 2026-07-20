@@ -69,6 +69,7 @@ struct MainTabView: View {
             TabView(selection: $tab) {
                 pane {
                     HomeView(
+                        isActive: tab == .home,
                         onCapture: beginCapture,
                         onShowProjects: { activate(barItems[1]) }
                     )
@@ -141,7 +142,7 @@ struct MainTabView: View {
 
     private var projectsPane: some View {
         NavigationStack(path: $projectsPath) {
-            ProjectListView()
+            ProjectListView(isActive: tab == .projects && !isCustomTabBarHidden)
                 .toolbarBackground(.hidden, for: .navigationBar)
         }
         .toolbar(.hidden, for: .tabBar)

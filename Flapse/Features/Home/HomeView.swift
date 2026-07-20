@@ -4,13 +4,16 @@ import UIKit
 
 struct HomeView: View {
 
+    let isActive: Bool
     let onCapture: (Project) -> Void
     let onShowProjects: () -> Void
 
     init(
+        isActive: Bool = true,
         onCapture: @escaping (Project) -> Void = { _ in },
         onShowProjects: @escaping () -> Void = {}
     ) {
+        self.isActive = isActive
         self.onCapture = onCapture
         self.onShowProjects = onShowProjects
     }
@@ -79,7 +82,7 @@ struct HomeView: View {
                                 onCapture(firstDueProject)
                             }
                         }
-                        ActivityHeroCard(projects: liveProjects, entries: liveEntries)
+                        ActivityHeroCard(projects: liveProjects, entries: liveEntries, isActive: isActive)
                         if dueProjects.count > 1 {
                             dueSection
                         }
@@ -355,6 +358,7 @@ private struct RecentEntryThumb: View {
 struct ActivityHeroCard: View {
     let projects: [Project]
     let entries: [Entry]
+    let isActive: Bool
 
     @Environment(\.theme) private var theme
 
@@ -388,7 +392,7 @@ struct ActivityHeroCard: View {
                 )
             }
 
-            ContributionGrid(entries: entries, accent: theme.accent)
+            ContributionGrid(entries: entries, accent: theme.accent, isActive: isActive)
 
             if dueCount > 0 {
                 Label("Bugün \(dueCount) projede çekim zamanı", systemImage: "bell.fill")
@@ -412,12 +416,20 @@ struct ActivityHeroCard: View {
 private struct ContributionGrid: View {
     let entries: [Entry]
     let accent: Color
+    let isActive: Bool
 
     @Environment(\.theme) private var theme
+    @Environment(\.displayScale) private var displayScale
+    @State private var thumbnails: [Date: GridThumbnail] = [:]
 
     private let weeks = 15
     private let cell: CGFloat = 11
     private let gap: CGFloat = 3
+
+    private struct GridThumbnail {
+        let cacheKey: String
+        let image: UIImage
+    }
 
     private var countsByDay: [Date: Int] {
         let calendar = Calendar.current
@@ -426,6 +438,20 @@ private struct ContributionGrid: View {
             counts[calendar.startOfDay(for: entry.capturedAt), default: 0] += 1
         }
         return counts
+    }
+
+    private var thumbnailRevisionKey: Int {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        let earliest = calendar.date(byAdding: .day, value: -(weeks * 7), to: today) ?? today
+        var hasher = Hasher()
+        hasher.combine(isActive)
+        for entry in entries where entry.capturedAt >= earliest {
+            hasher.combine(entry.id)
+            hasher.combine(entry.imageRevision)
+            hasher.combine(entry.capturedAt)
+        }
+        return hasher.finalize()
     }
 
     var body: some View {
@@ -444,6 +470,10 @@ private struct ContributionGrid: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+        .task(id: thumbnailRevisionKey) {
+            guard isActive else { return }
+            await loadThumbnails()
+        }
     }
 
     @ViewBuilder
@@ -452,9 +482,17 @@ private struct ContributionGrid: View {
             Color.clear.frame(width: cell, height: cell)
         } else {
             let date = calendar.date(byAdding: .day, value: -offset, to: today) ?? today
-            RoundedRectangle(cornerRadius: 2.5, style: .continuous)
-                .fill(fill(for: counts[date] ?? 0))
-                .frame(width: cell, height: cell)
+            if let thumbnail = thumbnails[date] {
+                Image(uiImage: thumbnail.image)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: cell, height: cell)
+                    .clipShape(RoundedRectangle(cornerRadius: 2.5, style: .continuous))
+            } else {
+                RoundedRectangle(cornerRadius: 2.5, style: .continuous)
+                    .fill(fill(for: counts[date] ?? 0))
+                    .frame(width: cell, height: cell)
+            }
         }
     }
 
@@ -465,6 +503,52 @@ private struct ContributionGrid: View {
         case 2:  accent.opacity(0.7)
         default: accent
         }
+    }
+
+    private func loadThumbnails() async {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        guard let earliest = calendar.date(byAdding: .day, value: -(weeks * 7), to: today) else { return }
+
+        var latestByDay: [Date: Entry] = [:]
+        for entry in entries {
+            let day = calendar.startOfDay(for: entry.capturedAt)
+            guard day >= earliest, day <= today else { continue }
+            if let current = latestByDay[day], current.capturedAt >= entry.capturedAt { continue }
+            latestByDay[day] = entry
+        }
+
+        let expectedKeys = latestByDay.mapValues(\.imageCacheKey)
+        var next = thumbnails.filter { day, thumbnail in
+            expectedKeys[day] == thumbnail.cacheKey
+        }
+        let targets = latestByDay.sorted { $0.key > $1.key }
+        let pixelSize = max(44, ceil(cell * displayScale * 1.5))
+        var pendingChanges = 0
+
+        for (day, entry) in targets {
+            guard !Task.isCancelled else { return }
+            let cacheKey = entry.imageCacheKey
+            guard next[day]?.cacheKey != cacheKey else { continue }
+            guard let image = await ImageDownsampler.cachedImage(
+                key: "grid-\(cacheKey)",
+                maxPixelSize: pixelSize,
+                priority: .utility,
+                load: { entry.imageData }
+            ) else { continue }
+            guard !Task.isCancelled else { return }
+            next[day] = GridThumbnail(cacheKey: cacheKey, image: image)
+            pendingChanges += 1
+
+            // Her karede body'yi yenilemek yerine küçük partiler halinde göster.
+            if pendingChanges.isMultiple(of: 8) {
+                thumbnails = next
+                await Task.yield()
+            }
+        }
+
+        guard !Task.isCancelled else { return }
+        thumbnails = next
     }
 }
 

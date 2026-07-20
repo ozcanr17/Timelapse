@@ -16,9 +16,13 @@ enum ImageDownsampler {
         return UIImage(cgImage: cgImage)
     }
 
-    static func image(from data: Data?, maxPixelSize: CGFloat) async -> UIImage? {
+    static func image(
+        from data: Data?,
+        maxPixelSize: CGFloat,
+        priority: TaskPriority = .userInitiated
+    ) async -> UIImage? {
         guard let data else { return nil }
-        return await Task.detached(priority: .userInitiated) {
+        return await Task.detached(priority: priority) {
             image(from: data, maxPixelSize: maxPixelSize)
         }.value
     }
@@ -28,12 +32,13 @@ enum ImageDownsampler {
     static func cachedImage(
         key: String,
         maxPixelSize: CGFloat,
+        priority: TaskPriority = .userInitiated,
         load: () -> Data?
     ) async -> UIImage? {
         let fullKey = "\(key)-\(Int(maxPixelSize))" as NSString
         if let hit = ThumbnailCache.shared.object(forKey: fullKey) { return hit }
         guard let data = load() else { return nil }
-        guard let decoded = await image(from: data, maxPixelSize: maxPixelSize) else { return nil }
+        guard let decoded = await image(from: data, maxPixelSize: maxPixelSize, priority: priority) else { return nil }
         let cost = decoded.cgImage.map { $0.bytesPerRow * $0.height } ?? 0
         ThumbnailCache.shared.setObject(decoded, forKey: fullKey, cost: cost)
         return decoded

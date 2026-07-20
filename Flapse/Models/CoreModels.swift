@@ -216,7 +216,7 @@ final class Project {
 
     /// En son çekimin tarihi (hiç yoksa nil).
     var lastCaptureDate: Date? {
-        (entries ?? [])
+        (entries ?? []).lazy
             .filter { !$0.isDeleted && $0.deletedAt == nil }
             .map(\.capturedAt)
             .max()

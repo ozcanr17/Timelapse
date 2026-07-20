@@ -5,6 +5,12 @@ import UIKit
 /// Projeleri listeleyen ana ekran.
 struct ProjectListView: View {
 
+    let isActive: Bool
+
+    init(isActive: Bool = true) {
+        self.isActive = isActive
+    }
+
     @Query(filter: #Predicate<Project> { $0.deletedAt == nil }, sort: \Project.createdAt, order: .reverse)
     private var projects: [Project]
     @Environment(\.modelContext) private var modelContext
@@ -45,27 +51,27 @@ struct ProjectListView: View {
         activeProjects.filter { !$0.isHidden }
     }
 
-    private var unlockedProjectID: UUID? {
-        FeatureGate.unlockedProjectID(
-            isPro: store.isPro,
-            projects: activeProjects.map { (id: $0.id, createdAt: $0.createdAt) }
-        )
-    }
-
-    private func isLocked(_ project: Project) -> Bool {
+    private func isLocked(_ project: Project, unlockedProjectID: UUID?) -> Bool {
         guard !store.isPro else { return false }
         return project.id != unlockedProjectID
     }
 
     var body: some View {
+        let sortedProjects = activeProjects
+        let visibleProjects = sortedProjects.filter { !$0.isHidden }
+        let unlockedID = FeatureGate.unlockedProjectID(
+            isPro: store.isPro,
+            projects: sortedProjects.map { (id: $0.id, createdAt: $0.createdAt) }
+        )
+        let jobs = visibleJobs(projectIDs: Set(visibleProjects.map(\.id)))
         ZStack {
             theme.canvas.ignoresSafeArea()
 
-            if liveProjects.isEmpty && visibleJobs.isEmpty {
+            if visibleProjects.isEmpty && jobs.isEmpty {
                 EmptyProjectsView(onCreate: addProjectTapped, onImport: importTapped)
             } else {
                 List {
-                    ForEach(visibleJobs) { job in
+                    ForEach(jobs) { job in
                         Button {
                             openJob(job)
                         } label: {
@@ -76,10 +82,10 @@ struct ProjectListView: View {
                         .listRowBackground(Color.clear)
                         .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
                     }
-                    ForEach(liveProjects) { project in
-                        ProjectCard(project: project)
+                    ForEach(visibleProjects) { project in
+                        ProjectCard(project: project, isActive: isActive)
                                 .overlay {
-                                    if isLocked(project) {
+                                    if isLocked(project, unlockedProjectID: unlockedID) {
                                         Button {
                                             activeSheet = .paywall
                                         } label: {
@@ -206,9 +212,9 @@ struct ProjectListView: View {
             .frame(width: 30, height: 30, alignment: .center)
     }
 
-    private var visibleJobs: [TimelapseRenderService.Job] {
+    private func visibleJobs(projectIDs: Set<UUID>) -> [TimelapseRenderService.Job] {
         (renderService.activeJobs + renderService.finishedJobs)
-            .filter { job in liveProjects.contains { $0.id == job.id } }
+            .filter { projectIDs.contains($0.id) }
     }
 
     private func openJob(_ job: TimelapseRenderService.Job) {
@@ -323,18 +329,47 @@ struct ProjectListView: View {
 /// için koyu geçiş, başlık ve ilerleme biner. Fotoğraf yoksa kategori rengine düşer.
 private struct ProjectCard: View {
     let project: Project
+    let isActive: Bool
 
     @Environment(\.theme) private var theme
     @State private var photo: UIImage?
 
     private var accent: Color { Theme.accent(for: project.category) }
 
+    private struct Snapshot {
+        let last: Entry?
+        let count: Int
+        let streak: Int
+        let isDue: Bool
+    }
+
+    private var snapshot: Snapshot {
+        var last: Entry?
+        var capturedDates: [Date] = []
+        capturedDates.reserveCapacity(project.entries?.count ?? 0)
+
+        for entry in project.entries ?? [] where !entry.isDeleted && entry.deletedAt == nil {
+            capturedDates.append(entry.capturedAt)
+            if let current = last, current.capturedAt >= entry.capturedAt {
+                continue
+            } else {
+                last = entry
+            }
+        }
+        return Snapshot(
+            last: last,
+            count: capturedDates.count,
+            streak: ActivitySummary.streak(capturedDates: capturedDates),
+            isDue: project.cadence.isCaptureDue(lastCapture: last?.capturedAt)
+        )
+    }
+
     var body: some View {
-        let entries = (project.entries ?? []).filter { !$0.isDeleted && $0.deletedAt == nil }
-        let last = entries.max { $0.capturedAt < $1.capturedAt }
-        let count = entries.count
-        let streak = ActivitySummary.streak(capturedDates: entries.map(\.capturedAt))
-        let isDue = project.cadence.isCaptureDue(lastCapture: last?.capturedAt)
+        let snapshot = snapshot
+        let last = snapshot.last
+        let count = snapshot.count
+        let streak = snapshot.streak
+        let isDue = snapshot.isDue
         VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .top) {
                 Image(systemName: Theme.icon(for: project.category))
@@ -397,13 +432,33 @@ private struct ProjectCard: View {
         .shadow(color: .black.opacity(0.12), radius: 12, x: 0, y: 6)
         .overlay {
             if streak > 0 {
-                FireStreakBorder(cornerRadius: 24)
+                FireStreakBorder(cornerRadius: 24, isActive: isActive)
             }
         }
         .contentShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-        .task(id: last?.imageCacheKey) {
-            guard let last else { return }
-            photo = await ImageDownsampler.cachedImage(key: "card-\(last.imageCacheKey)", maxPixelSize: 800) { last.imageData }
+        .task(id: "\(last?.imageCacheKey ?? "empty")-\(isActive)") {
+            guard isActive, let last else { return }
+            guard let imageData = last.imageData else {
+                photo = nil
+                return
+            }
+            let preview = await ImageDownsampler.cachedImage(
+                key: "card-preview-\(last.imageCacheKey)",
+                maxPixelSize: 420
+            ) { imageData }
+            guard !Task.isCancelled else { return }
+            photo = preview
+
+            await Task.yield()
+            let detailed = await ImageDownsampler.cachedImage(
+                key: "card-detail-\(last.imageCacheKey)",
+                maxPixelSize: 800,
+                priority: .utility
+            ) { imageData }
+            guard !Task.isCancelled else { return }
+            if let detailed {
+                photo = detailed
+            }
         }
     }
 
@@ -422,6 +477,7 @@ private struct ProjectCard: View {
 
 private struct FireStreakBorder: View {
     let cornerRadius: CGFloat
+    let isActive: Bool
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var isMoving = false
@@ -442,9 +498,15 @@ private struct FireStreakBorder: View {
                 ),
                 lineWidth: 2
             )
-            .animation(reduceMotion ? nil : .linear(duration: 7).repeatForever(autoreverses: false), value: isMoving)
+            .animation(
+                reduceMotion || !isActive ? nil : .linear(duration: 7).repeatForever(autoreverses: false),
+                value: isMoving
+            )
             .allowsHitTesting(false)
-            .onAppear { isMoving = true }
+            .onAppear { isMoving = isActive }
+            .onChange(of: isActive) { _, active in
+                isMoving = active
+            }
             .onDisappear { isMoving = false }
     }
 }

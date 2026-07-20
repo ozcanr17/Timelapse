@@ -26,6 +26,11 @@ struct ProjectDetailView: View {
     @State private var isChoosingShareCard = false
     @State private var isSelectingEntries = false
     @State private var selectedEntryIDs: Set<UUID> = []
+    @State private var showsAllTimelineEntries = false
+    @State private var isRevealingTimelineEntries = false
+
+    private static let initialTimelineEntryCount = 10
+    fileprivate static let timelinePreviewPixelSize: CGFloat = 420
 
     private struct MonthKey: Hashable {
         let year: Int
@@ -603,7 +608,11 @@ struct ProjectDetailView: View {
     }
 
     private var timeline: some View {
-        let entries = displayedEntries
+        let allEntries = displayedEntries
+        let entries = showsAllTimelineEntries
+            ? allEntries
+            : Array(allEntries.prefix(Self.initialTimelineEntryCount))
+        let hiddenEntryCount = max(0, allEntries.count - entries.count)
         return LazyVStack(alignment: .leading, spacing: 0) {
             HStack {
                 Text(isSelectingEntries ? "\(selectedEntryIDs.count) seçildi" : "Zaman Çizelgesi")
@@ -673,11 +682,49 @@ struct ProjectDetailView: View {
                 }
             }
 
+            if hiddenEntryCount > 0 {
+                timelineContinuation(hiddenEntryCount: hiddenEntryCount)
+            }
+
             if lockedCount > 0 {
                 lockedEntriesBanner
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    @ViewBuilder
+    private func timelineContinuation(hiddenEntryCount: Int) -> some View {
+        if isRevealingTimelineEntries {
+            HStack(spacing: 10) {
+                ProgressView()
+                    .tint(accent)
+                Text("Fotoğraflar yüklenirken lütfen bekleyiniz")
+                    .font(Theme.body(14))
+                    .foregroundStyle(theme.inkMuted)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 18)
+            .accessibilityIdentifier("timelineLoadingMore")
+        } else {
+            Button(action: revealRemainingTimelineEntries) {
+                HStack(spacing: 8) {
+                    Text("Devamını Gör")
+                    Text("(\(hiddenEntryCount))")
+                        .monospacedDigit()
+                        .foregroundStyle(theme.inkMuted)
+                    Image(systemName: "chevron.down")
+                }
+                .font(Theme.headline(15))
+                .foregroundStyle(accent)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 14)
+                .background(accent.opacity(0.1), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            }
+            .buttonStyle(.plain)
+            .padding(.top, 2)
+            .accessibilityIdentifier("timelineLoadMoreButton")
+        }
     }
 
     private var selectionActionBar: some View {
@@ -775,11 +822,11 @@ struct ProjectDetailView: View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
                 FilterChip(title: String(localized: "Tümü", bundle: .appLanguage), isSelected: monthFilter == nil, accent: accent) {
-                    monthFilter = nil
+                    setMonthFilter(nil)
                 }
                 ForEach(availableMonths, id: \.self) { key in
                     FilterChip(title: monthLabel(key), isSelected: monthFilter == key, accent: accent) {
-                        monthFilter = key
+                        setMonthFilter(key)
                     }
                 }
             }
@@ -796,6 +843,46 @@ struct ProjectDetailView: View {
     private var displayedEntries: [Entry] {
         guard let monthFilter else { return accessibleEntries }
         return accessibleEntries.filter { monthKey(for: $0.capturedAt) == monthFilter }
+    }
+
+    private var hiddenTimelineEntryCount: Int {
+        showsAllTimelineEntries ? 0 : max(0, displayedEntries.count - Self.initialTimelineEntryCount)
+    }
+
+    private func setMonthFilter(_ filter: MonthKey?) {
+        guard monthFilter != filter else { return }
+        monthFilter = filter
+        showsAllTimelineEntries = false
+        isRevealingTimelineEntries = false
+    }
+
+    private func revealRemainingTimelineEntries() {
+        guard !isRevealingTimelineEntries, hiddenTimelineEntryCount > 0 else { return }
+        isRevealingTimelineEntries = true
+
+        // İlk yeni ekran dolusunu küçük boyutta önceden hazırla. Böylece tüm arşivi
+        // belleğe almadan butondan sonraki kaydırma anında akıcı kalır.
+        let upcomingEntries = Array(
+            displayedEntries
+                .dropFirst(Self.initialTimelineEntryCount)
+                .prefix(6)
+        )
+        let requestedFilter = monthFilter
+        Task { @MainActor in
+            for entry in upcomingEntries {
+                guard !Task.isCancelled else { return }
+                _ = await ImageDownsampler.cachedImage(
+                    key: "row-preview-\(entry.imageCacheKey)",
+                    maxPixelSize: Self.timelinePreviewPixelSize
+                ) { entry.imageData }
+                await Task.yield()
+            }
+            guard !Task.isCancelled,
+                  isRevealingTimelineEntries,
+                  monthFilter == requestedFilter else { return }
+            showsAllTimelineEntries = true
+            isRevealingTimelineEntries = false
+        }
     }
 
     private var availableMonths: [MonthKey] {
@@ -1217,7 +1304,27 @@ private struct TimelineEntryRow: View {
         .accessibilityIdentifier("timelineCard")
         .accessibilityValue(isSelected ? Text("Seçili") : Text("Seçili değil"))
         .task(id: entry.imageCacheKey) {
-            photo = await ImageDownsampler.cachedImage(key: "row-\(entry.imageCacheKey)", maxPixelSize: 900) { entry.imageData }
+            guard let imageData = entry.imageData else {
+                photo = nil
+                return
+            }
+            let preview = await ImageDownsampler.cachedImage(
+                key: "row-preview-\(entry.imageCacheKey)",
+                maxPixelSize: ProjectDetailView.timelinePreviewPixelSize
+            ) { imageData }
+            guard !Task.isCancelled else { return }
+            photo = preview
+
+            await Task.yield()
+            let detailed = await ImageDownsampler.cachedImage(
+                key: "row-detail-\(entry.imageCacheKey)",
+                maxPixelSize: 900,
+                priority: .utility
+            ) { imageData }
+            guard !Task.isCancelled else { return }
+            if let detailed {
+                photo = detailed
+            }
             await resolvePlaceIfNeeded()
         }
     }
