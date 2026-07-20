@@ -9,18 +9,11 @@ struct FlapseApp: App {
     let container: ModelContainer
 
     init() {
-        #if DEBUG
-        let isDesignConcept = ProcessInfo.processInfo.arguments.contains("--design-concept")
-        #else
-        let isDesignConcept = false
-        #endif
         LanguageOverrideBundle.activate()
-        if !isDesignConcept {
-            CloudBackupPreference.prepareForLaunch()
-        }
+        CloudBackupPreference.prepareForLaunch()
         let isUITesting = ProcessInfo.processInfo.arguments.contains("--uitests")
             || ProcessInfo.processInfo.environment["FLAPSE_UI_TESTS"] == "1"
-        container = isUITesting || isDesignConcept
+        container = isUITesting
             ? AppModelContainer.makeInMemory()
             : AppModelContainer.makeProduction()
     }
@@ -30,12 +23,9 @@ struct FlapseApp: App {
 
     var body: some Scene {
         WindowGroup {
-            rootView
+            ContentView()
                 .environment(store)
                 .task {
-#if DEBUG
-                    guard !ProcessInfo.processInfo.arguments.contains("--design-concept") else { return }
-#endif
                     await store.loadProducts()
                     await store.refreshEntitlements()
                 }
@@ -52,16 +42,4 @@ struct FlapseApp: App {
         }
     }
 
-    @ViewBuilder
-    private var rootView: some View {
-#if DEBUG
-        if ProcessInfo.processInfo.arguments.contains("--design-concept") {
-            FlapseDesignConceptView()
-        } else {
-            ContentView()
-        }
-#else
-        ContentView()
-#endif
-    }
 }

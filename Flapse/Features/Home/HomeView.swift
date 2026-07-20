@@ -99,7 +99,7 @@ struct HomeView: View {
     private var header: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(greeting)
-                .font(.largeTitle.bold())
+                .font(Theme.headline(32))
                 .foregroundStyle(theme.ink)
             Text(Date.now.formatted(.dateTime.weekday(.wide).day().month(.wide).locale(AppLanguage.currentLocale)))
                 .font(.subheadline)
@@ -109,10 +109,10 @@ struct HomeView: View {
 
     private var statsGrid: some View {
         LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
-            StatTile(icon: "square.grid.2x2", value: liveProjects.count, label: "Aktif proje")
-            StatTile(icon: "photo.stack", value: liveEntries.count, label: "Toplam kare")
-            StatTile(icon: "flame", value: longestStreak, label: "En uzun seri")
-            StatTile(icon: "calendar", value: weekCount, label: "Bu hafta")
+            StatTile(icon: "square.grid.2x2", value: liveProjects.count, label: "Aktif proje", tint: theme.accent)
+            StatTile(icon: "photo.stack", value: liveEntries.count, label: "Toplam kare", tint: theme.secondary)
+            StatTile(icon: "flame", value: longestStreak, label: "En uzun seri", tint: .orange)
+            StatTile(icon: "calendar", value: weekCount, label: "Bu hafta", tint: theme.accent.mix(with: theme.secondary, by: 0.5))
         }
     }
 
@@ -143,7 +143,7 @@ struct HomeView: View {
 
             VStack(spacing: 8) {
                 Text("İlk hikayeni başlat")
-                    .font(.title2.bold())
+                    .font(Theme.headline(22))
                     .foregroundStyle(theme.ink)
                 Text("Günde bir kare çek; zamanla değişimin\nkendiliğinden bir timelapse'e dönüşsün.")
                     .font(.body)
@@ -220,16 +220,19 @@ private struct StatTile: View {
     let icon: String
     let value: Int
     let label: LocalizedStringKey
+    let tint: Color
 
     @Environment(\.theme) private var theme
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 10) {
             Image(systemName: icon)
-                .font(.headline)
-                .foregroundStyle(theme.accent)
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(tint)
+                .frame(width: 34, height: 34)
+                .background(tint.opacity(0.12), in: Circle())
             Text("\(value)")
-                .font(.title.bold())
+                .font(Theme.headline(28))
                 .monospacedDigit()
                 .foregroundStyle(theme.ink)
             Text(label)
@@ -237,8 +240,19 @@ private struct StatTile: View {
                 .foregroundStyle(theme.inkMuted)
         }
         .padding(16)
-        .frame(maxWidth: .infinity, minHeight: 132, alignment: .leading)
-        .cardStyle()
+        .frame(maxWidth: .infinity, minHeight: 128, alignment: .leading)
+        .background(
+            LinearGradient(
+                colors: [tint.opacity(0.13), theme.surface.opacity(0.92)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            ),
+            in: RoundedRectangle(cornerRadius: 22, style: .continuous)
+        )
+        .overlay {
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .strokeBorder(theme.ink.opacity(0.055), lineWidth: 0.7)
+        }
     }
 }
 
@@ -251,49 +265,71 @@ private struct DailyCaptureCard: View {
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 14) {
+            ZStack(alignment: .bottomLeading) {
                 ZStack {
                     if let photo {
                         Image(uiImage: photo)
                             .resizable()
                             .scaledToFill()
                     } else {
-                        Theme.accent(for: project.category).opacity(0.14)
+                        LinearGradient(
+                            colors: [
+                                Theme.accent(for: project.category),
+                                theme.accent.mix(with: theme.secondary, by: 0.45)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
                         Image(systemName: Theme.icon(for: project.category))
-                            .font(.title3.weight(.semibold))
-                            .foregroundStyle(Theme.accent(for: project.category))
+                            .font(.system(size: 54, weight: .semibold))
+                            .foregroundStyle(.white.opacity(0.28))
                     }
+                    LinearGradient(
+                        colors: [.black.opacity(0.05), .black.opacity(0.1), .black.opacity(0.72)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
                 }
-                .frame(width: 64, height: 64)
-                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
 
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Bugün çekim zamanı")
-                        .font(.footnote.weight(.semibold))
-                        .foregroundStyle(theme.accent)
-                    Text(project.title)
-                        .font(.headline)
+                HStack(alignment: .bottom, spacing: 12) {
+                    VStack(alignment: .leading, spacing: 5) {
+                        Text("Bugün çekim zamanı")
+                            .font(Theme.caption(12))
+                            .foregroundStyle(.white.opacity(0.82))
+                        Text(project.title)
+                            .font(Theme.headline(26))
+                            .foregroundStyle(.white)
+                            .lineLimit(2)
+                        Text("\(project.sortedEntries.count) kare · \(project.cadence.displayName)")
+                            .font(Theme.caption(13))
+                            .foregroundStyle(.white.opacity(0.82))
+                    }
+                    Spacer(minLength: 8)
+                    Image(systemName: "camera.fill")
+                        .font(.system(size: 19, weight: .semibold))
                         .foregroundStyle(theme.ink)
-                        .lineLimit(1)
-                    Text("Kare çek")
-                        .font(.subheadline)
-                        .foregroundStyle(theme.inkMuted)
+                        .frame(width: 52, height: 52)
+                        .background(.white.opacity(0.92), in: Circle())
+                        .overlay {
+                            Circle().strokeBorder(.white.opacity(0.7), lineWidth: 0.8)
+                        }
                 }
-                Spacer()
-                Image(systemName: "camera.fill")
-                    .font(.headline)
-                    .foregroundStyle(.white)
-                    .frame(width: 44, height: 44)
-                    .background(theme.accent, in: Circle())
+                .padding(18)
             }
-            .padding(14)
-            .contentShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
+            .frame(maxWidth: .infinity)
+            .frame(height: 250)
+            .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 28, style: .continuous)
+                    .strokeBorder(.white.opacity(0.16), lineWidth: 0.8)
+            }
+            .shadow(color: .black.opacity(0.12), radius: 18, x: 0, y: 9)
+            .contentShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
         }
         .buttonStyle(.plain)
-        .cardStyle()
         .task(id: project.sortedEntries.last?.imageCacheKey) {
             guard let last = project.sortedEntries.last(where: { !$0.isDeleted }) else { return }
-            photo = await ImageDownsampler.cachedImage(key: "daily-\(last.imageCacheKey)", maxPixelSize: 240) { last.imageData }
+            photo = await ImageDownsampler.cachedImage(key: "daily-\(last.imageCacheKey)", maxPixelSize: 900) { last.imageData }
         }
     }
 }

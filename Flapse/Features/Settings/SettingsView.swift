@@ -36,8 +36,76 @@ struct SettingsView: View {
         projects.reduce(0) { $0 + ($1.entries?.count ?? 0) }
     }
 
+    private var settingsOverview: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack(spacing: 14) {
+                LogoMark(size: 50)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("Flapse")
+                        .font(Theme.headline(21))
+                        .foregroundStyle(theme.ink)
+                    Text(store.isPro ? "Flapse Pro aktif" : "Flapse Pro'ya Geç")
+                        .font(Theme.caption(12))
+                        .foregroundStyle(store.isPro ? theme.accent : theme.inkMuted)
+                }
+                Spacer()
+                Image(systemName: iCloudActive ? "checkmark.icloud.fill" : "icloud")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(iCloudActive ? theme.accent : theme.inkMuted)
+                    .frame(width: 42, height: 42)
+                    .background(theme.surface.opacity(0.72), in: Circle())
+            }
+
+            HStack(spacing: 10) {
+                overviewMetric(value: projects.count, label: "Proje", icon: "square.grid.2x2")
+                overviewMetric(value: totalEntries, label: "Toplam çekim", icon: "photo.stack")
+            }
+        }
+        .padding(18)
+        .background(
+            LinearGradient(
+                colors: [theme.accent.opacity(0.13), theme.secondary.opacity(0.08), theme.surface.opacity(0.88)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            ),
+            in: RoundedRectangle(cornerRadius: 26, style: .continuous)
+        )
+        .overlay {
+            RoundedRectangle(cornerRadius: 26, style: .continuous)
+                .strokeBorder(theme.ink.opacity(0.06), lineWidth: 0.7)
+        }
+    }
+
+    private func overviewMetric(value: Int, label: LocalizedStringKey, icon: String) -> some View {
+        HStack(spacing: 9) {
+            Image(systemName: icon)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(theme.accent)
+            VStack(alignment: .leading, spacing: 1) {
+                Text("\(value)")
+                    .font(Theme.headline(17))
+                    .monospacedDigit()
+                    .foregroundStyle(theme.ink)
+                Text(label)
+                    .font(Theme.caption(10))
+                    .foregroundStyle(theme.inkMuted)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .frame(maxWidth: .infinity)
+        .background(theme.surface.opacity(0.66), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+    }
+
     var body: some View {
         List {
+            Section {
+                settingsOverview
+                    .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 4, trailing: 16))
+                    .listRowBackground(Color.clear)
+            }
+
             Section("Üyelik") {
                 if store.isPro {
                     Label {
@@ -270,6 +338,8 @@ struct SettingsView: View {
                 .listRowBackground(Color.clear)
             }
         }
+        .listStyle(.insetGrouped)
+        .listSectionSpacing(18)
         .scrollContentBackground(.hidden)
         .background(theme.canvas)
         .navigationTitle("Ayarlar")
