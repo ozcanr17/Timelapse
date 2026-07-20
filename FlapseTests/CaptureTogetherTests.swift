@@ -86,4 +86,17 @@ final class CaptureTogetherTests: XCTestCase {
         XCTAssertEqual(remaining.map(\.id), [ownID])
         XCTAssertFalse(project.cloudPurgedEntryIDs.contains(foreignID))
     }
+
+    @MainActor
+    func test_yeniPaylasimlar_projeBasinaAyriZoneKullanir() {
+        let first = UUID()
+        let second = UUID()
+
+        let firstZone = SharedProjectService.shared.projectZoneID(for: first)
+        let secondZone = SharedProjectService.shared.projectZoneID(for: second)
+
+        XCTAssertNotEqual(firstZone, secondZone)
+        XCTAssertTrue(firstZone.zoneName.contains(first.uuidString))
+        XCTAssertTrue(secondZone.zoneName.contains(second.uuidString))
+    }
 }

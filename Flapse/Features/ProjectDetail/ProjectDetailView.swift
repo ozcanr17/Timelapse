@@ -652,19 +652,21 @@ struct ProjectDetailView: View {
                 .contextMenu {
                     if !isSelectingEntries {
                         Button {
-                            isSelectingEntries = true
-                            selectedEntryIDs.insert(entry.id)
+                            DeferredMenuAction.perform {
+                                isSelectingEntries = true
+                                selectedEntryIDs.insert(entry.id)
+                            }
                         } label: {
                             Label("Seç", systemImage: "checkmark.circle")
                         }
                     }
                     Button {
-                        activeCover = .viewer(entry)
+                        DeferredMenuAction.perform { activeCover = .viewer(entry) }
                     } label: {
                         Label("Görüntüle", systemImage: "eye")
                     }
                     Button(role: .destructive) {
-                        deleteEntry(entry)
+                        DeferredMenuAction.perform { deleteEntry(entry) }
                     } label: {
                         Label("Sil", systemImage: "trash")
                     }

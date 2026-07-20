@@ -26,7 +26,7 @@ struct MainTabView: View {
     @State private var highlightX: CGFloat = 0
     @State private var highlightWidth: CGFloat = 0
     @State private var isDraggingBar = false
-    @State private var projectsResetToken = 0
+    @State private var projectsPath = NavigationPath()
     @State private var isCustomTabBarHidden = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -75,8 +75,7 @@ struct MainTabView: View {
                 }
                 .tag(Tab.home)
 
-                pane { ProjectListView() }
-                    .id(projectsResetToken)
+                projectsPane
                     .tag(Tab.projects)
 
                 pane { SavedTimelapsesView() }
@@ -134,6 +133,15 @@ struct MainTabView: View {
     private func pane<Content: View>(@ViewBuilder content: () -> Content) -> some View {
         NavigationStack {
             content()
+                .toolbarBackground(.hidden, for: .navigationBar)
+        }
+        .toolbar(.hidden, for: .tabBar)
+        .contentMargins(.bottom, 40, for: .scrollContent)
+    }
+
+    private var projectsPane: some View {
+        NavigationStack(path: $projectsPath) {
+            ProjectListView()
                 .toolbarBackground(.hidden, for: .navigationBar)
         }
         .toolbar(.hidden, for: .tabBar)
@@ -204,13 +212,14 @@ struct MainTabView: View {
             }
             .contentShape(Capsule())
         .onPreferenceChange(ItemFramePreference.self) { frames in
+            guard itemFrames != frames else { return }
             itemFrames = frames
             if !isDraggingBar, let frame = frames[currentIndex] {
                 highlightX = frame.minX
                 highlightWidth = frame.width
             }
         }
-        .gesture(slideToSelect)
+        .simultaneousGesture(slideToSelect)
         .sensoryFeedback(.selection, trigger: previewIndex)
         .sensoryFeedback(.impact(weight: .light), trigger: tab)
         .animation(reduceMotion ? nil : .smooth(duration: 0.2), value: previewIndex)
@@ -222,10 +231,11 @@ struct MainTabView: View {
     }
 
     private var slideToSelect: some Gesture {
-        DragGesture(minimumDistance: 0, coordinateSpace: .named("tabBarSpace"))
+        DragGesture(minimumDistance: 8, coordinateSpace: .named("tabBarSpace"))
             .onChanged { value in
                 isDraggingBar = true
                 let index = itemIndex(at: value.location.x)
+                guard previewIndex != index else { return }
                 previewIndex = index
                 if let frame = itemFrames[index] {
                     highlightWidth = frame.width
@@ -257,12 +267,7 @@ struct MainTabView: View {
     private func activate(_ item: BarItem) {
         if let target = item.tab {
             if target == .projects && tab == .projects {
-                projectsResetToken += 1
-            } else if target != .projects && tab == .projects {
-                Task {
-                    try? await Task.sleep(for: .seconds(0.5))
-                    if tab != .projects { projectsResetToken += 1 }
-                }
+                projectsPath = NavigationPath()
             }
             tab = target
             if let index = barItems.firstIndex(where: { $0.identifier == item.identifier }),
@@ -309,11 +314,15 @@ struct MainTabView: View {
             }
 
         if reportsFrame {
-            icon
+            Button {
+                activate(item)
+            } label: {
+                icon
+            }
+                .buttonStyle(.plain)
                 .accessibilityIdentifier(item.identifier)
                 .accessibilityLabel(Text(item.label))
                 .accessibilityAddTraits(isActive ? [.isButton, .isSelected] : [.isButton])
-                .accessibilityAction { activate(item) }
         } else {
             icon
                 .accessibilityHidden(true)

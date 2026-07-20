@@ -25,6 +25,8 @@ protocol ProjectRepositoryProtocol {
 final class ProjectRepository: ProjectRepositoryProtocol {
 
     private let context: ModelContext
+    private static let maintenanceVersionKey = "persistenceMaintenanceVersion"
+    private static let maintenanceVersion = 2
 
     /// Context'i dışarıdan alıyoruz: üretimde `container.mainContext`, testte ise
     /// bellek içi bir container'ın context'i. Aynı sınıf, iki farklı ortamda çalışır.
@@ -236,6 +238,14 @@ final class ProjectRepository: ProjectRepositoryProtocol {
             context.delete(duplicate)
         }
         try saveIfNeeded()
+    }
+
+    func runStartupMaintenanceIfNeeded() throws {
+        guard UserDefaults.standard.integer(forKey: Self.maintenanceVersionKey) < Self.maintenanceVersion else {
+            return
+        }
+        try repairDuplicateEntryIDs()
+        UserDefaults.standard.set(Self.maintenanceVersion, forKey: Self.maintenanceVersionKey)
     }
 
     /// Bekleyen değişiklik varsa diske/Cloud'a yazar. Gereksiz kayıttan kaçınmak için

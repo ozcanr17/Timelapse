@@ -276,11 +276,11 @@ struct RecentlyDeletedView: View {
             }
         }
         .contextMenu {
-            Button { restorePhoto(item.id) } label: {
+            Button { DeferredMenuAction.perform { restorePhoto(item.id) } } label: {
                 Label("Geri Al", systemImage: "arrow.uturn.backward")
             }
             Button(role: .destructive) {
-                pendingPhotoEraseID = item.id
+                DeferredMenuAction.perform { pendingPhotoEraseID = item.id }
             } label: {
                 Label("Kalıcı Olarak Sil", systemImage: "trash.fill")
             }
@@ -372,11 +372,11 @@ struct RecentlyDeletedView: View {
             }
         }
         .contextMenu {
-            Button { restore(item.id) } label: {
+            Button { DeferredMenuAction.perform { restore(item.id) } } label: {
                 Label("Geri Al", systemImage: "arrow.uturn.backward")
             }
             Button(role: .destructive) {
-                pendingEraseID = item.id
+                DeferredMenuAction.perform { pendingEraseID = item.id }
             } label: {
                 Label("Kalıcı Olarak Sil", systemImage: "trash.fill")
             }

@@ -12,8 +12,8 @@ final class SharedProjectService {
     let container = CKContainer(identifier: SharedProjectService.containerIdentifier)
     private var privateDB: CKDatabase { container.privateCloudDatabase }
     private var sharedDB: CKDatabase { container.sharedCloudDatabase }
-    private let defaultZoneID = CKRecordZone.ID(zoneName: "SharedProjects", ownerName: CKCurrentUserDefaultName)
     private var pendingPushes: [UUID: Task<Void, Never>] = [:]
+    private var zoneRecordCaches: [String: ZoneRecordCache] = [:]
 
     enum RecordType {
         static let project = "SharedProject"
@@ -80,15 +80,21 @@ final class SharedProjectService {
         let entries: [LocalEntrySnapshot]
     }
 
+    private struct ZoneRecordCache {
+        var records: [CKRecord.ID: CKRecord]
+        var changeToken: CKServerChangeToken?
+    }
+
     func accountAvailable() async -> Bool {
         ((try? await container.accountStatus()) ?? .couldNotDetermine) == .available
     }
 
     func createShare(project: Project) async throws -> CKShare {
         guard await accountAvailable() else { throw ShareError.notSignedIntoiCloud }
-        try await ensureZone(defaultZoneID)
+        let zoneID = projectZoneID(for: project.id)
+        try await ensureZone(zoneID)
 
-        let rootID = CKRecord.ID(recordName: project.id.uuidString, zoneID: defaultZoneID)
+        let rootID = CKRecord.ID(recordName: project.id.uuidString, zoneID: zoneID)
         let updatedAt = Date()
         project.sharedUpdatedAt = updatedAt
         let root = projectRecord(
@@ -116,12 +122,12 @@ final class SharedProjectService {
         project.isCollaborative = true
         project.cloudShareRecordName = savedShare.recordID.recordName
         project.cloudRootRecordName = rootID.recordName
-        project.cloudZoneName = defaultZoneID.zoneName
-        project.cloudOwnerName = defaultZoneID.ownerName
+        project.cloudZoneName = zoneID.zoneName
+        project.cloudOwnerName = zoneID.ownerName
 
         let snapshot = makeLocalSnapshot(project)
         try await upload(snapshot, to: privateDB)
-        try? await installSubscription(zoneID: defaultZoneID, database: privateDB)
+        try? await installSubscription(zoneID: zoneID, database: privateDB)
         return savedShare
     }
 
@@ -136,7 +142,7 @@ final class SharedProjectService {
             return nil
         }
         try? await installSubscription(zoneID: zoneID, database: sharedDB)
-        return makeSnapshot(
+        return await makeSnapshot(
             records: records,
             root: root,
             shareRecordName: metadata.share.recordID.recordName,
@@ -156,7 +162,7 @@ final class SharedProjectService {
             project.cloudRootRecordName = root.recordID.recordName
             project.cloudZoneName = root.recordID.zoneID.zoneName
             project.cloudOwnerName = root.recordID.zoneID.ownerName
-            let remote = makeSnapshot(
+            let remote = await makeSnapshot(
                 records: records,
                 root: root,
                 shareRecordName: project.cloudShareRecordName ?? "",
@@ -205,14 +211,16 @@ final class SharedProjectService {
         if let reference = reference(for: project) { return reference }
         guard project.isCollaborative, let shareName = project.cloudShareRecordName else { return nil }
 
-        if let ownerRecords = try? await records(in: defaultZoneID, database: privateDB),
-           let root = ownerRecords.first(where: {
-               $0.recordType == RecordType.project && $0.share?.recordID.recordName == shareName
-           }) {
-            project.cloudRootRecordName = root.recordID.recordName
-            project.cloudZoneName = root.recordID.zoneID.zoneName
-            project.cloudOwnerName = root.recordID.zoneID.ownerName
-            return (root.recordID.recordName, root.recordID.zoneID)
+        for zone in try await privateDB.allRecordZones() {
+            if let ownerRecords = try? await records(in: zone.zoneID, database: privateDB),
+               let root = ownerRecords.first(where: {
+                   $0.recordType == RecordType.project && $0.share?.recordID.recordName == shareName
+               }) {
+                project.cloudRootRecordName = root.recordID.recordName
+                project.cloudZoneName = root.recordID.zoneID.zoneName
+                project.cloudOwnerName = root.recordID.zoneID.ownerName
+                return (root.recordID.recordName, root.recordID.zoneID)
+            }
         }
 
         for zone in try await sharedDB.allRecordZones() {
@@ -365,22 +373,38 @@ final class SharedProjectService {
         }
     }
 
-    private func records(in zoneID: CKRecordZone.ID, database: CKDatabase) async throws -> [CKRecord] {
-        var output: [CKRecord.ID: CKRecord] = [:]
-        var token: CKServerChangeToken?
-        repeat {
-            let changes = try await database.recordZoneChanges(inZoneWith: zoneID, since: token)
-            for record in changes.modificationResultsByID.compactMap({ try? $0.value.get().record }) {
-                if let existing = output[record.recordID],
-                   (existing.modificationDate ?? .distantPast) > (record.modificationDate ?? .distantPast) {
-                    continue
+    private func records(
+        in zoneID: CKRecordZone.ID,
+        database: CKDatabase,
+        canRecoverExpiredToken: Bool = true
+    ) async throws -> [CKRecord] {
+        let cacheKey = "\(database.databaseScope.rawValue)-\(zoneID.ownerName)-\(zoneID.zoneName)"
+        var cache = zoneRecordCaches[cacheKey] ?? ZoneRecordCache(records: [:], changeToken: nil)
+        do {
+            repeat {
+                let changes = try await database.recordZoneChanges(
+                    inZoneWith: zoneID,
+                    since: cache.changeToken
+                )
+                for record in changes.modificationResultsByID.compactMap({ try? $0.value.get().record }) {
+                    if let existing = cache.records[record.recordID],
+                       (existing.modificationDate ?? .distantPast) > (record.modificationDate ?? .distantPast) {
+                        continue
+                    }
+                    cache.records[record.recordID] = record
                 }
-                output[record.recordID] = record
-            }
-            token = changes.changeToken
-            if !changes.moreComing { break }
-        } while true
-        return Array(output.values)
+                for deletion in changes.deletions {
+                    cache.records[deletion.recordID] = nil
+                }
+                cache.changeToken = changes.changeToken
+                zoneRecordCaches[cacheKey] = cache
+                if !changes.moreComing { break }
+            } while true
+            return Array(cache.records.values)
+        } catch let error as CKError where error.code == .changeTokenExpired && canRecoverExpiredToken {
+            zoneRecordCaches[cacheKey] = nil
+            return try await records(in: zoneID, database: database, canRecoverExpiredToken: false)
+        }
     }
 
     private func makeSnapshot(
@@ -388,30 +412,16 @@ final class SharedProjectService {
         root: CKRecord,
         shareRecordName: String,
         zoneID: CKRecordZone.ID
-    ) -> SharedProjectSnapshot {
-        let entries = records
+    ) async -> SharedProjectSnapshot {
+        let entryRecords = records
             .filter {
                 $0.recordType == RecordType.entry && entryRootID(for: $0) == root.recordID
             }
-            .compactMap { record -> SharedEntrySnapshot? in
-                guard let id = UUID(uuidString: record.recordID.recordName) else { return nil }
-                let asset = record["image"] as? CKAsset
-                let data = asset?.fileURL.flatMap { try? Data(contentsOf: $0) }
-                return SharedEntrySnapshot(
-                    id: id,
-                    data: data,
-                    capturedAt: record["capturedAt"] as? Date ?? .now,
-                    imageRevision: record["imageRevision"] as? Int ?? 0,
-                    latitude: record["latitude"] as? Double,
-                    longitude: record["longitude"] as? Double,
-                    placeName: record["placeName"] as? String,
-                    deletedAt: record["deletedAt"] as? Date,
-                    updatedAt: record["updatedAt"] as? Date ?? record.modificationDate ?? .distantPast,
-                    imageUpdatedAt: record["imageUpdatedAt"] as? Date ?? record.modificationDate ?? .distantPast,
-                    isLegacy: record["updatedAt"] == nil
-                )
-            }
-            .sorted { $0.capturedAt < $1.capturedAt }
+        let entries = await Task.detached(priority: .utility) {
+            entryRecords
+                .compactMap(Self.sharedEntrySnapshot)
+                .sorted { $0.capturedAt < $1.capturedAt }
+        }.value
         return SharedProjectSnapshot(
             shareRecordName: shareRecordName,
             rootRecordName: root.recordID.recordName,
@@ -432,8 +442,8 @@ final class SharedProjectService {
 
     private func makeLocalSnapshot(_ project: Project) -> LocalProjectSnapshot {
         let zoneID = CKRecordZone.ID(
-            zoneName: project.cloudZoneName ?? defaultZoneID.zoneName,
-            ownerName: project.cloudOwnerName ?? defaultZoneID.ownerName
+            zoneName: project.cloudZoneName ?? projectZoneID(for: project.id).zoneName,
+            ownerName: project.cloudOwnerName ?? CKCurrentUserDefaultName
         )
         return LocalProjectSnapshot(
             rootRecordName: project.cloudRootRecordName ?? project.id.uuidString,
@@ -539,6 +549,10 @@ final class SharedProjectService {
         }
     }
 
+    func projectZoneID(for projectID: UUID) -> CKRecordZone.ID {
+        CKRecordZone.ID(zoneName: "SharedProject-\(projectID.uuidString)", ownerName: CKCurrentUserDefaultName)
+    }
+
     func entryRootID(for record: CKRecord) -> CKRecord.ID? {
         (record["project"] as? CKRecord.Reference)?.recordID ?? record.parent?.recordID
     }
@@ -589,6 +603,25 @@ final class SharedProjectService {
         return renderer.jpegData(withCompressionQuality: 0.9) { _ in
             image.draw(in: CGRect(origin: .zero, size: size))
         }
+    }
+
+    private nonisolated static func sharedEntrySnapshot(_ record: CKRecord) -> SharedEntrySnapshot? {
+        guard let id = UUID(uuidString: record.recordID.recordName) else { return nil }
+        let asset = record["image"] as? CKAsset
+        let data = asset?.fileURL.flatMap { try? Data(contentsOf: $0, options: .mappedIfSafe) }
+        return SharedEntrySnapshot(
+            id: id,
+            data: data,
+            capturedAt: record["capturedAt"] as? Date ?? .now,
+            imageRevision: record["imageRevision"] as? Int ?? 0,
+            latitude: record["latitude"] as? Double,
+            longitude: record["longitude"] as? Double,
+            placeName: record["placeName"] as? String,
+            deletedAt: record["deletedAt"] as? Date,
+            updatedAt: record["updatedAt"] as? Date ?? record.modificationDate ?? .distantPast,
+            imageUpdatedAt: record["imageUpdatedAt"] as? Date ?? record.modificationDate ?? .distantPast,
+            isLegacy: record["updatedAt"] == nil
+        )
     }
 
     private func installSubscription(zoneID: CKRecordZone.ID, database: CKDatabase) async throws {

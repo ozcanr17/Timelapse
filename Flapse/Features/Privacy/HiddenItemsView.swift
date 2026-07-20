@@ -38,7 +38,7 @@ struct HiddenItemsView: View {
             if !isUnlocked { await unlock() }
         }
         .onChange(of: scenePhase) { _, phase in
-            guard phase != .active else { return }
+            guard phase == .background else { return }
             isUnlocked = false
             selectedProject = nil
             playingTimelapse = nil
@@ -173,16 +173,7 @@ struct HiddenItemsView: View {
 
     private func hiddenTimelapseRow(_ item: SavedTimelapse) -> some View {
         HStack(spacing: 12) {
-            Group {
-                if let data = item.posterData, let image = UIImage(data: data) {
-                    Image(uiImage: image)
-                        .resizable()
-                        .scaledToFill()
-                } else {
-                    Image(systemName: "film")
-                        .foregroundStyle(theme.inkMuted)
-                }
-            }
+            HiddenTimelapseThumbnail(item: item)
             .frame(width: 64, height: 44)
             .background(theme.surface)
             .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
@@ -206,7 +197,9 @@ struct HiddenItemsView: View {
 
     private func unhideProjectButton(_ project: Project) -> some View {
         Button {
-            try? ProjectRepository(context: modelContext).setHidden(false, for: project)
+            DeferredMenuAction.perform {
+                try? ProjectRepository(context: modelContext).setHidden(false, for: project)
+            }
         } label: {
             Label("Göster", systemImage: "eye")
         }
@@ -215,7 +208,9 @@ struct HiddenItemsView: View {
 
     private func unhideTimelapseButton(_ item: SavedTimelapse) -> some View {
         Button {
-            TimelapseLibrary.setHidden(false, for: item, context: modelContext)
+            DeferredMenuAction.perform {
+                TimelapseLibrary.setHidden(false, for: item, context: modelContext)
+            }
         } label: {
             Label("Göster", systemImage: "eye")
         }
@@ -227,7 +222,37 @@ struct HiddenItemsView: View {
         isAuthenticating = true
         let didAuthenticate = await DeviceOwnerAuthentication.authenticate()
         isAuthenticating = false
-        isUnlocked = didAuthenticate
+        if didAuthenticate {
+            isUnlocked = true
+        }
+    }
+}
+
+private struct HiddenTimelapseThumbnail: View {
+    let item: SavedTimelapse
+
+    @Environment(\.theme) private var theme
+    @State private var image: UIImage?
+
+    var body: some View {
+        ZStack {
+            theme.surface
+            if let image {
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFill()
+            } else {
+                Image(systemName: "film")
+                    .foregroundStyle(theme.inkMuted)
+            }
+        }
+        .task(id: item.id) {
+            image = await ImageDownsampler.cachedImage(
+                key: "hidden-video-\(item.id.uuidString)",
+                maxPixelSize: 240,
+                load: { item.posterData }
+            )
+        }
     }
 }
 

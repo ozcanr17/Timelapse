@@ -17,14 +17,17 @@ struct HomeView: View {
 
     @Query(filter: #Predicate<Project> { $0.deletedAt == nil }, sort: \Project.createdAt, order: .reverse)
     private var projects: [Project]
+    @Query(
+        filter: #Predicate<Entry> {
+            $0.deletedAt == nil && $0.project?.deletedAt == nil && $0.project?.isHidden == false
+        },
+        sort: \Entry.capturedAt,
+        order: .reverse
+    ) private var liveEntries: [Entry]
     @Environment(\.theme) private var theme
 
     private var liveProjects: [Project] {
         projects.filter { !$0.isDeleted && $0.deletedAt == nil && !$0.isHidden }
-    }
-
-    private var liveEntries: [Entry] {
-        liveProjects.flatMap { ($0.entries ?? []).filter { !$0.isDeleted && $0.deletedAt == nil } }
     }
 
     private var dueProjects: [Project] {
@@ -32,7 +35,10 @@ struct HomeView: View {
     }
 
     private var longestStreak: Int {
-        liveProjects.map { ActivitySummary.streak(capturedDates: $0.sortedEntries.map(\.capturedAt)) }.max() ?? 0
+        Dictionary(grouping: liveEntries, by: { $0.project?.id })
+            .values
+            .map { ActivitySummary.streak(capturedDates: $0.map(\.capturedAt)) }
+            .max() ?? 0
     }
 
     private var weekCount: Int {
@@ -41,7 +47,7 @@ struct HomeView: View {
     }
 
     private var recentEntries: [Entry] {
-        liveEntries.sorted { $0.capturedAt > $1.capturedAt }.prefix(10).map { $0 }
+        Array(liveEntries.prefix(10))
     }
 
     private var dailyTip: LocalizedStringKey {
@@ -73,7 +79,7 @@ struct HomeView: View {
                                 onCapture(firstDueProject)
                             }
                         }
-                        ActivityHeroCard(projects: liveProjects)
+                        ActivityHeroCard(projects: liveProjects, entries: liveEntries)
                         if dueProjects.count > 1 {
                             dueSection
                         }
@@ -348,6 +354,7 @@ private struct RecentEntryThumb: View {
 
 struct ActivityHeroCard: View {
     let projects: [Project]
+    let entries: [Entry]
 
     @Environment(\.theme) private var theme
 
@@ -355,11 +362,7 @@ struct ActivityHeroCard: View {
         projects.filter { !$0.isDeleted && $0.deletedAt == nil && !$0.isHidden }
     }
 
-    private var liveEntries: [Entry] {
-        liveProjects.flatMap { ($0.entries ?? []).filter { !$0.isDeleted && $0.deletedAt == nil } }
-    }
-
-    private var totalCaptures: Int { liveEntries.count }
+    private var totalCaptures: Int { entries.count }
 
     private var dueCount: Int {
         liveProjects.filter { $0.isCaptureDue() }.count
@@ -385,7 +388,7 @@ struct ActivityHeroCard: View {
                 )
             }
 
-            ContributionGrid(entries: liveEntries, accent: theme.accent)
+            ContributionGrid(entries: entries, accent: theme.accent)
 
             if dueCount > 0 {
                 Label("Bugün \(dueCount) projede çekim zamanı", systemImage: "bell.fill")
@@ -411,8 +414,6 @@ private struct ContributionGrid: View {
     let accent: Color
 
     @Environment(\.theme) private var theme
-    @Environment(\.displayScale) private var displayScale
-    @State private var thumbnails: [Date: UIImage] = [:]
 
     private let weeks = 15
     private let cell: CGFloat = 11
@@ -443,7 +444,6 @@ private struct ContributionGrid: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .task(id: entries.map(\.imageRevision).reduce(0, +)) { await loadThumbnails() }
     }
 
     @ViewBuilder
@@ -452,17 +452,9 @@ private struct ContributionGrid: View {
             Color.clear.frame(width: cell, height: cell)
         } else {
             let date = calendar.date(byAdding: .day, value: -offset, to: today) ?? today
-            if let thumbnail = thumbnails[date] {
-                Image(uiImage: thumbnail)
-                    .resizable()
-                    .scaledToFill()
-                    .frame(width: cell, height: cell)
-                    .clipShape(RoundedRectangle(cornerRadius: 2.5, style: .continuous))
-            } else {
-                RoundedRectangle(cornerRadius: 2.5, style: .continuous)
-                    .fill(fill(for: counts[date] ?? 0))
-                    .frame(width: cell, height: cell)
-            }
+            RoundedRectangle(cornerRadius: 2.5, style: .continuous)
+                .fill(fill(for: counts[date] ?? 0))
+                .frame(width: cell, height: cell)
         }
     }
 
@@ -473,29 +465,6 @@ private struct ContributionGrid: View {
         case 2:  accent.opacity(0.7)
         default: accent
         }
-    }
-
-    private func loadThumbnails() async {
-        let calendar = Calendar.current
-        let today = calendar.startOfDay(for: Date())
-        guard let earliest = calendar.date(byAdding: .day, value: -(weeks * 7), to: today) else { return }
-
-        var latestByDay: [Date: Entry] = [:]
-        for entry in entries {
-            let day = calendar.startOfDay(for: entry.capturedAt)
-            guard day >= earliest else { continue }
-            if let current = latestByDay[day], current.capturedAt >= entry.capturedAt { continue }
-            latestByDay[day] = entry
-        }
-
-        var thumbs: [Date: UIImage] = [:]
-        for (day, entry) in latestByDay {
-            thumbs[day] = await ImageDownsampler.cachedImage(
-                key: "grid-\(entry.imageCacheKey)",
-                maxPixelSize: cell * displayScale * 2
-            ) { entry.imageData }
-        }
-        thumbnails = thumbs
     }
 }
 

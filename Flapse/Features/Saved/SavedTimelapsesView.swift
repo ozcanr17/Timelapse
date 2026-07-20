@@ -92,11 +92,7 @@ struct SavedTimelapsesView: View {
                 ZStack {
                     RoundedRectangle(cornerRadius: 14, style: .continuous)
                         .fill(theme.inkMuted.opacity(0.12))
-                    if let posterData = item.posterData, let poster = UIImage(data: posterData) {
-                        Image(uiImage: poster)
-                            .resizable()
-                            .scaledToFill()
-                    }
+                    SavedTimelapsePoster(item: item)
                     Image(systemName: "play.circle.fill")
                         .font(.system(size: 34))
                         .foregroundStyle(.white.opacity(0.9))
@@ -131,17 +127,19 @@ struct SavedTimelapsesView: View {
                 Label("Paylaş", systemImage: "square.and.arrow.up")
             }
             Button {
-                saveToPhotos(item)
+                DeferredMenuAction.perform { saveToPhotos(item) }
             } label: {
                 Label("Fotoğraflara kaydet", systemImage: "square.and.arrow.down")
             }
             Button {
-                TimelapseLibrary.setHidden(true, for: item, context: modelContext)
+                DeferredMenuAction.perform {
+                    TimelapseLibrary.setHidden(true, for: item, context: modelContext)
+                }
             } label: {
                 Label("Gizle", systemImage: "eye.slash")
             }
             Button(role: .destructive) {
-                pendingDeletion = item
+                DeferredMenuAction.perform { pendingDeletion = item }
             } label: {
                 Label("Sil", systemImage: "trash")
             }
@@ -155,6 +153,29 @@ struct SavedTimelapsesView: View {
                 showPhotosDenied = true
             }
             UINotificationFeedbackGenerator().notificationOccurred(outcome == .saved ? .success : .error)
+        }
+    }
+}
+
+private struct SavedTimelapsePoster: View {
+    let item: SavedTimelapse
+
+    @State private var image: UIImage?
+
+    var body: some View {
+        Group {
+            if let image {
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFill()
+            }
+        }
+        .task(id: item.id) {
+            image = await ImageDownsampler.cachedImage(
+                key: "saved-video-\(item.id.uuidString)",
+                maxPixelSize: 500,
+                load: { item.posterData }
+            )
         }
     }
 }

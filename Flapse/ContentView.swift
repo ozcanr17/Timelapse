@@ -65,17 +65,22 @@ struct ContentView: View {
             LanguageOverrideBundle.apply(appLanguage)
         }
         .task {
-            try? ProjectRepository(context: modelContext).repairDuplicateEntryIDs()
             isDataReady = true
-            try? ProjectRepository(context: modelContext).purgeExpiredProjects(retentionDays: 30, now: Date())
-            try? ProjectRepository(context: modelContext).purgeExpiredEntries(retentionDays: 30, now: Date())
+            await Task.yield()
+            let repository = ProjectRepository(context: modelContext)
+            try? repository.runStartupMaintenanceIfNeeded()
+            try? repository.purgeExpiredProjects(retentionDays: 30, now: Date())
+            try? repository.purgeExpiredEntries(retentionDays: 30, now: Date())
             TimelapseLibrary.purgeExpired(context: modelContext)
-            WidgetStateWriter.update(projects: (try? modelContext.fetch(FetchDescriptor<Project>())) ?? [])
             try? await Task.sleep(for: .seconds(1.3))
             withAnimation(.easeOut(duration: 0.4)) { isShowingSplash = false }
             Task { @MainActor in
                 await synchronizeSharedProjects()
-                try? ProjectRepository(context: modelContext).repairDuplicateEntryIDs()
+            }
+            Task { @MainActor in
+                try? await Task.sleep(for: .seconds(2))
+                let projects = (try? modelContext.fetch(FetchDescriptor<Project>())) ?? []
+                WidgetStateWriter.update(projects: projects)
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .flapseMilestone)) { notification in

@@ -111,12 +111,14 @@ struct ProjectListView: View {
                                 }
                                 .contextMenu {
                                     Button {
-                                        try? ProjectRepository(context: modelContext).setHidden(true, for: project)
+                                        DeferredMenuAction.perform {
+                                            try? ProjectRepository(context: modelContext).setHidden(true, for: project)
+                                        }
                                     } label: {
                                         Label("Gizle", systemImage: "eye.slash")
                                     }
                                     Button(role: .destructive) {
-                                        pendingDeletion = [project]
+                                        DeferredMenuAction.perform { pendingDeletion = [project] }
                                     } label: {
                                         Label("Sil", systemImage: "trash")
                                     }
