@@ -28,7 +28,12 @@ struct MainTabView: View {
     @State private var isDraggingBar = false
     @State private var projectsPath = NavigationPath()
     @State private var isCustomTabBarHidden = false
+    @State private var contentTransitionOffset: CGFloat = 0
+    @State private var contentTransitionOpacity = 1.0
+    @State private var contentTransitionGeneration = 0
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    private static let barTint = Color(light: "F5F5F7", dark: "1B1B1F").opacity(0.26)
 
     private enum CaptureRoute: Identifiable {
         case project(Project)
@@ -80,10 +85,12 @@ struct MainTabView: View {
                 pane { SavedTimelapsesView() }
                     .tag(Tab.saved)
 
-                pane { SettingsView(onWelcomeFinished: { tab = .home }) }
+                pane { SettingsView(onWelcomeFinished: { selectTab(.home) }) }
                     .tag(Tab.settings)
             }
             .toolbar(.hidden, for: .tabBar)
+            .offset(x: contentTransitionOffset)
+            .opacity(contentTransitionOpacity)
         }
         .environment(\.customTabBarHidden, $isCustomTabBarHidden)
         .safeAreaInset(edge: .bottom, spacing: 0) {
@@ -184,9 +191,9 @@ struct MainTabView: View {
     private var tabBarContent: some View {
         iconRow(reportsFrames: true)
             .coordinateSpace(name: "tabBarSpace")
-            // Renk tint'i açık temalarda sistem camını opak bir kapsüle
-            // dönüştürüyordu. Sistem Liquid Glass materyalini doğrudan kullan.
-            .liquidGlassBarCapsule(interactive: true)
+            // Önceki, daha belirgin Liquid Glass görünümü: sistem materyali
+            // temaya uyumlu çok hafif bir tint ile arka planı kırar.
+            .liquidGlassCapsule(tint: Self.barTint, interactive: true)
             .overlay {
                 Capsule()
                     .strokeBorder(
@@ -278,7 +285,7 @@ struct MainTabView: View {
             if target == .projects && tab == .projects {
                 projectsPath = NavigationPath()
             }
-            tab = target
+            selectTab(target)
             if let index = barItems.firstIndex(where: { $0.identifier == item.identifier }),
                let frame = itemFrames[index] {
                 highlightX = frame.minX
@@ -286,6 +293,48 @@ struct MainTabView: View {
             }
         } else {
             captureTapped()
+        }
+    }
+
+    private func selectTab(_ target: Tab) {
+        guard target != tab else { return }
+        let movesLeft = tabPosition(target) < tabPosition(tab)
+        contentTransitionGeneration &+= 1
+        let generation = contentTransitionGeneration
+
+        if reduceMotion {
+            tab = target
+            contentTransitionOffset = 0
+            contentTransitionOpacity = 1
+            return
+        }
+
+        // Soldaki hedef sağdan gelip sola, sağdaki hedef soldan gelip sağa
+        // yerleşir. TabView korunur; sekmelerin navigation state'i sıfırlanmaz.
+        var transaction = Transaction()
+        transaction.disablesAnimations = true
+        withTransaction(transaction) {
+            tab = target
+            contentTransitionOffset = movesLeft ? 32 : -32
+            contentTransitionOpacity = 0.96
+        }
+
+        Task { @MainActor in
+            await Task.yield()
+            guard generation == contentTransitionGeneration else { return }
+            withAnimation(.easeOut(duration: 0.16)) {
+                contentTransitionOffset = 0
+                contentTransitionOpacity = 1
+            }
+        }
+    }
+
+    private func tabPosition(_ value: Tab) -> Int {
+        switch value {
+        case .home: 0
+        case .projects: 1
+        case .saved: 2
+        case .settings: 3
         }
     }
 
@@ -341,7 +390,7 @@ struct MainTabView: View {
     private func captureTapped() {
         refreshCaptureProjects()
         guard !liveProjects.isEmpty else {
-            tab = .projects
+            selectTab(.projects)
             return
         }
         CameraService.shared.prewarm()

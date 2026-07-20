@@ -332,6 +332,7 @@ struct LiquidGlassStyle<S: InsettableShape>: ViewModifier {
                 }
         } else if #available(iOS 26.0, *) {
             content
+                .clipShape(shape)
                 .glassEffect(glass, in: shape)
         } else {
             content
