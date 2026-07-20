@@ -1,112 +1,226 @@
 # HANDOFF — Flapse iOS App
 
-Written for a fresh session with zero context. Read this first, then `README.md` (feature tour), `YAYINLAMA_REHBERI.md` (App Store publishing guide, Turkish, with live status), and `project_handoff.md` (older on-ramp; still valid for house rules).
+Last updated: **2026-07-21**. This document is written for a completely new session with no prior context.
 
-## What this project is
+Read this file first, then:
 
-Native iOS app (Swift/SwiftUI/SwiftData/StoreKit 2/AVFoundation/Vision/ActivityKit, **no third-party deps**). "One photo a day" progress timelapses with smart alignment, streaks, background rendering with a Dynamic Island Live Activity, in-app saved-video library, photo editor, widgets, and freemium monetization.
+1. `README.md` for the feature overview.
+2. `YAYINLAMA_REHBERI.md` for the Turkish App Store publishing guide and live checklist.
+3. `project_handoff.md` for older architectural and repository conventions.
 
-- Local path: `/Users/ridvanozcan/Desktop/workspace/Flapse`
-- Repo: `https://github.com/ozcanr17/Flapse.git`, branch `main`. App changes are pushed after each batch; preserve any unrelated owner-owned working-tree changes.
-- Owner: Rıdvan Özcan (`ridvanozcan7@gmail.com`), display name **Flapse**, bundle ID **`rozcan.Flapse`**, widget `rozcan.Flapse.Widgets`, team `5ZYCHZ39QV`, min iOS 17, tested on an iOS 26 device with Dynamic Island.
+## Project identity
 
-## Build & test
+Flapse is a native SwiftUI iOS app for building long-term photo progress projects and creating timelapse videos. It uses SwiftData, CloudKit, StoreKit 2, AVFoundation, Vision, ActivityKit and WidgetKit. There are no third-party runtime dependencies.
+
+- Actual local repository: `/Users/ridvanozcan/Desktop/workspace/Flapse`
+- Old/stale path sometimes supplied by the environment: `/Users/ridvanozcan/Desktop/workspace/Timelapse`
+- GitHub: `https://github.com/ozcanr17/Flapse.git`
+- Branch: `main`
+- Latest pushed code commit: `55a8382 Restore tinted liquid glass and directional tab motion`
+- App display name: **Flapse**
+- Main bundle ID: `rozcan.Flapse`
+- Widget bundle ID: `rozcan.Flapse.Widgets`
+- Apple team: `5ZYCHZ39QV`
+- Minimum iOS: 17; current development/testing also targets iOS 26.
+
+Always confirm the working directory before running Git or Xcode commands. The `Timelapse` directory is not the active Git repository.
+
+## Current task
+
+The active work is a performance and interaction-latency stabilization pass, followed by restoration of the owner's preferred Liquid Glass tab bar.
+
+The owner expects:
+
+- Tab changes, navigation and ordinary taps to acknowledge input immediately, with a perceived response budget near 100 ms.
+- Large projects and photo-heavy screens not to block the main thread or grow memory without bound.
+- No loss of existing features, navigation state, data integrity or image quality.
+- The custom five-item bottom bar to retain the preferred iOS 26 Liquid Glass appearance.
+- Tab content to move horizontally by direction: when selecting a tab to the left, the incoming view moves left into place; when selecting a tab to the right, it moves right into place.
+
+The 100 ms target applies to visible acknowledgement of input. Disk reads, CloudKit sync, photo import and video export cannot be guaranteed to finish within 100 ms; those operations must acknowledge immediately and continue asynchronously.
+
+## What has been completed
+
+### Performance and crash stabilization
+
+Recent commits, all pushed to `origin/main`:
+
+- `7d164f6 Optimize media sync and navigation performance`
+- `bff6d8d Prevent media sync memory spikes and tab crashes`
+- `3af4684 Reduce interaction latency and restore native glass`
+- `55a8382 Restore tinted liquid glass and directional tab motion`
+
+Key changes:
+
+- Removed broad root-level SwiftData queries that caused unrelated tabs to invalidate and redraw when project or photo records changed.
+- Reduced repeated sorting/filtering in Home rows. Latest-entry lookup is now a single lazy filter/max pass instead of repeated `sortedEntries` construction in `body` and thumbnail tasks.
+- Fixed a major thumbnail pipeline bottleneck: SwiftData `.externalStorage` image data is no longer faulted eagerly for every visible cell before concurrency control. A decode slot is acquired first, then the data is loaded on the model actor, and downsampling runs detached. At most three image data loads/decodes proceed concurrently.
+- Originals remain untouched. UI thumbnails use bounded, memory-costed downsampling and revision-based cache keys.
+- CloudKit/shared-project media synchronization was changed to avoid loading every full-resolution photo into memory at once. Media is processed incrementally and in bounded batches.
+- Removed a duplicated, non-hit-testing copy of the entire tab-bar icon row. It was doubling layout/render work.
+- Replaced long tab highlight springs with an 80 ms selection animation and a short interactive drag spring.
+- Reduced the deliberate context-menu action delay from 220 ms to 32 ms, preserving the menu-dismissal race workaround without making taps feel ignored.
+- Preserved cancellation/generation checks during rapid tab switching so an older animation cannot overwrite a newer selection.
+
+Earlier crash root causes that must stay fixed:
+
+- Duplicate CloudKit record IDs were passed into a dictionary, causing `Fatal error: Duplicate values for key`. Shared-record collections must be deduplicated by stable record ID before dictionary creation.
+- Duplicate SwiftUI identities appeared in `ForEach<Array<Entry>, UUID, ...>`. Collections shown by SwiftUI must have stable, unique IDs and shared-project imports must not create duplicate local entries.
+- Large CloudKit/photo batches previously caused CPU and memory spikes; an earlier physical-device report showed roughly 86% average CPU and 1.38 GB peak memory. Do not return to all-at-once media loading.
+
+### Liquid Glass and directional tab motion
+
+The current implementation is in `Flapse/MainTabView.swift` and `Flapse/Theme.swift`.
+
+- The bar uses the earlier visual recipe: native iOS 26 `glassEffect`, capsule clipping, interactivity, and a subtle adaptive tint (`F5F5F7` light / `1B1B1F` dark at 0.26 opacity).
+- A restrained highlight remains above the glass. The duplicate icon overlay and slow spring were intentionally not restored.
+- Tab content keeps the native `TabView`; it is not replaced by a conditional custom ZStack. This preserves each tab's `NavigationStack` and avoids rebuilding expensive screens.
+- On selection, the new tab starts 32 points from the opposite side and settles in 160 ms with a slight opacity change. The tab state changes immediately.
+- Rapid repeated selections are protected by `contentTransitionGeneration`.
+- Reduce Motion disables the horizontal transition.
+- Re-tapping Projects still clears `projectsPath` as before.
+
+### Validation completed
+
+- Generic iOS Simulator Debug build: passed after the latest glass/transition changes.
+- Physical iPhone Debug build: passed after the latest changes.
+- Latest build was installed on device ID `68A160A9-06E1-5973-8014-EB9128274414` (`rozcan.Flapse`).
+- `testRapidTabNavigationRemainsResponsive`: passed with 12 consecutive transitions, no crash. Latest measurement average: **8.721 s** with values `8.688253`, `8.771921`, `8.702762`.
+- Previous comparable measurement before directional motion: **8.878 s**. The motion did not regress the test.
+- The absolute UI-test duration is not app tap latency: the test performs repeated `waitForExistence`/XCUITest quiescence waits of about one second per step. Use it for regression/crash detection, not as a 100 ms latency measurement.
+- The unit suite had **153 passing tests** after the media/performance changes. The final one-line glass restoration and directional tab change were subsequently verified by builds and the focused rapid-tab UI test.
+
+The latest UI test result bundle is:
+
+`/Users/ridvanozcan/Library/Developer/Xcode/DerivedData/Flapse-fzsukklxtjzjhmchajrzzqjxnkgf/Logs/Test/Test-Flapse-2026.07.21_00-05-47-+0300.xcresult`
+
+## Current status and what is not yet proven
+
+There is no active compilation failure or known reproducible crash in the current build.
+
+The most recent physical-device run did not produce a new Flapse `.ips`, Jetsam/OOM, hang or resource-termination report. Xcode console stdout from a detached/finished run is not retained as a durable log, so the remaining perceived slowness has not yet been tied to a fresh Time Profiler trace from the owner's exact device interaction.
+
+The code-level bottlenecks found so far were fixed, and automated tab switching is stable. The remaining question is whether the owner still perceives a delay on the newly installed build and, if so, which exact screen/action causes it.
+
+## Next plan
+
+1. Have the owner test commit `55a8382` on the physical phone, especially Home → Projects → Saved → Settings and opening a photo-heavy project.
+2. If latency remains, record the exact interaction with Instruments on the physical device:
+   - Time Profiler with thread state and Swift concurrency enabled.
+   - SwiftUI Instruments for body evaluations and long view updates.
+   - Core Animation for hitches/FPS.
+   - Allocations for repeated tab loops and project open/close loops.
+3. Add `os_signpost` intervals around tab selection, first rendered frame, project fetch completion and thumbnail availability if Instruments cannot attribute the delay clearly. Do not add arbitrary sleeps/debounces.
+4. Compare tap-to-first-frame, main-thread tasks over 16.7 ms, peak memory and surviving objects across at least 20 tab loops.
+5. Only then change the next proven hotspot. Keep each change isolated and reversible.
+6. Run the 153 unit tests, the focused rapid-tab UI test, a physical-device build, and install the build before handoff.
+
+## Important working-tree state
+
+At this handoff, these unrelated owner-owned changes are intentionally not staged or committed:
+
+- `Flapse/InfoPlist.xcstrings`
+- `Flapse/Localizable.xcstrings`
+- `Widgets/Localizable.xcstrings`
+- `.agents/` (untracked)
+- `.codex/` (untracked)
+
+Do not discard, overwrite, normalize, stage or include them in an unrelated commit. Always stage explicit file paths.
+
+## Pitfalls encountered — do not repeat
+
+1. **Do not use the stale `Timelapse` folder.** The active repository is `/Users/ridvanozcan/Desktop/workspace/Flapse`.
+2. **Do not restore the duplicate tab icon row.** Old handoff text said to preserve it, but profiling/code inspection showed that it duplicated layout and rendering. The bar must contain one interactive icon row only.
+3. **Do not restore the 0.4-second spring or 220 ms menu delay.** They were directly visible as sluggish interaction.
+4. **Do not rebuild all tab views conditionally to get slide animations.** That loses navigation state and re-triggers expensive lifecycle work. The current implementation animates the retained native `TabView` container.
+5. **Do not load `entry.imageData` in `body`, sorting/filtering computed properties, or before the thumbnail concurrency slot.** SwiftData external-storage faults can synchronously pull large compressed photos onto the main actor.
+6. **Do not load all CloudKit/shared-project images into arrays or dictionaries at once.** Process IDs first, deduplicate, then fetch/upload media in bounded batches.
+7. **Do not build dictionaries from CloudKit records without deduplicating record IDs.** This caused the fatal duplicate-key crash.
+8. **Do not use unstable or duplicate SwiftUI IDs.** Never paper over duplicate entries by switching to array indices; repair the underlying data/import deduplication.
+9. **Do not claim every operation finishes under 100 ms.** Guarantee immediate visual feedback; move unavoidable work off the animation-critical path.
+10. **Do not add random delays, blanket `DispatchQueue.main.async`, or broad `@MainActor` annotations to hide races.** Measure and fix ownership/isolation.
+11. **Do not lower original photo quality.** Downsample only presentation thumbnails; editing/export must use originals.
+12. **Do not remove the foreground render retry.** iOS can kill the hardware encoder in background; `writerFailed` retry on foreground is required.
+13. **Do not change front-camera mirroring casually.** Preview and captured selfie are explicitly mirrored to match what the user sees; the back camera remains unmirrored.
+14. **Do not use nested-sheet `dismiss` after PhotosPicker.** Dismiss import through the presenter's item binding (`onFinished` → `activeSheet = nil`).
+15. **Do not reintroduce removed marketing claims or gates.** Drop detection was removed; smart alignment is free/default-on; auto-sort requires confirmation.
+16. **Do not re-add flat `docs/privacy.html` or `docs/support.html`.** GitHub Pages would shadow the intended directory index pages.
+17. **Do not add new user-facing strings without all catalog localizations.** App and widget catalogs cover Turkish source plus ar, de, en, es, fr, hi, ja, ko, pt, ru and zh-Hans.
+18. **Do not commit unrelated localization or agent metadata changes.** The current dirty files listed above belong to the owner/current environment.
+
+## Project conventions
+
+- Prefer small, measurable changes within the current architecture.
+- Preserve all existing features, UI workflows and data semantics.
+- Keep English identifiers. Turkish UI literals act as localization keys.
+- Do not add code comments unless the owner explicitly changes the existing repository rule. Some comments predate this rule; avoid expanding them.
+- Build and test with Xcode's command line. SourceKit's `No such module UIKit` diagnostics in non-Xcode harnesses are noise.
+- Use the iOS 26.5 `iPhone 17 Pro` simulator UUID `C85B1445-BFF2-40AC-B7FD-95A9C374AFA8` when it is available, or resolve a unique simulator before running.
+- Push completed, verified batches to `origin/main`.
+
+## Build and test commands
 
 ```sh
+cd /Users/ridvanozcan/Desktop/workspace/Flapse
 export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
-xcodebuild build -scheme Flapse -destination 'platform=iOS Simulator,name=iPhone 17'
-xcodebuild test  -scheme Flapse -destination 'platform=iOS Simulator,name=iPhone 17' -only-testing:FlapseTests
+
+xcodebuild -project Flapse.xcodeproj -scheme Flapse -configuration Debug \
+  -destination 'generic/platform=iOS Simulator' build
+
+xcodebuild test -project Flapse.xcodeproj -scheme Flapse \
+  -destination 'platform=iOS Simulator,id=C85B1445-BFF2-40AC-B7FD-95A9C374AFA8' \
+  -only-testing:FlapseTests
+
+xcodebuild test -project Flapse.xcodeproj -scheme Flapse \
+  -destination 'platform=iOS Simulator,id=C85B1445-BFF2-40AC-B7FD-95A9C374AFA8' \
+  -only-testing:FlapseUITests/FlapseUITests/testRapidTabNavigationRemainsResponsive
 ```
 
-**133 unit tests**, all green at handoff. The full UI journey test is also green. Use **iPhone 17** as destination ("iPhone 16" matches multiple runtimes and errors). SourceKit diagnostics in the IDE harness are noise ("No such module UIKit") — trust `xcodebuild` only. Release build has **zero warnings**.
+Physical device currently used:
 
-## House rules (from the owner — do not break)
+```sh
+xcodebuild -project Flapse.xcodeproj -scheme Flapse -configuration Debug \
+  -destination 'id=68A160A9-06E1-5973-8014-EB9128274414' build
 
-- **No comments in code.** (Existing Turkish `///` doc comments predate the rule; don't add new ones.)
-- English identifiers; UI strings are Turkish literals used as keys in `Flapse/Localizable.xcstrings` (12 languages: tr source + ar de en es fr hi ja ko pt ru zh-Hans). **Every new user-facing string needs translations in all 11 target languages** — pattern: a Python script that inserts `localizations.<lang>.stringUnit` entries (see git history). `String(localized:bundle:.appLanguage)` in Swift code; plain `LocalizedStringKey` Text works too. **The widget extension now has its own catalog** (`Widgets/Localizable.xcstrings`, same 12 languages) — keep it in sync for widget strings.
-- Owner sends screenshots/screen recordings as feedback, iterates in small batches. Build + run unit tests + **push to origin/main after every batch** (they install on device from this repo).
-- UI work must follow `.claude/skills/tasteskill` (calm native Apple HIG; no neon/gaming styling).
+xcrun devicectl device install app \
+  --device 68A160A9-06E1-5973-8014-EB9128274414 \
+  /Users/ridvanozcan/Library/Developer/Xcode/DerivedData/Flapse-fzsukklxtjzjhmchajrzzqjxnkgf/Build/Products/Debug-iphoneos/Flapse.app
+```
 
-## PUBLISHING STATUS (2026-07-18) — the current focus
+## App Store publishing status
 
-The app is **technically ready for App Store submission**. State of the pipeline:
+The technical signing/export path was previously verified end-to-end: archive, provisioning, entitlements and App Store `.ipa` export succeeded. GitHub Pages privacy/support pages are live. The remaining publishing work is primarily App Store Connect setup by the owner:
 
-✅ **Done & verified:**
-- Apple Developer Program membership ACTIVE (team `5ZYCHZ39QV`). Verified end-to-end from CLI: `xcodebuild archive -allowProvisioningUpdates` succeeded, profiles auto-minted for both targets, all entitlements (SIWA, iCloud/CloudKit, aps-environment, App Groups) confirmed in the signed archive via `codesign -d --entitlements`, and `-exportArchive` with root `ExportOptions.plist` produced a real App Store `.ipa` (cloud-managed distribution signing; only an Apple Development cert exists locally and that's fine).
-- GitHub Pages LIVE (`main` `/docs`): `https://ozcanr17.github.io/Flapse/privacy`, `/support`, `/` all 200 and Flapse-branded. The stale flat `docs/privacy.html`/`support.html` were DELETED because Pages served them at extensionless URLs, shadowing the good `docs/privacy/index.html` versions — **do not re-add flat files next to same-named directories in docs/**.
-- App Review compliance implemented: optional sign-in ("Giriş yapmadan devam et" in `SignInGateSheet`, `auth.gateSkipped` AppStorage), account deletion (Settings → Hesap → Hesabı sil → `AuthService.deleteAccountData()` clears identity + admin grant from UserDefaults and iCloud KVS), paywall auto-renew disclosure + working Terms (Apple std EULA) & Privacy links, camera-denied → "Ayarları Aç", rating prompt (once per version, after first "Uygulamada sakla" success).
-- Metadata kit `docs/AppStoreListing.md` is accurate and copy-paste ready (drop-detection claim removed — that feature was deleted from the app; auto-sort wording says "AI suggests, you confirm"; App Privacy = **Data Not Collected**; review notes mention optional sign-in + account deletion path).
-- **Prices (halved 2026-07-18)**: monthly **$0.49**, yearly **$4.99**, lifetime **$9.99** (TR: 24,99₺ / 249,99₺ / 499,99₺). Product IDs: `com.ridvan.timelapse.pro.monthly|yearly|lifetime`. `Products.storekit` (attached to the shared scheme — the ONLY StoreKit config; a duplicate Configuration.storekit was removed) mirrors these. Real prices get set in ASC when creating IAPs.
-- Small Business Program: applied, approval pending — does NOT block release; 15% commission applies once approved.
+1. Complete Paid Applications agreement, banking and tax.
+2. Create the app record and IAPs.
+3. Paste metadata from `docs/AppStoreListing.md`, upload screenshots and promote CloudKit schema to Production.
+4. Upload through Organizer/TestFlight and submit.
 
-⏳ **Remaining = App Store Connect web work (owner, step-by-step in `YAYINLAMA_REHBERI.md`):**
-1. Business → Paid Applications agreement + bank + tax (IAPs can't be created without it).
-2. Create app record (`rozcan.Flapse`), 3 IAPs + 7-day free trials on both subs.
-3. Paste metadata from `docs/AppStoreListing.md`; screenshots on device (6.9"); CloudKit schema → Production.
-4. Archive/Upload via Organizer (or CLI with root `ExportOptions.plist`), TestFlight pass, submit.
+Current product IDs intentionally retain the old domain and must not be renamed:
 
-## Recent session work (2026-07-17/18, all pushed)
+- `com.ridvan.timelapse.pro.monthly`
+- `com.ridvan.timelapse.pro.yearly`
+- `com.ridvan.timelapse.pro.lifetime`
 
-- **Authenticated Hidden items**: projects and saved timelapses can be hidden from their context menus and restored from Settings → Hidden after device-owner authentication. Hidden projects are excluded from Home, Projects, quick capture, reminders, widgets and visible statistics without bypassing free-tier project limits. The protected view relocks and dismisses open private media when the app leaves the foreground.
-- **Persistent Capture Together sync**: shared projects now use stable entry UUIDs and retain CloudKit zone/root metadata. New captures, photo edits, date/location changes, project edits, soft deletes, restores and permanent-delete tombstones synchronize in both directions. The app refreshes on launch, foreground, CloudKit push and while a shared project is open; uploads are debounced, incremental and process only changed images off the main thread. Legacy snapshot shares migrate without duplicating frames, and the old 50-frame upload limit is removed.
-
-- **Cross-device backup preference**: `CloudBackupPreference` mirrors the Pro iCloud-backup toggle through `NSUbiquitousKeyValueStore`; a newly received preference requests one restart before SwiftData opens the cloud-backed store. Sign in with Apple is explicitly distinguished from the device-level iCloud account required by CloudKit. UI-test containers now force `cloudKitDatabase: .none` so tests cannot import real private-database records.
-- **Home/UI performance pass**: heavy tab panes moved from a simultaneously animated `ZStack` to native `TabView` lifecycle management; expensive blurred/drawing-group fire borders became lightweight, glow-free streak accents; the Home screen now prioritizes a due capture, uses a calm 2×2 stats grid, and shows a real first-project empty state. Onboarding typography, Reduce Transparency, Dynamic Type usage, tab selection, and VoiceOver duplication were improved.
-- **Capture/project polish**: front-camera preview and photo output both explicitly mirror, so the saved selfie matches the familiar on-screen view; the back camera remains unmirrored. Projects sort by latest capture activity with creation date as fallback; the streak border uses a slow, glow-free angular motion and respects Reduce Motion.
-- **Reliable presentation/import flows**: Settings welcome replay now dismisses and selects Home; manual import uses a 75%-height, drag-dismissible sheet and shows a downward completion affordance instead of relying on the broken nested "Bitti" state mutation; a full-screen system `PHPickerViewController` supports ordered current-format transfers plus file/data fallbacks, including hidden-library selection after system authentication without requesting broad library access.
-- **Entry-level Recently Deleted**: deleting a frame now soft-deletes it for 30 days. Settings groups deleted photos by their source project in expandable rows, supports per-photo restore/delete and one-tap permanent deletion of every deleted photo in a project; automatic purging remains covered by repository tests.
-- **Couple-mode identity order and safe framing**: smart mode compares on-device Vision face feature prints against the first reliable two-face frame and only mirrors confidently swapped frames; it no longer applies face-based scale, translation or rotation. Couple frames use aspect-fit inside the selected video ratio, cap automatic zoom at 1× and preserve both people with a softened fill behind any unused canvas area. No identity or biometric data leaves the device or is persisted.
-- **Unified photo editor**: the former crop action opens a native editor with free, 9:16, 3:4, 4:3 and 16:9 crop ratios plus pan/zoom, horizontal flip, vertical flip, 90-degree rotation, reset and save/cancel semantics. Pixel and crop-geometry tests cover transform direction, dimensions, centered crops and pan bounds.
-- **Large-project/photo-editor performance**: project detail fetches only its live entries with SwiftData and renders the timeline and full-screen viewer lazily. UI images use a memory-cost-limited downsample cache while original photo data remains untouched; revision-based keys refresh edited thumbnails immediately without flushing every cached image. Editor controls live in a stable bottom panel, free crop uses a non-flickering aspect slider, and final edits render from the original full-resolution source.
-- **Stable photo paging + camera zoom**: the unstable three-page `TabView` window was replaced by iOS 17 lazy scroll paging over a stable entry collection, preventing half-finished swipes while retaining lazy page creation. The custom camera now prewarms with the selected project's correct front/back device, selects the best virtual multi-lens device, uses smooth hardware ramps between zoom presets, supports direct pinch zoom, and captures at balanced quality. Edit previews decode at 1800 px for responsive gestures while final saves still render from original data; free crop uses a stable aspect slider instead of a self-moving gesture handle.
-- **Editable capture dates**: tapping the date card in the full-screen photo viewer opens native date/time pickers. Saving persists `capturedAt`, immediately reorders viewer paging and the project timeline, and updates date-derived activity/streak calculations.
-- **Localization audit**: the app and Info.plist catalogs have complete translations for all 11 target locales, with stale machine-state entries resolved and recent jargon rewritten naturally per language.
-- **Widget redesign**: Today supports small/medium, Activity supports small/medium/large, Projects supports medium/large, and the Lock Screen widget supports inline/rectangular/circular families. The new layouts use adaptive system surfaces, restrained accent color and photo-first compositions without glow.
-- **Final Flapse rename**: the app target/module/product, source/test folders, Xcode project and scheme are named Flapse. The GitHub repository, Pages paths and local repository folder also use Flapse; domain terms such as `TimelapseComposer` and fixed StoreKit product identifiers intentionally remain unchanged.
-
-1. **Security/bug sweep round 2**: widget deep link `flapse://capture` now enforces `FeatureGate.canAddEntry` (was a free-tier bypass); `CameraService` capture continuation race fixed (delegate hops to `sessionQueue`, takes continuation atomically).
-2. **Owner-reported fixes**: PhotoImportSheet "Bitti" not dismissing — root cause: PhotosPicker inside a sheet breaks the `dismiss` environment; fix: presenters clear `activeSheet` via `onFinished` (keep this pattern). Sign-in gate dead-end fixed: pending intent (add/import) continues after sign-in OR skip.
-3. **Photo editor** (`Features/ProjectDetail/PhotoCropView.swift`): opened from the edit icon in `EntryViewerView` top bar; pinch/drag crop with thirds grid, horizontal/vertical flip and 90-degree rotation; keeps the crop aspect consistent and saves via `repository.replaceImage` (invalidates thumbnails). Entry viewer share image refreshes via task id keyed on `imageData?.count`.
-4. **Pre-launch audit fixes**: import-into-new-project rolls back the created project if import fails (was leaking an empty project consuming the free slot; 4 new tests in `PhotoImportViewModelTests`); paywall shows retry state instead of hardcoded fallback prices in Release (`loadFailed`; fallback is `#if DEBUG` only); `hasTrial` honors `isEligibleForIntroOffer`; widget fully localized.
-5. **Docs**: `YAYINLAMA_REHBERI.md` (Turkish publishing guide with ✅ status per step), `ExportOptions.plist`, AppStoreListing accuracy pass, price halving everywhere.
-
-## Older session summaries (still relevant)
-
-- 4-tab liquid-glass shell (`MainTabView`), drag-to-select capsule bar, Projects pane `.id` reset token (bumps only on re-tap or 0.5s after leaving).
-- Background rendering (`TimelapseRenderService`) + Live Activity/Dynamic Island; `writerFailed` auto-retry on foreground (iOS kills the hardware encoder in background — never remove the retry).
-- 7-day trash for saved timelapses, 30-day trash for projects and individual photos (Settings → Son Silinenler).
-- Smart alignment is FREE and default-on; only manual per-frame alignment is Pro. **Do not reintroduce it as a Pro bullet.**
-- Auto-capture (`AutoCaptureFlow`): always confirm, never silently auto-assign. Matcher scores mean of top-3 nearest signatures.
-- Beat sync: strictly one cut per beat via `loopedCutTimes`; **drop detection was removed — do not reintroduce without owner sign-off, and it must not be claimed in marketing copy.**
-- Camera prewarm via `CameraService.shared.prewarm()`; call `.stop()` when a capture flow is cancelled before presenting.
-- Photos saving via `PhotoLibrarySaver` (add-only auth, `.photosDeniedAlert`).
-- No third-party backend or analytics — "Data Not Collected" stays accurate. Capture Together and optional backup use the user's Apple iCloud/CloudKit account. CaptionWriter is on-device FoundationModels. StoreKit entitlements verified, never persisted. Admin Pro rides UserDefaults/iCloud KVS by design (`AuthService.adminEmailHashes`). `CKShare.publicPermission = .readWrite` is required for link-invite UX — revisit before marketing Birlikte Çekim broadly.
-
-## Pitfalls — DO NOT repeat
-
-1. **Liquid glass nesting**: bar = `liquidGlassCapsule` on icon row; selection capsule = `.overlay` above bar glass; duplicate non-hit-testing icon row on top. Don't "simplify".
-2. **Live Activity images**: oversized images render as a gray box. `Widgets/Assets.xcassets/AppLogo.imageset` is 128px on purpose and must be the real AppIcon copy.
-3. **`.id()` resets kill animations** — Projects reset token timing (see above).
-4. **Hardware encoder dies in background** → keep the foreground retry mechanism.
-5. **Main-thread SwiftData faulting**: never read `entry.imageData` in computed props re-evaluated per body pass; cache in `@State` once or use `ImageDownsampler.cachedImage`.
-6. **Toolbar buttons on iOS 26**: plain 21pt icons in 30pt frames (`ProjectDetailView.toolbarIcon`); let the system provide glass.
-7. **Front camera mirroring** is explicitly enabled on both preview-layer and photo-output connections; back-camera preview/output stay unmirrored. Don't flip in post.
-8. **`RenderActivityAttributes` is duplicated** in `Flapse/Features/Export/RenderActivity.swift` and `Widgets/RenderLiveActivity.swift` — keep byte-identical.
-9. **QR in outro** must be drawn via `UIImage(cgImage:).draw` (CGContext draw mirrors it).
-10. **Monetization copy accuracy**: if gating or pricing changes, update Paywall, Welcome, Settings, README, `docs/AppStoreListing.md`, and `Products.storekit` in the same commit.
-11. **`dismiss` environment breaks after PhotosPicker in a sheet** — dismiss via the presenter's item binding (`onFinished` → `activeSheet = nil`).
-12. **GitHub Pages serves flat `foo.html` over `foo/index.html`** at extensionless URLs — don't re-add flat duplicates in `docs/`.
+See `YAYINLAMA_REHBERI.md` before changing publishing configuration.
 
 ## Key file map
 
-- `Flapse/MainTabView.swift` — tab shell, glass bar, deep link (`flapse://capture`, entry-limit gated)
-- `Flapse/Features/Export/TimelapseRenderService.swift` — background jobs, retry, `TimelapseLibrary`
-- `Flapse/Features/Export/TimelapseExportSheet.swift` — studio; cached `frames` @State; review prompt
-- `Flapse/Features/Export/TimelapseComposer.swift` — render pipeline, outro + QR
-- `Flapse/Features/ProjectDetail/PhotoCropView.swift` — crop/flip/rotate photo editor
-- `Flapse/Features/Import/PhotoImportSheet.swift` + `PhotoImportViewModel.swift` — import, rollback-on-failure
-- `Flapse/Features/Auth/AuthService.swift` + `SignInGateSheet.swift` — optional sign-in, account deletion
-- `Flapse/Features/Store/` — StoreService (intro-offer eligibility), PaywallView/ViewModel (retry state)
-- `Widgets/FlapseWidgets.swift` + `Widgets/Localizable.xcstrings` — widgets, localized
-- `docs/` — GitHub Pages (LIVE) + `AppStoreListing.md` (ASC copy-paste kit)
-- `YAYINLAMA_REHBERI.md`, `RELEASE_CHECKLIST.md`, `ExportOptions.plist`, `Products.storekit` — publishing kit
+- `Flapse/MainTabView.swift` — retained native tab shell, custom Liquid Glass bar, directional content motion and capture deep link.
+- `Flapse/Theme.swift` — theme palettes and shared Liquid Glass modifiers.
+- `Flapse/ImageDownsampler.swift` — bounded image loading/decoding and thumbnail cache.
+- `Flapse/Features/Home/HomeView.swift` — Home queries/cards and thumbnail consumers.
+- `Flapse/Features/ProjectDetail/ProjectDetailView.swift` — paginated/lazy project timeline.
+- `Flapse/Features/ProjectDetail/EntryViewerView.swift` — stable full-screen photo paging and metadata actions.
+- `Flapse/Features/ProjectDetail/PhotoCropView.swift` — crop/flip/rotate editor using original-resolution output.
+- `Flapse/Features/CaptureTogether/SharedProjectService.swift` — CloudKit shared-project synchronization and deduplication.
+- `Flapse/Features/Export/TimelapseRenderService.swift` — render jobs, background handling and foreground retry.
+- `Flapse/Features/Export/TimelapseComposer.swift` — video assembly, transitions, music timing and outro.
+- `Flapse/Features/Import/PhotoImportSheet.swift` and `PhotoImportViewModel.swift` — Photos import and rollback behavior.
+- `Flapse/Features/Settings/RecentlyDeletedView.swift` — authenticated/grouped deletion recovery.
+- `Widgets/FlapseWidgets.swift` — Home/Lock Screen widgets.
+- `docs/AppStoreListing.md`, `YAYINLAMA_REHBERI.md`, `RELEASE_CHECKLIST.md`, `ExportOptions.plist`, `Products.storekit` — publishing material.
+
+## Final note for the next session
+
+Start by running `git status`, confirming `origin/main` and reading the latest user report. Do not redo completed optimizations or reset the working tree. The next useful work is evidence-driven physical-device profiling if the owner still reports slowness on commit `55a8382`.
