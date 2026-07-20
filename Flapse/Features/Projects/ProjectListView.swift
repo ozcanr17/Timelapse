@@ -59,17 +59,12 @@ struct ProjectListView: View {
 
     var body: some View {
         ZStack {
-            FlapseScreenBackdrop()
+            theme.canvas.ignoresSafeArea()
 
             if liveProjects.isEmpty && visibleJobs.isEmpty {
                 EmptyProjectsView(onCreate: addProjectTapped, onImport: importTapped)
             } else {
                 List {
-                    projectOverview
-                        .listRowSeparator(.hidden)
-                        .listRowBackground(Color.clear)
-                        .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 10, trailing: 16))
-
                     ForEach(visibleJobs) { job in
                         Button {
                             openJob(job)
@@ -82,7 +77,7 @@ struct ProjectListView: View {
                         .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
                     }
                     ForEach(liveProjects) { project in
-                        ProjectCard(project: project, isFeatured: project.id == liveProjects.first?.id)
+                        ProjectCard(project: project)
                                 .overlay {
                                     if isLocked(project) {
                                         Button {
@@ -178,49 +173,6 @@ struct ProjectListView: View {
         }
         .sheet(item: $resumeExportProject, onDismiss: discardCheckedJob) { project in
             TimelapseExportSheet(project: project)
-        }
-    }
-
-    private var projectOverview: some View {
-        HStack(spacing: 14) {
-            Image(systemName: "square.grid.2x2.fill")
-                .font(.system(size: 20, weight: .semibold))
-                .foregroundStyle(theme.accent)
-                .frame(width: 48, height: 48)
-                .background(theme.accent.opacity(0.12), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-            VStack(alignment: .leading, spacing: 3) {
-                Text("Projeler")
-                    .font(Theme.headline(19))
-                    .foregroundStyle(theme.ink)
-                Text("\(liveProjects.count) proje")
-                    .font(Theme.caption(12))
-                    .foregroundStyle(theme.inkMuted)
-            }
-            Spacer()
-            HStack(spacing: 5) {
-                Image(systemName: "bell.fill")
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(theme.accent)
-                Text("\(liveProjects.filter { $0.isCaptureDue() }.count)")
-                    .font(Theme.stamp(13))
-                    .foregroundStyle(theme.ink)
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .background(theme.surface.opacity(0.72), in: Capsule())
-        }
-        .padding(16)
-        .background(
-            LinearGradient(
-                colors: [theme.surface.opacity(0.9), theme.accent.opacity(0.08), theme.secondary.opacity(0.07)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            ),
-            in: RoundedRectangle(cornerRadius: 24, style: .continuous)
-        )
-        .overlay {
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .strokeBorder(theme.ink.opacity(0.06), lineWidth: 0.7)
         }
     }
 
@@ -371,7 +323,6 @@ struct ProjectListView: View {
 /// için koyu geçiş, başlık ve ilerleme biner. Fotoğraf yoksa kategori rengine düşer.
 private struct ProjectCard: View {
     let project: Project
-    let isFeatured: Bool
 
     @Environment(\.theme) private var theme
     @State private var photo: UIImage?
@@ -408,32 +359,22 @@ private struct ProjectCard: View {
 
             Spacer(minLength: 12)
 
-            HStack(alignment: .bottom, spacing: 12) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(project.title)
-                        .font(Theme.headline(isFeatured ? 28 : 24))
-                        .foregroundStyle(.white)
-                        .lineLimit(2)
-                    HStack(spacing: 6) {
-                        Text("\(count)")
-                            .monospacedDigit()
-                            .fontWeight(.semibold)
-                        Text("kare · \(project.cadence.displayName)")
-                    }
-                    .font(Theme.caption(13))
-                    .foregroundStyle(.white.opacity(0.88))
-                }
-                Spacer(minLength: 8)
-                Image(systemName: "arrow.up.right")
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(.black.opacity(0.78))
-                    .frame(width: 42, height: 42)
-                    .background(.white.opacity(0.9), in: Circle())
+            Text(project.title)
+                .font(.system(size: 24, weight: .bold, design: .default))
+                .foregroundStyle(.white)
+            HStack(spacing: 6) {
+                Text("\(count)")
+                    .monospacedDigit()
+                    .fontWeight(.semibold)
+                Text("kare · \(project.cadence.displayName)")
             }
+            .font(Theme.caption(13))
+            .foregroundStyle(.white.opacity(0.92))
+            .padding(.top, 3)
         }
-        .padding(isFeatured ? 20 : 18)
+        .padding(18)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .frame(height: isFeatured ? 260 : 198)
+        .frame(height: 188)
         .background {
             ZStack {
                 if let photo {
@@ -453,7 +394,7 @@ private struct ProjectCard: View {
             }
         }
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-        .shadow(color: .black.opacity(isFeatured ? 0.16 : 0.11), radius: isFeatured ? 18 : 12, x: 0, y: isFeatured ? 9 : 6)
+        .shadow(color: .black.opacity(0.12), radius: 12, x: 0, y: 6)
         .overlay {
             if streak > 0 {
                 FireStreakBorder(cornerRadius: 24)
@@ -529,10 +470,10 @@ private struct EmptyProjectsView: View {
 
             VStack(spacing: 8) {
                 Text("İlk hikayeni başlat")
-                    .font(Theme.headline(26))
+                    .font(.system(size: 26, weight: .bold, design: .default))
                     .foregroundStyle(theme.ink)
                 Text("Günde bir kare çek; zamanla değişimin\nkendiliğinden bir timelapse'e dönüşsün.")
-                    .font(Theme.body(16))
+                    .font(.system(size: 16, weight: .regular, design: .default))
                     .foregroundStyle(theme.inkMuted)
                     .multilineTextAlignment(.center)
                     .lineSpacing(2)

@@ -15,7 +15,7 @@ struct SavedTimelapsesView: View {
 
     var body: some View {
         ZStack {
-            FlapseScreenBackdrop()
+            theme.canvas.ignoresSafeArea()
             if items.isEmpty {
                 emptyState
             } else {
@@ -59,10 +59,10 @@ struct SavedTimelapsesView: View {
                 )
             VStack(spacing: 8) {
                 Text("Henüz kayıtlı timelapse yok")
-                    .font(Theme.headline(22))
+                    .font(.system(size: 22, weight: .bold, design: .default))
                     .foregroundStyle(theme.ink)
                 Text("Bir projeden timelapse oluşturup \"Uygulamada sakla\" dediğinde burada birikir.")
-                    .font(Theme.body(15))
+                    .font(.system(size: 15, weight: .regular, design: .default))
                     .foregroundStyle(theme.inkMuted)
                     .multilineTextAlignment(.center)
                     .lineSpacing(2)
@@ -72,58 +72,34 @@ struct SavedTimelapsesView: View {
     }
 
     private var librarySection: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            HStack(alignment: .center) {
-                VStack(alignment: .leading, spacing: 3) {
-                    Text("Kitaplık")
-                        .font(Theme.headline(22))
-                        .foregroundStyle(theme.ink)
-                    Text("\(items.count) timelapse")
-                        .font(Theme.caption(12))
-                        .foregroundStyle(theme.inkMuted)
-                }
-                Spacer()
-                Image(systemName: "play.rectangle.on.rectangle.fill")
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundStyle(theme.accent)
-                    .frame(width: 44, height: 44)
-                    .liquidGlassStyle(cornerRadius: 15, tint: theme.accent.opacity(0.08))
-            }
-
-            if let featured = items.first {
-                libraryCard(featured, isFeatured: true)
-            }
-
-            if items.count > 1 {
-                LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 16) {
-                    ForEach(Array(items.dropFirst())) { item in
-                        libraryCard(item, isFeatured: false)
-                    }
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Kitaplık")
+                .font(Theme.caption(13))
+                .foregroundStyle(theme.inkMuted)
+            LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
+                ForEach(items) { item in
+                    libraryCard(item)
                 }
             }
         }
     }
 
-    private func libraryCard(_ item: SavedTimelapse, isFeatured: Bool) -> some View {
+    private func libraryCard(_ item: SavedTimelapse) -> some View {
         Button {
             playing = item
         } label: {
-            VStack(alignment: .leading, spacing: isFeatured ? 10 : 8) {
+            VStack(alignment: .leading, spacing: 8) {
                 ZStack {
-                    RoundedRectangle(cornerRadius: isFeatured ? 24 : 16, style: .continuous)
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
                         .fill(theme.inkMuted.opacity(0.12))
-                    SavedTimelapseThumbnail(item: item, maxPixelSize: isFeatured ? 900 : 500)
+                    SavedTimelapseThumbnail(item: item, maxPixelSize: 500)
                     Image(systemName: "play.circle.fill")
-                        .font(.system(size: isFeatured ? 54 : 34))
-                        .foregroundStyle(.white.opacity(0.94))
-                        .shadow(color: .black.opacity(0.32), radius: 9)
+                        .font(.system(size: 34))
+                        .foregroundStyle(.white.opacity(0.9))
+                        .shadow(color: .black.opacity(0.3), radius: 6)
                 }
-                .frame(height: isFeatured ? 250 : 150)
-                .clipShape(RoundedRectangle(cornerRadius: isFeatured ? 24 : 16, style: .continuous))
-                .overlay {
-                    RoundedRectangle(cornerRadius: isFeatured ? 24 : 16, style: .continuous)
-                        .strokeBorder(.white.opacity(0.16), lineWidth: 0.8)
-                }
+                .frame(height: 150)
+                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                 .overlay(alignment: .bottomTrailing) {
                     Text(Duration.seconds(item.duration).formatted(.time(pattern: .minuteSecond)))
                         .font(Theme.caption(11)).monospacedDigit()
@@ -135,7 +111,7 @@ struct SavedTimelapsesView: View {
                 }
                 VStack(alignment: .leading, spacing: 2) {
                     Text(item.title)
-                        .font(Theme.headline(isFeatured ? 20 : 14))
+                        .font(Theme.headline(14))
                         .foregroundStyle(theme.ink)
                         .lineLimit(1)
                     Text(item.createdAt.formatted(.dateTime.day().month(.abbreviated).year().locale(AppLanguage.currentLocale)))
@@ -143,18 +119,7 @@ struct SavedTimelapsesView: View {
                         .foregroundStyle(theme.inkMuted)
                 }
             }
-            .padding(isFeatured ? 10 : 0)
-            .background(
-                isFeatured ? theme.surface.opacity(0.76) : .clear,
-                in: RoundedRectangle(cornerRadius: 28, style: .continuous)
-            )
-            .overlay {
-                if isFeatured {
-                    RoundedRectangle(cornerRadius: 28, style: .continuous)
-                        .strokeBorder(theme.ink.opacity(0.055), lineWidth: 0.7)
-                }
-            }
-            .contentShape(RoundedRectangle(cornerRadius: isFeatured ? 28 : 16, style: .continuous))
+            .contentShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         }
         .buttonStyle(.plain)
         .contextMenu {

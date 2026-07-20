@@ -80,6 +80,12 @@ struct ProjectDetailView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
+                Text(project.title)
+                    .font(.system(size: 28, weight: .bold, design: .default))
+                    .foregroundStyle(theme.ink)
+                    .lineLimit(2)
+                    .padding(.top, 2)
+
                 heroCard
 
                 if !liveEntries.isEmpty {
@@ -108,7 +114,7 @@ struct ProjectDetailView: View {
             }
             .padding(16)
         }
-        .background { FlapseScreenBackdrop() }
+        .background(theme.canvas.ignoresSafeArea())
         .navigationBarTitleDisplayMode(.inline)
         .safeAreaInset(edge: .bottom, spacing: 0) {
             if isSelectingEntries {
@@ -489,13 +495,13 @@ struct ProjectDetailView: View {
                 icon: "photo.stack",
                 value: "\(dates.count)",
                 label: "Toplam kare",
-                accent: theme.secondary
+                accent: accent
             )
             StatTile(
                 icon: "calendar",
                 value: "\(ActivitySummary.daysRunning(firstCapture: dates.first))",
                 label: "Gündür sürüyor",
-                accent: accent.mix(with: theme.secondary, by: 0.52)
+                accent: accent
             )
         }
     }
@@ -532,9 +538,8 @@ struct ProjectDetailView: View {
 
             VStack(alignment: .leading, spacing: 6) {
                 Text(project.title)
-                    .font(Theme.headline(32))
+                    .font(.system(size: 30, weight: .bold, design: .default))
                     .foregroundStyle(.white)
-                    .lineLimit(2)
                 HStack(spacing: 6) {
                     Text("\(liveEntries.count)")
                         .monospacedDigit().fontWeight(.semibold)
@@ -545,7 +550,7 @@ struct ProjectDetailView: View {
             }
             .padding(20)
         }
-        .frame(height: 360)
+        .frame(height: 340)
         .frame(maxWidth: .infinity)
         .overlay(alignment: .topLeading) {
             Label(project.category.displayName, systemImage: Theme.icon(for: project.category))
@@ -569,11 +574,7 @@ struct ProjectDetailView: View {
             }
         }
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .strokeBorder(.white.opacity(0.16), lineWidth: 0.8)
-        }
-        .shadow(color: .black.opacity(0.15), radius: 18, x: 0, y: 9)
+        .shadow(color: .black.opacity(0.12), radius: 12, x: 0, y: 6)
         .accessibilityElement(children: .combine)
         .task(id: liveEntries.last?.imageCacheKey) {
             guard let last = liveEntries.last else { return }
@@ -1077,35 +1078,21 @@ private struct StatTile: View {
     @Environment(\.theme) private var theme
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(spacing: 6) {
             Image(systemName: icon)
                 .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(accent)
-                .frame(width: 32, height: 32)
-                .background(accent.opacity(0.13), in: Circle())
+                .foregroundStyle(isAlive ? accent : theme.inkMuted)
             Text(value)
-                .font(Theme.headline(21))
+                .font(.system(size: 20, weight: .bold, design: .default))
                 .monospacedDigit()
                 .foregroundStyle(theme.ink)
             Text(label)
                 .font(Theme.caption(11))
                 .foregroundStyle(theme.inkMuted)
-                .lineLimit(2)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(14)
-        .background(
-            LinearGradient(
-                colors: [accent.opacity(isAlive ? 0.18 : 0.11), theme.surface.opacity(0.94)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            ),
-            in: RoundedRectangle(cornerRadius: 18, style: .continuous)
-        )
-        .overlay {
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .strokeBorder(theme.ink.opacity(0.055), lineWidth: 0.7)
-        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 14)
+        .cardStyle()
     }
 }
 
