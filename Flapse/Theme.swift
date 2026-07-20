@@ -14,14 +14,11 @@ struct ThemePalette: Equatable {
 
 enum AppTheme: String, CaseIterable, Identifiable {
     case filmNegative = "film_negative"
-    case daylight
-    case bright
-    case fjord
-    case lavender
     case paper
     case coastal
     case cyber
     case darkroom
+    case fjord
 
     static let storageKey = "appTheme"
 
@@ -30,12 +27,9 @@ enum AppTheme: String, CaseIterable, Identifiable {
     var displayName: String {
         switch self {
         case .filmNegative: String(localized: "Negatif", bundle: .appLanguage)
-        case .daylight:     String(localized: "Aydınlık", bundle: .appLanguage)
-        case .bright:       String(localized: "Canlı", bundle: .appLanguage)
         case .cyber:        String(localized: "Grafit", bundle: .appLanguage)
         case .darkroom:     String(localized: "Karanlık Oda", bundle: .appLanguage)
         case .fjord:        String(localized: "Fiyort", bundle: .appLanguage)
-        case .lavender:     String(localized: "Lavanta", bundle: .appLanguage)
         case .paper:        String(localized: "Kâğıt", bundle: .appLanguage)
         case .coastal:      String(localized: "Sahil", bundle: .appLanguage)
         }
@@ -43,9 +37,18 @@ enum AppTheme: String, CaseIterable, Identifiable {
 
     var preferredColorScheme: ColorScheme? {
         switch self {
-        case .daylight, .bright, .lavender, .paper, .coastal: .light
-        case .darkroom, .cyber: .dark
-        default: nil
+        case .filmNegative, .paper, .coastal: .light
+        case .fjord, .cyber, .darkroom: .dark
+        }
+    }
+
+    static func resolved(storedID: String) -> AppTheme {
+        if let exact = AppTheme(rawValue: storedID) { return exact }
+        switch storedID {
+        case "daylight": return .coastal
+        case "bright": return .paper
+        case "lavender": return .filmNegative
+        default: return .filmNegative
         }
     }
 
@@ -53,86 +56,112 @@ enum AppTheme: String, CaseIterable, Identifiable {
         switch self {
         case .filmNegative:
             ThemePalette(
-                accent: Color(light: "2E8B57", dark: "5FD98A"),
-                secondary: Color(light: "1F6B6E", dark: "4FADAF"),
-                canvas: Color(light: "F3F0EA", dark: "16140F"),
-                surface: Color(light: "FFFFFF", dark: "211E19"),
-                ink: Color(light: "241F1B", dark: "F2EEE7"),
-                inkMuted: Color(light: "6E675E", dark: "B3ABA0")
-            )
-        case .daylight:
-            ThemePalette(
-                accent: Color(light: "007AFF", dark: "007AFF"),
-                secondary: Color(light: "30B0C7", dark: "30B0C7"),
-                canvas: Color(light: "F6F7F9", dark: "F6F7F9"),
-                surface: Color(light: "FFFFFF", dark: "FFFFFF"),
-                ink: Color(light: "0B0C0E", dark: "0B0C0E"),
-                inkMuted: Color(light: "83898F", dark: "83898F")
-            )
-        case .bright:
-            ThemePalette(
-                accent: Color(light: "C5522D", dark: "C5522D"),
-                secondary: Color(light: "6B7A3A", dark: "6B7A3A"),
-                canvas: Color(light: "FFF4E6", dark: "FFF4E6"),
-                surface: Color(light: "FFFCF7", dark: "FFFCF7"),
-                ink: Color(light: "2B1810", dark: "2B1810"),
-                inkMuted: Color(light: "80685D", dark: "80685D")
+                accent: Color(hex: "2E8B57"),
+                secondary: Color(hex: "1F6B6E"),
+                canvas: Color(hex: "F3F0EA"),
+                surface: Color(hex: "FFFFFF"),
+                ink: Color(hex: "241F1B"),
+                inkMuted: Color(hex: "6E675E")
             )
         case .cyber:
             ThemePalette(
-                accent: Color(light: "3B6EA5", dark: "6FA8DC"),
-                secondary: Color(light: "5A6472", dark: "9AA4B2"),
-                canvas: Color(light: "0F1115", dark: "0F1115"),
-                surface: Color(light: "1A1D23", dark: "1A1D23"),
-                ink: Color(light: "F2F3F5", dark: "F2F3F5"),
-                inkMuted: Color(light: "9AA0A8", dark: "9AA0A8")
+                accent: Color(hex: "6FA8DC"),
+                secondary: Color(hex: "9AA4B2"),
+                canvas: Color(hex: "0F1115"),
+                surface: Color(hex: "1A1D23"),
+                ink: Color(hex: "F2F3F5"),
+                inkMuted: Color(hex: "9AA0A8")
             )
         case .darkroom:
             ThemePalette(
-                accent: Color(light: "E3A23B", dark: "E3A23B"),
-                secondary: Color(light: "C4574A", dark: "C4574A"),
-                canvas: Color(light: "121110", dark: "121110"),
-                surface: Color(light: "1F1C18", dark: "1F1C18"),
-                ink: Color(light: "F4EDE1", dark: "F4EDE1"),
-                inkMuted: Color(light: "9A9187", dark: "9A9187")
+                accent: Color(hex: "E3A23B"),
+                secondary: Color(hex: "C4574A"),
+                canvas: Color(hex: "121110"),
+                surface: Color(hex: "1F1C18"),
+                ink: Color(hex: "F4EDE1"),
+                inkMuted: Color(hex: "9A9187")
             )
         case .fjord:
             ThemePalette(
-                accent: Color(light: "315A79", dark: "88BDE6"),
-                secondary: Color(light: "56876D", dark: "80C29D"),
-                canvas: Color(light: "EDF2F2", dark: "0D1820"),
-                surface: Color(light: "F9FCFB", dark: "172832"),
-                ink: Color(light: "172D3A", dark: "EDF6F8"),
-                inkMuted: Color(light: "65787E", dark: "9BB0B7")
-            )
-        case .lavender:
-            ThemePalette(
-                accent: Color(light: "7254A3", dark: "7254A3"),
-                secondary: Color(light: "B65B7A", dark: "B65B7A"),
-                canvas: Color(light: "F5F0FA", dark: "F5F0FA"),
-                surface: Color(light: "FFFBFF", dark: "FFFBFF"),
-                ink: Color(light: "30233F", dark: "30233F"),
-                inkMuted: Color(light: "776B83", dark: "776B83")
+                accent: Color(hex: "88BDE6"),
+                secondary: Color(hex: "80C29D"),
+                canvas: Color(hex: "0D1820"),
+                surface: Color(hex: "172832"),
+                ink: Color(hex: "EDF6F8"),
+                inkMuted: Color(hex: "9BB0B7")
             )
         case .paper:
             ThemePalette(
-                accent: Color(light: "A43B34", dark: "A43B34"),
-                secondary: Color(light: "2F5D50", dark: "2F5D50"),
-                canvas: Color(light: "F6F0E4", dark: "F6F0E4"),
-                surface: Color(light: "FFFBF2", dark: "FFFBF2"),
-                ink: Color(light: "1E1A17", dark: "1E1A17"),
-                inkMuted: Color(light: "746B61", dark: "746B61")
+                accent: Color(hex: "A43B34"),
+                secondary: Color(hex: "2F5D50"),
+                canvas: Color(hex: "F6F0E4"),
+                surface: Color(hex: "FFFBF2"),
+                ink: Color(hex: "1E1A17"),
+                inkMuted: Color(hex: "746B61")
             )
         case .coastal:
             ThemePalette(
-                accent: Color(light: "007C91", dark: "007C91"),
-                secondary: Color(light: "D96B35", dark: "D96B35"),
-                canvas: Color(light: "EAF6F7", dark: "EAF6F7"),
-                surface: Color(light: "FBFFFF", dark: "FBFFFF"),
-                ink: Color(light: "14343A", dark: "14343A"),
-                inkMuted: Color(light: "627D80", dark: "627D80")
+                accent: Color(hex: "007C91"),
+                secondary: Color(hex: "D96B35"),
+                canvas: Color(hex: "EAF6F7"),
+                surface: Color(hex: "FBFFFF"),
+                ink: Color(hex: "14343A"),
+                inkMuted: Color(hex: "627D80")
             )
         }
+    }
+}
+
+struct ThemeConfiguration: Equatable {
+    let palette: ThemePalette
+    let preferredColorScheme: ColorScheme
+}
+
+enum ThemePreference {
+    static let customEnabledKey = "customTheme.enabled"
+    static let primaryHexKey = "customTheme.primaryHex"
+    static let secondaryHexKey = "customTheme.secondaryHex"
+    static let defaultPrimaryHex = "F3F0EA"
+    static let defaultSecondaryHex = "2E8B57"
+
+    static func configuration(
+        themeID: String,
+        customEnabled: Bool,
+        primaryHex: String,
+        secondaryHex: String
+    ) -> ThemeConfiguration {
+        guard customEnabled else {
+            let theme = AppTheme.resolved(storedID: themeID)
+            return ThemeConfiguration(
+                palette: theme.palette,
+                preferredColorScheme: theme.preferredColorScheme ?? .light
+            )
+        }
+
+        let primary = UIColor(hex: normalized(primaryHex, fallback: defaultPrimaryHex))
+        let accent = UIColor(hex: normalized(secondaryHex, fallback: defaultSecondaryHex))
+        let isDark = primary.relativeLuminance < 0.42
+        let surface = primary.blended(with: .white, fraction: isDark ? 0.09 : 0.68)
+        let secondary = accent.blended(with: isDark ? .white : .black, fraction: 0.2)
+
+        return ThemeConfiguration(
+            palette: ThemePalette(
+                accent: Color(uiColor: accent),
+                secondary: Color(uiColor: secondary),
+                canvas: Color(uiColor: primary),
+                surface: Color(uiColor: surface),
+                ink: Color(hex: isDark ? "F5F5F7" : "17171A"),
+                inkMuted: Color(hex: isDark ? "B3B3BB" : "66666E"),
+                glow: Color(uiColor: accent)
+            ),
+            preferredColorScheme: isDark ? .dark : .light
+        )
+    }
+
+    private static func normalized(_ hex: String, fallback: String) -> String {
+        let cleaned = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted).uppercased()
+        guard cleaned.count == 6, UInt64(cleaned, radix: 16) != nil else { return fallback }
+        return cleaned
     }
 }
 
@@ -195,6 +224,25 @@ enum Theme {
 }
 
 extension Color {
+    init(hex: String) {
+        self.init(uiColor: UIColor(hex: hex))
+    }
+
+    var hexRGB: String? {
+        let color = UIColor(self).resolvedColor(with: UITraitCollection(userInterfaceStyle: .light))
+        var red: CGFloat = 0
+        var green: CGFloat = 0
+        var blue: CGFloat = 0
+        var alpha: CGFloat = 0
+        guard color.getRed(&red, green: &green, blue: &blue, alpha: &alpha) else { return nil }
+        return String(
+            format: "%02X%02X%02X",
+            Int(round(red * 255)),
+            Int(round(green * 255)),
+            Int(round(blue * 255))
+        )
+    }
+
     init(light: String, dark: String) {
         self.init(uiColor: UIColor { trait in
             UIColor(hex: trait.userInterfaceStyle == .dark ? dark : light)
@@ -225,6 +273,43 @@ private extension UIColor {
         let g = CGFloat((value & 0x00FF00) >> 8) / 255
         let b = CGFloat(value & 0x0000FF) / 255
         self.init(red: r, green: g, blue: b, alpha: 1)
+    }
+
+    var relativeLuminance: CGFloat {
+        var red: CGFloat = 0
+        var green: CGFloat = 0
+        var blue: CGFloat = 0
+        var alpha: CGFloat = 0
+        guard getRed(&red, green: &green, blue: &blue, alpha: &alpha) else { return 0 }
+
+        func channel(_ value: CGFloat) -> CGFloat {
+            value <= 0.04045
+                ? value / 12.92
+                : pow((value + 0.055) / 1.055, 2.4)
+        }
+        return 0.2126 * channel(red) + 0.7152 * channel(green) + 0.0722 * channel(blue)
+    }
+
+    func blended(with other: UIColor, fraction: CGFloat) -> UIColor {
+        let amount = min(max(fraction, 0), 1)
+        var red: CGFloat = 0
+        var green: CGFloat = 0
+        var blue: CGFloat = 0
+        var alpha: CGFloat = 0
+        var otherRed: CGFloat = 0
+        var otherGreen: CGFloat = 0
+        var otherBlue: CGFloat = 0
+        var otherAlpha: CGFloat = 0
+        guard getRed(&red, green: &green, blue: &blue, alpha: &alpha),
+              other.getRed(&otherRed, green: &otherGreen, blue: &otherBlue, alpha: &otherAlpha) else {
+            return self
+        }
+        return UIColor(
+            red: red + (otherRed - red) * amount,
+            green: green + (otherGreen - green) * amount,
+            blue: blue + (otherBlue - blue) * amount,
+            alpha: alpha + (otherAlpha - alpha) * amount
+        )
     }
 }
 

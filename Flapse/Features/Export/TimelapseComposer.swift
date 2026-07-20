@@ -307,12 +307,18 @@ struct TimelapseComposer: TimelapseComposing {
         let renderer = ImageRenderer(content: LogoMark(size: 512))
         renderer.scale = 1
         renderer.isOpaque = false
-        let theme = AppTheme(rawValue: UserDefaults.standard.string(forKey: AppTheme.storageKey) ?? "") ?? .filmNegative
-        let traits = UITraitCollection.current
+        let defaults = UserDefaults.standard
+        let configuration = ThemePreference.configuration(
+            themeID: defaults.string(forKey: AppTheme.storageKey) ?? AppTheme.filmNegative.rawValue,
+            customEnabled: defaults.bool(forKey: ThemePreference.customEnabledKey),
+            primaryHex: defaults.string(forKey: ThemePreference.primaryHexKey) ?? ThemePreference.defaultPrimaryHex,
+            secondaryHex: defaults.string(forKey: ThemePreference.secondaryHexKey) ?? ThemePreference.defaultSecondaryHex
+        )
+        let traits = UITraitCollection(userInterfaceStyle: configuration.preferredColorScheme == .dark ? .dark : .light)
         return OutroAssets(
             logo: renderer.cgImage,
-            canvas: UIColor(theme.palette.canvas).resolvedColor(with: traits),
-            ink: UIColor(theme.palette.ink).resolvedColor(with: traits),
+            canvas: UIColor(configuration.palette.canvas).resolvedColor(with: traits),
+            ink: UIColor(configuration.palette.ink).resolvedColor(with: traits),
             qr: qrCode(for: LegalLinks.appSite)
         )
     }

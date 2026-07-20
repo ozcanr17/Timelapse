@@ -6,6 +6,9 @@ struct ContentView: View {
 
     @AppStorage("hasSeenWelcome") private var hasSeenWelcome = false
     @AppStorage(AppTheme.storageKey) private var themeID = AppTheme.filmNegative.rawValue
+    @AppStorage(ThemePreference.customEnabledKey) private var customThemeEnabled = false
+    @AppStorage(ThemePreference.primaryHexKey) private var customPrimaryHex = ThemePreference.defaultPrimaryHex
+    @AppStorage(ThemePreference.secondaryHexKey) private var customSecondaryHex = ThemePreference.defaultSecondaryHex
     @AppStorage(AppLanguage.storageKey) private var languageID = AppLanguage.system.rawValue
 
     @Environment(\.modelContext) private var modelContext
@@ -13,8 +16,13 @@ struct ContentView: View {
     @State private var isDataReady = false
     @State private var milestoneMessage: String?
 
-    private var appTheme: AppTheme {
-        AppTheme(rawValue: themeID) ?? .filmNegative
+    private var themeConfiguration: ThemeConfiguration {
+        ThemePreference.configuration(
+            themeID: themeID,
+            customEnabled: customThemeEnabled,
+            primaryHex: customPrimaryHex,
+            secondaryHex: customSecondaryHex
+        )
     }
 
     private var appLanguage: AppLanguage {
@@ -26,7 +34,7 @@ struct ContentView: View {
             if isDataReady {
                 MainTabView()
             } else {
-                appTheme.palette.canvas.ignoresSafeArea()
+                themeConfiguration.palette.canvas.ignoresSafeArea()
             }
 
             if isShowingSplash && hasSeenWelcome {
@@ -54,10 +62,10 @@ struct ContentView: View {
         .fullScreenCover(isPresented: needsWelcome) {
             WelcomeView { hasSeenWelcome = true }
         }
-        .tint(appTheme.palette.accent)
-        .environment(\.theme, appTheme.palette)
-        .preferredColorScheme(appTheme.preferredColorScheme)
-        .animation(.easeInOut(duration: 0.25), value: themeID)
+        .tint(themeConfiguration.palette.accent)
+        .environment(\.theme, themeConfiguration.palette)
+        .preferredColorScheme(themeConfiguration.preferredColorScheme)
+        .animation(.easeInOut(duration: 0.25), value: themeChangeToken)
         .environment(\.locale, appLanguage.localeIdentifier.map(Locale.init(identifier:)) ?? .autoupdatingCurrent)
         .environment(\.layoutDirection, appLanguage.isRightToLeft ? .rightToLeft : (appLanguage == .system ? (Locale.Language(identifier: Locale.preferredLanguages.first ?? "en").characterDirection == .rightToLeft ? .rightToLeft : .leftToRight) : .leftToRight))
         .id(languageID)
@@ -98,6 +106,10 @@ struct ContentView: View {
         .onReceive(NotificationCenter.default.publisher(for: .flapseCloudKitChanged)) { _ in
             Task { await synchronizeSharedProjects() }
         }
+    }
+
+    private var themeChangeToken: String {
+        "\(themeID)-\(customThemeEnabled)-\(customPrimaryHex)-\(customSecondaryHex)"
     }
 
     /// Davet kabul edilince paylaşılan projeyi (önceki kareleriyle birlikte) yerel

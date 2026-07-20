@@ -16,6 +16,9 @@ struct SettingsView: View {
     @State private var projects: [Project] = []
 
     @AppStorage(AppTheme.storageKey) private var themeID = AppTheme.filmNegative.rawValue
+    @AppStorage(ThemePreference.customEnabledKey) private var customThemeEnabled = false
+    @AppStorage(ThemePreference.primaryHexKey) private var customPrimaryHex = ThemePreference.defaultPrimaryHex
+    @AppStorage(ThemePreference.secondaryHexKey) private var customSecondaryHex = ThemePreference.defaultSecondaryHex
     @AppStorage(AppLanguage.storageKey) private var languageID = AppLanguage.system.rawValue
     @AppStorage(ReminderScheduler.enabledKey) private var remindersEnabled = false
     @AppStorage(ReminderScheduler.hourKey) private var reminderHour = 19
@@ -152,12 +155,28 @@ struct SettingsView: View {
                 }
             }
 
-            Section("Görünüm") {
-                ForEach(AppTheme.allCases) { appTheme in
-                    ThemeRow(appTheme: appTheme, isSelected: themeID == appTheme.rawValue) {
-                        themeID = appTheme.rawValue
+            Section {
+                LazyVGrid(
+                    columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)],
+                    spacing: 10
+                ) {
+                    ForEach(AppTheme.allCases) { appTheme in
+                        ThemePresetCard(
+                            appTheme: appTheme,
+                            isSelected: !customThemeEnabled && AppTheme.resolved(storedID: themeID) == appTheme
+                        ) {
+                            customThemeEnabled = false
+                            themeID = appTheme.rawValue
+                        }
                     }
                 }
+                .padding(.vertical, 4)
+
+                customThemeEditor
+            } header: {
+                Text("Görünüm")
+            } footer: {
+                Text("Birincil renk arka planı; ikincil renk butonları, seçimleri ve vurguları belirler.")
             }
 
             Section("Hatırlatıcı") {
@@ -330,6 +349,69 @@ struct SettingsView: View {
         }
     }
 
+    private var customThemeEditor: some View {
+        VStack(spacing: 12) {
+            Button {
+                customThemeEnabled = true
+            } label: {
+                HStack(spacing: 12) {
+                    CustomThemeSwatch(
+                        configuration: ThemePreference.configuration(
+                            themeID: themeID,
+                            customEnabled: true,
+                            primaryHex: customPrimaryHex,
+                            secondaryHex: customSecondaryHex
+                        )
+                    )
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Özel Palet")
+                            .font(Theme.headline(15))
+                            .foregroundStyle(theme.ink)
+                        Text("Kendi renklerini oluştur")
+                            .font(Theme.caption(12))
+                            .foregroundStyle(theme.inkMuted)
+                    }
+                    Spacer()
+                    Image(systemName: customThemeEnabled ? "checkmark.circle.fill" : "circle")
+                        .foregroundStyle(customThemeEnabled ? theme.accent : theme.inkMuted)
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("theme-custom")
+
+            Divider()
+
+            ColorPicker("Birincil renk · Arka plan", selection: primaryColorBinding, supportsOpacity: false)
+                .font(Theme.body(15))
+            ColorPicker("İkincil renk · Butonlar", selection: secondaryColorBinding, supportsOpacity: false)
+                .font(Theme.body(15))
+        }
+        .padding(.vertical, 4)
+    }
+
+    private var primaryColorBinding: Binding<Color> {
+        Binding(
+            get: { Color(hex: customPrimaryHex) },
+            set: { color in
+                guard let hex = color.hexRGB else { return }
+                customPrimaryHex = hex
+                customThemeEnabled = true
+            }
+        )
+    }
+
+    private var secondaryColorBinding: Binding<Color> {
+        Binding(
+            get: { Color(hex: customSecondaryHex) },
+            set: { color in
+                guard let hex = color.hexRGB else { return }
+                customSecondaryHex = hex
+                customThemeEnabled = true
+            }
+        )
+    }
+
     private func finishWelcomeReplay() {
         guard shouldReturnHomeAfterWelcome else { return }
         shouldReturnHomeAfterWelcome = false
@@ -500,7 +582,7 @@ private struct ProToggleRow: View {
     }
 }
 
-private struct ThemeRow: View {
+private struct ThemePresetCard: View {
     let appTheme: AppTheme
     let isSelected: Bool
     let action: () -> Void
@@ -509,35 +591,69 @@ private struct ThemeRow: View {
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 14) {
-                ZStack {
-                    Circle()
+            VStack(alignment: .leading, spacing: 9) {
+                ZStack(alignment: .bottomLeading) {
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
                         .fill(appTheme.palette.canvas)
-                        .overlay(Circle().strokeBorder(theme.inkMuted.opacity(0.25), lineWidth: 1))
-                        .frame(width: 30, height: 30)
-                    Circle()
+                    RoundedRectangle(cornerRadius: 7, style: .continuous)
+                        .fill(appTheme.palette.surface)
+                        .frame(width: 48, height: 24)
+                        .padding(7)
+                    Capsule()
                         .fill(appTheme.palette.accent)
-                        .frame(width: 16, height: 16)
-                        .offset(x: 5, y: 5)
+                        .frame(width: 38, height: 10)
+                        .padding(10)
                     Circle()
                         .fill(appTheme.palette.secondary)
-                        .frame(width: 9, height: 9)
-                        .offset(x: -6, y: -5)
+                        .frame(width: 17, height: 17)
+                        .overlay(Circle().strokeBorder(.white.opacity(0.65), lineWidth: 1))
+                        .padding(8)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+                }
+                .frame(height: 58)
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .strokeBorder(isSelected ? theme.accent : theme.inkMuted.opacity(0.2), lineWidth: isSelected ? 2 : 0.8)
                 }
 
-                Text(appTheme.displayName)
-                    .font(Theme.body(15))
-                    .foregroundStyle(theme.ink)
-
-                Spacer()
-
-                if isSelected {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(theme.accent)
+                HStack(spacing: 5) {
+                    Text(appTheme.displayName)
+                        .font(Theme.caption(13))
+                        .foregroundStyle(theme.ink)
+                        .lineLimit(1)
+                    Spacer(minLength: 2)
+                    Image(systemName: isSelected ? "checkmark.circle.fill" : (appTheme.preferredColorScheme == .dark ? "moon.fill" : "sun.max.fill"))
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(isSelected ? theme.accent : theme.inkMuted)
                 }
             }
+            .padding(8)
+            .background(theme.surface.opacity(0.55), in: RoundedRectangle(cornerRadius: 15, style: .continuous))
         }
+        .buttonStyle(.plain)
         .accessibilityIdentifier("theme-\(appTheme.rawValue)")
+    }
+}
+
+private struct CustomThemeSwatch: View {
+    let configuration: ThemeConfiguration
+
+    var body: some View {
+        ZStack {
+            Circle()
+                .fill(configuration.palette.canvas)
+                .overlay(Circle().strokeBorder(configuration.palette.inkMuted.opacity(0.35), lineWidth: 1))
+            Circle()
+                .fill(configuration.palette.accent)
+                .frame(width: 22, height: 22)
+                .offset(x: 9, y: 9)
+            Circle()
+                .fill(configuration.palette.secondary)
+                .frame(width: 13, height: 13)
+                .offset(x: -10, y: -9)
+        }
+        .frame(width: 42, height: 42)
     }
 }
 

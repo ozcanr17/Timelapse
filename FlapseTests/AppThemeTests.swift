@@ -19,8 +19,30 @@ final class AppThemeTests: XCTestCase {
         XCTAssertEqual(AppTheme(rawValue: "film_negative"), .filmNegative)
     }
 
-    func test_enAzBesTema_aydinlikGorunumuKorur() {
+    func test_altiHazirTema_ucAcikUcKoyuOlarakDagilir() {
+        XCTAssertEqual(AppTheme.allCases.count, 6)
         let lightThemes = AppTheme.allCases.filter { $0.preferredColorScheme == .light }
-        XCTAssertGreaterThanOrEqual(lightThemes.count, 5)
+        let darkThemes = AppTheme.allCases.filter { $0.preferredColorScheme == .dark }
+        XCTAssertEqual(lightThemes.count, 3)
+        XCTAssertEqual(darkThemes.count, 3)
+    }
+
+    func test_eskiTemaKimlikleri_enYakinYeniPaleteTasinir() {
+        XCTAssertEqual(AppTheme.resolved(storedID: "daylight"), .coastal)
+        XCTAssertEqual(AppTheme.resolved(storedID: "bright"), .paper)
+        XCTAssertEqual(AppTheme.resolved(storedID: "lavender"), .filmNegative)
+    }
+
+    func test_ozelTema_birincilVeIkincilRenkleriUygular() {
+        let configuration = ThemePreference.configuration(
+            themeID: AppTheme.filmNegative.rawValue,
+            customEnabled: true,
+            primaryHex: "101820",
+            secondaryHex: "FF6B6B"
+        )
+
+        XCTAssertEqual(configuration.preferredColorScheme, .dark)
+        XCTAssertEqual(configuration.palette.canvas.hexRGB, "101820")
+        XCTAssertEqual(configuration.palette.accent.hexRGB, "FF6B6B")
     }
 }
